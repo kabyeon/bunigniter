@@ -16,11 +16,18 @@ import { resolve, relative } from "node:path";
  */
 function safeStaticPath(urlPathname: string): string | null {
 	const publicDir = resolve(process.cwd(), "public");
-	const resolvedPath = resolve(process.cwd(), "public", urlPathname.replace(/^\//, ""));
+	const resolvedPath = resolve(
+		process.cwd(),
+		"public",
+		urlPathname.replace(/^\//, ""),
+	);
 	const relativePath = relative(publicDir, resolvedPath);
 
 	// 경로가 public/ 외부를 가리키면 거부
-	if (relativePath.startsWith("..") || resolve(publicDir) !== resolvedPath && !relativePath.startsWith("public")) {
+	if (
+		relativePath.startsWith("..") ||
+		(resolve(publicDir) !== resolvedPath && !relativePath.startsWith("public"))
+	) {
 		return null;
 	}
 

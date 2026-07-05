@@ -143,7 +143,11 @@ export class FileSession implements SessionDriver {
 		const oldFile = this.getFilePath(oldId);
 		this.sessionId = crypto.randomUUID();
 		// 이전 세션 파일 삭제
-		try { unlinkSync(oldFile); } catch { /* 이미 삭제됨 */ }
+		try {
+			unlinkSync(oldFile);
+		} catch {
+			/* 이미 삭제됨 */
+		}
 		// 데이터는 유지한 채 새 ID로 저장
 		this.save();
 	}

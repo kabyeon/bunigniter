@@ -70,18 +70,30 @@ export class Auth {
 
 		if (!user) {
 			// 타이밍 공격 방지: 존재하지 않는 사용자에도 더미 해시 검증 수행
-			await Bun.password.verify(password, "$2a$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-			return { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다" };
+			await Bun.password.verify(
+				password,
+				"$2a$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+			);
+			return {
+				success: false,
+				error: "이메일 또는 비밀번호가 일치하지 않습니다",
+			};
 		}
 
 		// 비밀번호 필드가 없거나 빈 값이면 로그인 거부
 		if (!user.password) {
-			return { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다" };
+			return {
+				success: false,
+				error: "이메일 또는 비밀번호가 일치하지 않습니다",
+			};
 		}
 
 		const valid = await Auth.verifyPassword(password, user.password);
 		if (!valid) {
-			return { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다" };
+			return {
+				success: false,
+				error: "이메일 또는 비밀번호가 일치하지 않습니다",
+			};
 		}
 
 		const session = await Auth.getSession(request);

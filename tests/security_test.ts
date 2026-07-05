@@ -443,7 +443,9 @@ describe("Crypto - 약한 알고리즘 경고", () => {
 		const { Crypto } = require("../system/core/crypto.ts");
 		const originalWarn = console.warn;
 		let warned = false;
-		console.warn = () => { warned = true; };
+		console.warn = () => {
+			warned = true;
+		};
 
 		Crypto.hash("test", { algorithm: "md5" });
 
@@ -455,7 +457,9 @@ describe("Crypto - 약한 알고리즘 경고", () => {
 		const { Crypto } = require("../system/core/crypto.ts");
 		const originalWarn = console.warn;
 		let warned = false;
-		console.warn = () => { warned = true; };
+		console.warn = () => {
+			warned = true;
+		};
 
 		Crypto.hash("test", { algorithm: "sha1" });
 
@@ -467,7 +471,9 @@ describe("Crypto - 약한 알고리즘 경고", () => {
 		const { Crypto } = require("../system/core/crypto.ts");
 		const originalWarn = console.warn;
 		let warned = false;
-		console.warn = () => { warned = true; };
+		console.warn = () => {
+			warned = true;
+		};
 
 		Crypto.hash("test", { algorithm: "sha256" });
 
