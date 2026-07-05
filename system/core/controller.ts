@@ -5,11 +5,23 @@
 
 import { renderView } from "./view.ts";
 
+/** response.status() 체이닝 빌더 */
+export interface ResponseStatusBuilder {
+	/** 본문과 함께 응답 */
+	send: (body: string) => Response;
+	/** JSON 본문과 함께 응답 */
+	json: (data: any) => Response;
+}
+
 /** 컨트롤러 컨텍스트 타입 */
 export interface Context {
-	request: Request;
+	request: Request & {
+		/** 파싱된 요청 본문 반환 (JSON/Form/URL-encoded 자동 파싱) */
+		body: () => any;
+	};
 	response: {
-		status: (code: number) => any;
+		/** 상태 코드 설정 (체이닝 지원: response.status(404).send("Not Found")) */
+		status: (code: number) => ResponseStatusBuilder;
 		redirect: (url: string) => Response;
 		json: (data: any) => Response;
 		send: (body: string | Response) => Response;

@@ -4,7 +4,7 @@
 // Bun.serve 네이티브 라우터 기반
 // ============================================================
 
-import type { Controller, Context } from "./controller.ts";
+import type { Controller, Context, ResponseStatusBuilder } from "./controller.ts";
 import type { MiddlewareFn } from "./middleware.ts";
 import { runMiddlewarePipeline } from "./middleware.ts";
 import { RouteModelBinding } from "./route_model_binding.ts";
@@ -280,10 +280,21 @@ export class Router {
 				}
 
 				// Context 객체 구성 (CodeIgniter3 스타일)
+				const statusBuilder = (code: number): ResponseStatusBuilder => ({
+					send: (body: string) => new Response(body, { status: code }),
+					json: (data: any) =>
+						new Response(JSON.stringify(data), {
+							status: code,
+							headers: { "Content-Type": "application/json" },
+						}),
+				});
+
 				const controllerCtx: Context = {
-					request: req,
+					request: Object.assign(req, {
+						body: () => bodyData,
+					}),
 					response: {
-						status: (code: number) => new Response(null, { status: code }),
+						status: statusBuilder,
 						redirect: (url: string) =>
 							new Response(null, {
 								status: 302,

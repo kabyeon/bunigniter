@@ -2,7 +2,7 @@
 // system/core/index.ts
 
 export { Controller } from "./controller.ts";
-export type { Context } from "./controller.ts";
+export type { Context, ResponseStatusBuilder } from "./controller.ts";
 export { Model } from "./model.ts";
 export { Router } from "./router.ts";
 export { getDB, closeAllConnections } from "./database.ts";
