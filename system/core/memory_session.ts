@@ -13,6 +13,11 @@ function generateSessionId(): string {
 	return crypto.randomUUID();
 }
 
+/** 세션 ID 유효성 검증 (UUID v4 형식, 경로 순회 방지) */
+function isValidSessionId(sid: string): boolean {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid);
+}
+
 /**
  * 인메모리 세션 드라이버
  * 기존 Session 클래스와 동일한 동작
@@ -25,8 +30,15 @@ export class MemorySession implements SessionDriver {
 	constructor(request: Request, cookieName?: string) {
 		const cookies = this.parseCookies(request);
 		const name = cookieName ?? SESSION_COOKIE_NAME;
-		this.sessionId = cookies[name] ?? generateSessionId();
-		this.data = sessions.get(this.sessionId) ?? {};
+		const sid = cookies[name];
+
+		if (sid && isValidSessionId(sid) && sessions.has(sid)) {
+			this.sessionId = sid;
+			this.data = sessions.get(sid) ?? {};
+		} else {
+			this.sessionId = generateSessionId();
+			this.data = {};
+		}
 	}
 
 	set(key: string, value: any): void {

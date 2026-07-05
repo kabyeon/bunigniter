@@ -3,13 +3,7 @@
 // CodeIgniter3 의 Upload 라이브러리와 동일
 // ============================================================
 
-import {
-	writeFileSync,
-	existsSync,
-	mkdirSync,
-	statSync,
-	unlinkSync,
-} from "node:fs";
+import { writeFileSync, existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { join, extname, basename } from "node:path";
 import { randomUUID } from "node:crypto";
 
@@ -60,6 +54,55 @@ export interface MultiUploadResult {
  *   }
  */
 export class Upload {
+	/** 위험한 확장자 (서버 사이드 실행 가능) */
+	private static DANGEROUS_EXTENSIONS = new Set([
+		"php",
+		"phtml",
+		"php3",
+		"php4",
+		"php5",
+		"phar",
+		"jsp",
+		"jspx",
+		"asp",
+		"aspx",
+		"asa",
+		"ascx",
+		"cgi",
+		"pl",
+		"py",
+		"rb",
+		"sh",
+		"bash",
+		"zsh",
+		"exe",
+		"bat",
+		"cmd",
+		"com",
+		"msi",
+		"scr",
+		"html",
+		"htm",
+		"svg",
+		"js",
+		"mjs",
+		"vbs",
+	]);
+
+	/** 위험한 MIME 타입 */
+	private static DANGEROUS_MIME_TYPES = new Set([
+		"text/html",
+		"application/xhtml+xml",
+		"image/svg+xml",
+		"application/javascript",
+		"text/javascript",
+		"application/x-javascript",
+		"application/x-httpd-php",
+		"application/x-shellscript",
+		"application/x-msdos-program",
+		"application/x-msdownload",
+	]);
+
 	private static DEFAULT_OPTIONS: UploadOptions = {
 		maxSize: 10 * 1024 * 1024, // 10MB
 		uploadDir: "public/uploads",
@@ -166,9 +209,57 @@ export class Upload {
 		const mimeType = file.type;
 		const size = file.size;
 
+		// 위험한 확장자 차단 (항상 검사 — 옵션 무시)
+		if (Upload.DANGEROUS_EXTENSIONS.has(extension)) {
+			return {
+				success: false,
+				fileName: "",
+				originalName,
+				filePath: "",
+				url: "",
+				size,
+				mimeType,
+				extension,
+				error: `위험한 확장자 .${extension} 은(는) 업로드할 수 없습니다`,
+			};
+		}
+
+		// 위험한 MIME 타입 차단 (항상 검사 — 옵션 무시)
+		// MIME 매개변수 제거 후 비교 (예: "text/html;charset=utf-8" → "text/html")
+		const baseMimeType = mimeType.split(";")[0].trim().toLowerCase();
+		if (Upload.DANGEROUS_MIME_TYPES.has(baseMimeType)) {
+			return {
+				success: false,
+				fileName: "",
+				originalName,
+				filePath: "",
+				url: "",
+				size,
+				mimeType,
+				extension,
+				error: `위험한 MIME 타입 ${mimeType} 은(는) 업로드할 수 없습니다`,
+			};
+		}
+
+		// 파일명 경로 순회(Path Traversal) 검증
+		const sanitizedName = basename(originalName);
+		if (sanitizedName !== originalName || originalName.includes("..")) {
+			return {
+				success: false,
+				fileName: "",
+				originalName,
+				filePath: "",
+				url: "",
+				size,
+				mimeType,
+				extension,
+				error: "파일명에 경로 문자를 포함할 수 없습니다",
+			};
+		}
+
 		// MIME 타입 검증
 		if (options.allowedMimeTypes && options.allowedMimeTypes.length > 0) {
-			if (!options.allowedMimeTypes.includes(mimeType)) {
+			if (!options.allowedMimeTypes.includes(baseMimeType)) {
 				return {
 					success: false,
 					fileName: "",
@@ -265,6 +356,20 @@ export class Upload {
 				extension,
 				error: `파일 저장 실패: ${err.message}`,
 			};
+		}
+
+		// 업로드 파일 실행 방지: 저장 경로가 public/ 내부면 .htaccess 생성
+		try {
+			const htaccessPath = join(fullPath, "..", ".htaccess");
+			if (!existsSync(htaccessPath)) {
+				writeFileSync(
+					htaccessPath,
+					'# BunIgniter - 업로드 파일 실행 방지\nphp_flag engine off\n\n<FilesMatch ".+">\n  Require all denied\n</FilesMatch>\n\n<IfModule mod_headers.c>\n  Header set Content-Disposition attachment\n  Header set X-Content-Type-Options nosniff\n</IfModule>\n',
+					"utf-8",
+				);
+			}
+		} catch {
+			// .htaccess 생성 실패는 무시 (Nginx 등)
 		}
 
 		// URL 경로 생성

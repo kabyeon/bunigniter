@@ -53,13 +53,22 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	/**
 	 * 조건으로 레코드 조회
 	 * CodeIgniter3: $this->db->where($conditions)->get()->result()
+	 *
+	 * 주의: 컬럼명은 화이트리스트 검증을 통해 SQL 인젝션을 방지합니다.
+	 * 키값은 알파벳/숫자/언더스코어만 허용됩니다.
 	 */
 	async findWhere(conditions: Partial<T>): Promise<T[]> {
 		const sql = await this.db();
 		const entries = Object.entries(conditions);
 		if (entries.length === 0) return this.findAll();
 
-		const whereClauses = entries.map(([key, _]) => `${key} = ?`);
+		// 컬럼명 화이트리스트 검증 (SQL 인젝션 방지)
+		const whereClauses = entries.map(([key, _]) => {
+			if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
+				throw new Error(`Invalid column name: ${key}`);
+			}
+			return `${key} = ?`;
+		});
 		const values = entries.map(([_, val]) => val);
 		const whereStr = whereClauses.join(" AND ");
 
@@ -104,13 +113,20 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	/**
 	 * 레코드 개수 조회
 	 * CodeIgniter3: $this->db->count_all_results()
+	 *
+	 * 주의: 컬럼명은 화이트리스트 검증을 통해 SQL 인젝션을 방지합니다.
 	 */
 	async count(conditions?: Partial<T>): Promise<number> {
 		const sql = await this.db();
 
 		if (conditions && Object.keys(conditions).length > 0) {
 			const entries = Object.entries(conditions);
-			const whereClauses = entries.map(([key, _]) => `${key} = ?`);
+			const whereClauses = entries.map(([key, _]) => {
+				if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(key)) {
+					throw new Error(`Invalid column name: ${key}`);
+				}
+				return `${key} = ?`;
+			});
 			const values = entries.map(([_, val]) => val);
 			const whereStr = whereClauses.join(" AND ");
 			const result = await sql.unsafe(

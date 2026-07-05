@@ -84,6 +84,10 @@ export class Shell {
 	 * 명령어 실행 (비동기)
 	 * Bun.spawn() 내장 사용
 	 * HTTP 서버/앱에 적합
+	 *
+	 * ⚠️ 보안 경고: 이 메서드는 문자열을 공백으로 분리합니다.
+	 * 사용자 입력을 직접 전달하면 명령어 인젝션 위험이 있습니다.
+	 * 사용자 입력이 포함된 경우 Shell.exec() 를 사용하세요.
 	 */
 	static async run(
 		command: string,
@@ -127,6 +131,13 @@ export class Shell {
 	/**
 	 * 명령어 배열로 실행 (안전한 인자 전달)
 	 * Bun.spawn() 내장 사용
+	 *
+	 * ✅ 권장: 사용자 입력을 전달할 때는 반드시 이 메서드를 사용하세요.
+	 * 각 인자가 분리되어 셸 메타문자 해석을 방지합니다.
+	 *
+	 * @example
+	 *   // 안전: 사용자 입력이 단일 인자로 전달
+	 *   await Shell.exec("git", ["log", userInput]);
 	 */
 	static async exec(
 		command: string,

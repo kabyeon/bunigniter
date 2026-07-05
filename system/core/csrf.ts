@@ -257,7 +257,8 @@ export async function csrfMiddleware({
  * 템플릿에서 사용: <?= csrfField(csrfToken) ?>
  */
 export function csrfField(token: string): string {
-	return `<input type="hidden" name="csrf_token" value="${token}" />`;
+	const escaped = escapeHtmlAttr(token);
+	return `<input type="hidden" name="csrf_token" value="${escaped}" />`;
 }
 
 /**
@@ -268,7 +269,21 @@ export function csrfField(token: string): string {
  * 메타 태그 방식도 지원합니다.
  */
 export function csrfMeta(token: string): string {
-	return `<meta name="csrf-token" content="${token}" />`;
+	const escaped = escapeHtmlAttr(token);
+	return `<meta name="csrf-token" content="${escaped}" />`;
+}
+
+/**
+ * HTML 속성값 이스케이프 (XSS 방지)
+ * ", ', <, >, & 를 HTML 엔티티로 변환
+ */
+function escapeHtmlAttr(value: string): string {
+	return value
+		.replace(/&/g, "&amp;")
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
 }
 
 function parseCookies(request: Request): Record<string, string> {

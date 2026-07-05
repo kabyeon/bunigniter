@@ -17,6 +17,11 @@ export interface RateLimitConfig {
 	statusCode: number;
 	/** 응답 헤더 포함 여부 */
 	headers: boolean;
+	/** 프록시 헤더(X-Forwarded-For, X-Real-IP) 신뢰 여부 (기본값: false)
+	 *  ⚠️ 역방향 프록시(nginx, Cloudflare 등) 뒤에 있을 때만 true로 설정하세요.
+	 *  true로 설정하지 않으면 직접 연결 IP만 사용됩니다.
+	 */
+	trustProxy: boolean;
 }
 
 const DEFAULT_CONFIG: RateLimitConfig = {
@@ -25,6 +30,7 @@ const DEFAULT_CONFIG: RateLimitConfig = {
 	message: "Too many requests, please try again later.",
 	statusCode: 429,
 	headers: true,
+	trustProxy: false,
 };
 
 interface RateLimitEntry {
@@ -76,7 +82,11 @@ export async function rateLimitMiddleware({
  */
 export function createRateLimitMiddleware(
 	config: Partial<RateLimitConfig>,
-): (ctx: { request: Request; response: any; next: () => Promise<Response | void> }) => Promise<Response | void> {
+): (ctx: {
+	request: Request;
+	response: any;
+	next: () => Promise<Response | void>;
+}) => Promise<Response | void> {
 	const merged = { ...DEFAULT_CONFIG, ...config };
 	return async ({ request, next }) => handleRateLimit(request, next, merged);
 }
@@ -89,10 +99,9 @@ async function handleRateLimit(
 	next: () => Promise<Response | void>,
 	config: RateLimitConfig,
 ): Promise<Response | void> {
-	// 클라이언트 식별 키
 	const key = config.keyGenerator
 		? config.keyGenerator(request)
-		: getClientIp(request);
+		: getClientIp(request, config.trustProxy);
 
 	const now = Date.now();
 	const windowMs = config.windowMs * 1000;
@@ -162,16 +171,19 @@ async function handleRateLimit(
 
 /**
  * 클라이언트 IP 주소 추출
+ * ⚠️ trustProxy가 false면 프록시 헤더를 무시합니다 (IP 스푸핑 방지).
  */
-function getClientIp(request: Request): string {
-	// 프록시 헤더 확인
-	const forwarded = request.headers.get("x-forwarded-for");
-	if (forwarded) {
-		return forwarded.split(",")[0].trim();
-	}
+function getClientIp(request: Request, trustProxy: boolean = false): string {
+	// 프록시 헤더는 trustProxy가 true일 때만 확인
+	if (trustProxy) {
+		const forwarded = request.headers.get("x-forwarded-for");
+		if (forwarded) {
+			return forwarded.split(",")[0].trim();
+		}
 
-	const realIp = request.headers.get("x-real-ip");
-	if (realIp) return realIp;
+		const realIp = request.headers.get("x-real-ip");
+		if (realIp) return realIp;
+	}
 
 	// 직접 연결
 	return "unknown";

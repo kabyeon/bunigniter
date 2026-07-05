@@ -22,6 +22,11 @@ const SESSION_COOKIE_NAME = "bunigniter_session";
 const SESSION_PREFIX = "sess_";
 const DEFAULT_EXPIRATION = 7200; // 2시간 (초)
 
+/** 세션 ID 유효성 검증 (UUID v4 형식, 경로 순회 방지) */
+function isValidSessionId(sid: string): boolean {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid);
+}
+
 /** 파일 기반 세션 드라이버 */
 export class FileSession implements SessionDriver {
 	private sessionId: string = "";
@@ -46,7 +51,7 @@ export class FileSession implements SessionDriver {
 		const cookies = this.parseCookies(request);
 		const sid = cookies[this.cookieName];
 
-		if (sid && this.sessionExists(sid)) {
+		if (sid && isValidSessionId(sid) && this.sessionExists(sid)) {
 			this.sessionId = sid;
 			this.data = this.readSessionFile(sid);
 		} else {

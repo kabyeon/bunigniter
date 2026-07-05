@@ -62,7 +62,11 @@ export async function corsMiddleware({
  */
 export function createCorsMiddleware(
 	config: Partial<CorsConfig>,
-): (ctx: { request: Request; response: any; next: () => Promise<Response | void> }) => Promise<Response | void> {
+): (ctx: {
+	request: Request;
+	response: any;
+	next: () => Promise<Response | void>;
+}) => Promise<Response | void> {
 	const merged = { ...DEFAULT_CONFIG, ...config };
 	return async ({ request, next }) => handleCors(request, next, merged);
 }
@@ -78,7 +82,11 @@ async function handleCors(
 	const origin = request.headers.get("origin") ?? "*";
 
 	// 오리진 검증
-	const allowedOrigin = getAllowedOrigin(origin, config.origin);
+	const allowedOrigin = getAllowedOrigin(
+		origin,
+		config.origin,
+		config.credentials,
+	);
 
 	// Preflight (OPTIONS) 요청 처리
 	if (request.method === "OPTIONS") {
@@ -131,19 +139,32 @@ async function handleCors(
 
 /**
  * 허용된 오리진 판별
+ *
+ * ⚠️ 보안: credentials가 true이면 origin에 "*"를 사용할 수 없습니다.
+ * 브라우저 스펙상 credentials + 와일드카드 조합은 차단됩니다.
+ * credentials가 필요하면 명시적인 오리진 목록을 지정하세요.
  */
-function getAllowedOrigin(
+export function getAllowedOrigin(
 	requestOrigin: string,
 	allowedOrigins: string | string[],
+	credentials: boolean = false,
 ): string {
+	// credentials + wildcard 차단
+	if (credentials && allowedOrigins === "*") {
+		console.warn(
+			'[BunIgniter CORS] credentials: true with origin: "*" is not allowed by browsers. Specify explicit origins.',
+		);
+		return ""; // 빈 값 반환 → 브라우저가 요청 차단
+	}
+
 	if (allowedOrigins === "*") return "*";
 
 	if (Array.isArray(allowedOrigins)) {
 		if (allowedOrigins.includes(requestOrigin)) {
 			return requestOrigin;
 		}
-		// 첫 번째 허용 오리진 반환
-		return allowedOrigins[0] ?? "*";
+		// 일치하는 오리진이 없으면 빈 값 반환 (브라우저가 요청 차단)
+		return "";
 	}
 
 	return allowedOrigins === requestOrigin ? requestOrigin : "";

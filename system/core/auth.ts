@@ -72,11 +72,14 @@ export class Auth {
 			return { success: false, error: "사용자를 찾을 수 없습니다" };
 		}
 
-		if (user.password) {
-			const valid = await Auth.verifyPassword(password, user.password);
-			if (!valid) {
-				return { success: false, error: "비밀번호가 일치하지 않습니다" };
-			}
+		// 비밀번호 필드가 없거나 빈 값이면 로그인 거부
+		if (!user.password) {
+			return { success: false, error: "비밀번호가 설정되지 않은 계정입니다" };
+		}
+
+		const valid = await Auth.verifyPassword(password, user.password);
+		if (!valid) {
+			return { success: false, error: "비밀번호가 일치하지 않습니다" };
 		}
 
 		const session = await Auth.getSession(request);

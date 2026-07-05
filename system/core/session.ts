@@ -16,6 +16,16 @@ function generateSessionId(): string {
 }
 
 /**
+ * 세션 ID 유효성 검증 (UUID v4 형식)
+ * 조작된 세션 ID로 인한 경로 순회 등을 방지
+ */
+function isValidSessionId(sid: string): boolean {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+		sid,
+	);
+}
+
+/**
  * 세션 관리
  * CodeIgniter3:
  *   $this->session->set_userdata('key', 'value');
@@ -27,8 +37,15 @@ export class Session {
 
 	constructor(request: Request) {
 		const cookies = this.parseCookies(request);
-		this.sessionId = cookies[SESSION_COOKIE_NAME] ?? generateSessionId();
-		this.data = sessions.get(this.sessionId) ?? {};
+		const sid = cookies[SESSION_COOKIE_NAME];
+
+		if (sid && isValidSessionId(sid) && sessions.has(sid)) {
+			this.sessionId = sid;
+			this.data = sessions.get(sid) ?? {};
+		} else {
+			this.sessionId = generateSessionId();
+			this.data = {};
+		}
 	}
 
 	/** 세션 데이터 설정 */

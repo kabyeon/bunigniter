@@ -28,7 +28,7 @@ export async function renderView(
 	const fullPath = join(APP_ROOT, "views", `${viewPath}.html`);
 
 	if (!existsSync(fullPath)) {
-		return new Response(`View not found: ${viewPath}`, { status: 500 });
+		return new Response("View not found", { status: 500 });
 	}
 
 	let viewContent = readFileSync(fullPath, "utf-8");
