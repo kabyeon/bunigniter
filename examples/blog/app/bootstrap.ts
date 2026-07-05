@@ -8,10 +8,9 @@ process.chdir(resolve(import.meta.dir, ".."));
 process.env.APP_ROOT = APP_ROOT;
 
 function safeStaticPath(urlPathname: string): string | null {
-	const publicDir = resolve(APP_ROOT, "public");
+	const publicDir = resolve(process.cwd(), "public");
 	const resolvedPath = resolve(
-		APP_ROOT,
-		"public",
+		publicDir,
 		urlPathname.replace(/^\//, ""),
 	);
 	const relPath = relative(publicDir, resolvedPath);
@@ -39,14 +38,14 @@ async function bootstrap() {
 		(req: any) => Response | Bun.BunFile | Promise<Response>
 	> = {};
 	for (const prefix of ["/css", "/js", "/images"]) {
-		staticRoutes[`${prefix}/*`] = ({ request }: { request: Request }) => {
+		staticRoutes[`${prefix}/*`] = (req: any) => {
 			try {
-				const url = new URL(request.url);
+				const url = new URL(req.url);
 				const safePath = safeStaticPath(url.pathname);
 				if (!safePath) return new Response("Not Found", { status: 404 });
 				const file = Bun.file(safePath);
 				if (file.size === 0) return new Response("Not Found", { status: 404 });
-				return file;
+				return new Response(file);
 			} catch {
 				return new Response("Not Found", { status: 404 });
 			}

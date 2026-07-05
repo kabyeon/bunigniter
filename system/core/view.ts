@@ -7,7 +7,7 @@ import { compileTemplate, createRenderContext } from "rendu";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
-const APP_ROOT = join(import.meta.dir, "..", "..", "app");
+import { getAppRoot } from "./config.ts";
 
 /** 템플릿 캐시 */
 const templateCache: Record<string, any> = {};
@@ -25,7 +25,8 @@ export async function renderView(
 	data: Record<string, any> = {},
 	request?: Request,
 ): Promise<Response> {
-	const fullPath = join(APP_ROOT, "views", `${viewPath}.html`);
+	const appRoot = getAppRoot();
+	const fullPath = join(appRoot, "views", `${viewPath}.html`);
 
 	if (!existsSync(fullPath)) {
 		return new Response("View not found", { status: 500 });
@@ -45,7 +46,7 @@ export async function renderView(
 	// 레이아웃이 있으면 결합
 	let finalTemplate: string;
 	if (layoutName) {
-		const layoutPath = join(APP_ROOT, "views", "layout", `${layoutName}.html`);
+		const layoutPath = join(appRoot, "views", "layout", `${layoutName}.html`);
 
 		if (existsSync(layoutPath)) {
 			const layoutContent = readFileSync(layoutPath, "utf-8");

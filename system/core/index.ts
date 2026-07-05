@@ -6,7 +6,7 @@ export type { Context, ResponseStatusBuilder } from "./controller.ts";
 export { Model } from "./model.ts";
 export { Router } from "./router.ts";
 export { getDB, closeAllConnections } from "./database.ts";
-export { loadConfig, clearConfigCache, APP_ROOT } from "./config.ts";
+export { loadConfig, clearConfigCache, getAppRoot } from "./config.ts";
 export { Input } from "./input.ts";
 export { Session } from "./session.ts";
 export type { SessionDriver, SessionConfig } from "./session_driver.ts";

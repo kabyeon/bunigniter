@@ -39,4 +39,4 @@ export function clearConfigCache(): void {
 	}
 }
 
-export { getAppRoot as APP_ROOT };
+export { getAppRoot };
