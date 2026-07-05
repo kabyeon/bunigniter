@@ -24,10 +24,7 @@ function safeStaticPath(urlPathname: string): string | null {
 	const relativePath = relative(publicDir, resolvedPath);
 
 	// 경로가 public/ 외부를 가리키면 거부
-	if (
-		relativePath.startsWith("..") ||
-		(resolve(publicDir) !== resolvedPath && !relativePath.startsWith("public"))
-	) {
+	if (relativePath.startsWith("..")) {
 		return null;
 	}
 
@@ -77,9 +74,9 @@ async function bootstrap() {
 		(req: any) => Response | Bun.BunFile | Promise<Response>
 	> = {};
 	for (const prefix of ["/css", "/js", "/images", "/uploads"]) {
-		staticRoutes[`${prefix}/*`] = ({ request }: { request: Request }) => {
+		staticRoutes[`${prefix}/*`] = (req: any) => {
 			try {
-				const url = new URL(request.url);
+				const url = new URL(req.url);
 				const safePath = safeStaticPath(url.pathname);
 				if (!safePath) {
 					return new Response("Not Found", { status: 404 });
@@ -88,7 +85,7 @@ async function bootstrap() {
 				if (file.size === 0) {
 					return new Response("Not Found", { status: 404 });
 				}
-				return file;
+				return new Response(file);
 			} catch {
 				return new Response("Not Found", { status: 404 });
 			}
