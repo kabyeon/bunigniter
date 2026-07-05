@@ -52,7 +52,8 @@ export class Auth {
 		const sql = await getDB();
 
 		// 사용자 조회
-		const users = await sql`SELECT * FROM ${sql(tableName)} WHERE email = ${email}`;
+		const users =
+			await sql`SELECT * FROM ${sql(tableName)} WHERE email = ${email}`;
 		const user = users[0] as AuthUser | undefined;
 
 		if (!user) {
@@ -70,7 +71,11 @@ export class Auth {
 		// 세션에 사용자 ID 저장
 		const session = new FileSession(request);
 		session.set(Auth.USER_SESSION_KEY, user.id);
-		session.set("auth_user", { id: user.id, email: user.email, name: user.name });
+		session.set("auth_user", {
+			id: user.id,
+			email: user.email,
+			name: user.name,
+		});
 		session.save();
 
 		// 비밀번호 필드 제거 후 반환
@@ -87,7 +92,8 @@ export class Auth {
 		tableName: string = "users",
 	): Promise<AuthResult> {
 		const sql = await getDB();
-		const users = await sql`SELECT * FROM ${sql(tableName)} WHERE id = ${userId}`;
+		const users =
+			await sql`SELECT * FROM ${sql(tableName)} WHERE id = ${userId}`;
 		const user = users[0] as AuthUser | undefined;
 
 		if (!user) {
@@ -96,7 +102,11 @@ export class Auth {
 
 		const session = new FileSession(request);
 		session.set(Auth.USER_SESSION_KEY, user.id);
-		session.set("auth_user", { id: user.id, email: user.email, name: user.name });
+		session.set("auth_user", {
+			id: user.id,
+			email: user.email,
+			name: user.name,
+		});
 		session.save();
 
 		const { password: _, ...safeUser } = user;

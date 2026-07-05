@@ -8,19 +8,13 @@ import { Validator, validate } from "../system/core/validator.ts";
 
 describe("Validator.check", () => {
 	test("필수 필드 검증 - 빈 값", () => {
-		const result = Validator.check(
-			{ name: "" },
-			{ name: ["required"] },
-		);
+		const result = Validator.check({ name: "" }, { name: ["required"] });
 		expect(result.valid).toBe(false);
 		expect(result.errors[0].rule).toBe("required");
 	});
 
 	test("필수 필드 검증 - 값 있음", () => {
-		const result = Validator.check(
-			{ name: "Alice" },
-			{ name: ["required"] },
-		);
+		const result = Validator.check({ name: "Alice" }, { name: ["required"] });
 		expect(result.valid).toBe(true);
 	});
 
@@ -66,10 +60,7 @@ describe("Validator.check", () => {
 	});
 
 	test("정수 검증", () => {
-		const result = Validator.check(
-			{ age: "25" },
-			{ age: ["integer"] },
-		);
+		const result = Validator.check({ age: "25" }, { age: ["integer"] });
 		expect(result.valid).toBe(true);
 	});
 
@@ -99,10 +90,7 @@ describe("Validator.check", () => {
 
 describe("validate (빠른 검증)", () => {
 	test("파이프 구분자 규칙", () => {
-		const result = validate(
-			{ email: "bad" },
-			{ email: "required|email" },
-		);
+		const result = validate({ email: "bad" }, { email: "required|email" });
 		expect(result.valid).toBe(false);
 	});
 

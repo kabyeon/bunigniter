@@ -28,9 +28,7 @@ export const migrateRollback: Command = {
 	async run(args: string[]): Promise<void> {
 		const { flags } = parseArgs(args);
 		const rollbackAll = !!flags["all"];
-		const steps = rollbackAll
-			? Infinity
-			: Number(flags["steps"] ?? 1);
+		const steps = rollbackAll ? Infinity : Number(flags["steps"] ?? 1);
 
 		console.log("\n⏪ 마이그레이션 롤백 중...\n");
 
@@ -72,9 +70,7 @@ export const migrateRollback: Command = {
 			return;
 		}
 
-		const toRollback = rollbackAll
-			? ranNames
-			: ranNames.slice(0, steps);
+		const toRollback = rollbackAll ? ranNames : ranNames.slice(0, steps);
 
 		let count = 0;
 

@@ -2,7 +2,7 @@
 
 **CodeIgniter 3-Style Full Stack MVC Framework for Bun**
 
-Bun + Elysia + Bun SQL + Rendu 기반의 풀스택 MVC 웹 프레임워크입니다.  
+Bun + Elysia + Bun SQL + Rendu 기반의 풀스택 MVC 웹 프레임워크입니다.
 CodeIgniter 3의 친숙한 MVC 패턴과 AdonisJS Ace 스타일의 CLI 스캐폴딩을 결합했습니다.
 
 ---
@@ -21,11 +21,18 @@ CodeIgniter 3의 친숙한 MVC 패턴과 AdonisJS Ace 스타일의 CLI 스캐폴
 - [데이터베이스 설정](#-데이터베이스-설정)
 - [마이그레이션](#-마이그레이션)
 - [미들웨어](#-미들웨어)
+- [CSRF 보호](#-csrf-보호)
+- [유효성 검사](#-유효성-검사)
+- [인증 (Auth)](#-인증-auth)
 - [세션](#-세션)
+- [파일 업로드](#-파일-업로드)
+- [페이지네이션](#-페이지네이션)
+- [로깅](#-로깅)
 - [Input 헬퍼](#-input-헬퍼)
 - [헬퍼 함수](#-헬퍼-함수)
 - [정적 파일](#-정적-파일)
 - [환경 변수](#-환경-변수)
+- [테스트](#-테스트)
 - [CodeIgniter3 ↔ BunIgniter 비교](#-codeigniter3--bunigniter-비교)
 
 ---
@@ -38,6 +45,7 @@ CodeIgniter 3의 친숙한 MVC 패턴과 AdonisJS Ace 스타일의 CLI 스캐폴
 | HTTP 프레임워크 | [Elysia](https://elysiajs.com) | 2.0.0-exp.25 |
 | 데이터베이스 | [Bun SQL](https://bun.sh/docs/runtime/sql) | 내장 (SQLite/PostgreSQL/MySQL) |
 | 템플릿 엔진 | [Rendu](https://github.com/h3js/rendu) | ^0.1.0 |
+| 테스트 | [bun:test](https://bun.sh/docs/cli/test) | 내장 |
 | 언어 | TypeScript | - |
 
 ---
@@ -75,11 +83,19 @@ bunigniter/
 │   │   ├── database.ts              # DB 매니저 (Bun SQL 연결 관리)
 │   │   ├── index.ts                 # 시스템 통합 내보내기
 │   │   ├── input.ts                 # 입력 헬퍼 ($this->input)
-│   │   ├── middleware.ts            # 미들웨어 파이프라인
+│   │   ├── middleware.ts            # 미들웨어 파이프라인 (next() 체인)
 │   │   ├── model.ts                 # 기본 모델 (CI_Model)
-│   │   ├── router.ts                # 라우터 (Elysia 래핑)
-│   │   ├── session.ts               # 세션 관리 ($this->session)
-│   │   └── view.ts                  # 뷰 렌더러 (Rendu + 레이아웃)
+│   │   ├── router.ts                # 라우터 (Elysia 래핑 + 미들웨어 통합)
+│   │   ├── session.ts               # 인메모리 세션 (기본)
+│   │   ├── file_session.ts          # 파일 기반 세션 (서버 재시작 유지)
+│   │   ├── view.ts                  # 뷰 렌더러 (Rendu + 레이아웃)
+│   │   ├── csrf.ts                  # CSRF 보호 미들웨어
+│   │   ├── validator.ts             # 유효성 검사 (20+ 규칙)
+│   │   ├── auth.ts                  # 인증 라이브러리 (bcrypt)
+│   │   ├── upload.ts                # 파일 업로드 헬퍼
+│   │   ├── pagination.ts            # 페이지네이션 HTML 생성
+│   │   ├── logger.ts                # 로깅 시스템 (파일+콘솔)
+│   │   └── test_helper.ts           # 테스트 헬퍼
 │   └── helpers/
 │       └── index.ts                 # 전역 헬퍼 함수
 │
@@ -109,20 +125,35 @@ bunigniter/
 │       ├── makeview.ts
 │       ├── makemigration.ts
 │       ├── makemiddleware.ts
-│       ├── makescaffold.ts
+│       ├── makescaffold.ts          # --api 플래그 지원
 │       ├── makehelper.ts
 │       ├── makelibrary.ts
+│       ├── makeseed.ts              # 시드 파일 생성
 │       ├── listroutes.ts
 │       ├── serve.ts
-│       └── migrate.ts
+│       ├── migrate.ts
+│       ├── migraterollback.ts       # 마이그레이션 롤백
+│       └── dbseed.ts                # 시드 실행
 │
 ├── database/
 │   ├── migrate.ts                   # 마이그레이션 실행기
-│   └── migrations/                  # 마이그레이션 파일 (타임스탬프 정렬)
+│   ├── migrations/                  # 마이그레이션 파일 (타임스탬프 정렬)
+│   └── seeds/                       # 시드 파일
+│
+├── storage/                         # 런타임 저장소
+│   ├── logs/                        # 로그 파일
+│   └── sessions/                    # 파일 기반 세션
 │
 ├── public/                          # 정적 파일 (CSS, JS, 이미지)
 │   ├── css/style.css
-│   └── js/app.js
+│   ├── js/app.js
+│   └── uploads/                     # 업로드 파일
+│
+├── tests/                           # 테스트 파일
+│   ├── validator_test.ts
+│   ├── upload_test.ts
+│   ├── pagination_test.ts
+│   └── helpers_test.ts
 │
 ├── .env                             # 환경 변수
 ├── .gitignore
@@ -145,6 +176,7 @@ bun run igniter <command> <name> [options]
 | 명령어 | 설명 | 예시 |
 |--------|------|------|
 | `make:scaffold` | **Controller + Model + View + Migration 전체 생성** | `bun run igniter make:scaffold post --fields=title:string,content:text` |
+| `make:scaffold` | **API 모드 (뷰 없이 JSON 컨트롤러)** | `bun run igniter make:scaffold post --api --fields=title:string` |
 | `make:controller` | 컨트롤러 생성 | `bun run igniter make:controller users` |
 | `make:controller` | CRUD 컨트롤러 생성 | `bun run igniter make:controller users --resource` |
 | `make:model` | 모델 생성 | `bun run igniter make:model user --fields=name:string,email:string` |
@@ -155,18 +187,22 @@ bun run igniter <command> <name> [options]
 | `make:middleware` | 미들웨어 생성 | `bun run igniter make:middleware auth` |
 | `make:helper` | 헬퍼 파일 생성 | `bun run igniter make:helper string` |
 | `make:library` | 라이브러리 클래스 생성 | `bun run igniter make:library email` |
+| `make:seed` | 시드 파일 생성 | `bun run igniter make:seed user_seeder` |
 | `migrate` | 마이그레이션 실행 | `bun run igniter migrate` |
+| `migrate:rollback` | 마이그레이션 롤백 | `bun run igniter migrate:rollback` |
+| `migrate:rollback` | N개 롤백 | `bun run igniter migrate:rollback --steps=3` |
+| `migrate:rollback` | 전체 롤백 | `bun run igniter migrate:rollback --all` |
+| `db:seed` | 시드 실행 (전체) | `bun run igniter db:seed` |
+| `db:seed` | 특정 시드만 실행 | `bun run igniter db:seed --files=user_seeder,post_seeder` |
 | `list:routes` | 라우트 목록 출력 | `bun run igniter list:routes` |
 
 ### 스캐폴딩 예시
 
-`make:scaffold` 하나의 명령으로 MVC 전체가 자동 생성됩니다:
+**웹 스캐폴딩 (뷰 포함):**
 
 ```bash
 bun run igniter make:scaffold post --fields=title:string,content:text,author:string
 ```
-
-**생성 결과:**
 
 | 파일 | 경로 |
 |------|------|
@@ -174,6 +210,18 @@ bun run igniter make:scaffold post --fields=title:string,content:text,author:str
 | Controller | `app/controllers/post_controller.ts` |
 | Views | `app/views/posts/index.html`, `show.html`, `create.html`, `edit.html` |
 | Migration | `database/migrations/<timestamp>_create_posts_table.ts` |
+
+**API 스캐폴딩 (`--api`, 뷰 없이 JSON 응답):**
+
+```bash
+bun run igniter make:scaffold product --api --fields=name:string,price:number
+```
+
+| 파일 | 경로 |
+|------|------|
+| Model | `app/models/product_model.ts` |
+| Controller | `app/controllers/product_controller.ts` (JSON 응답) |
+| Migration | `database/migrations/<timestamp>_create_products_table.ts` |
 
 **라우트 등록** (`app/config/routes.ts`):
 
@@ -200,6 +248,7 @@ bun run migrate
 | Helper | `{name}_helper.ts` | `string_helper.ts` |
 | Library | `{name}_library.ts` | `email_library.ts` |
 | Migration | `{timestamp}_{name}.ts` | `1783262870269_create_posts_table.ts` |
+| Seeder | `{name}.ts` | `user_seeder.ts` |
 
 ---
 
@@ -211,6 +260,7 @@ bun run migrate
 import { Router } from "system/core/router.ts";
 import welcomeController from "app/controllers/welcome_controller.ts";
 import userController from "app/controllers/user_controller.ts";
+import { authGuard } from "system/core/auth.ts";
 
 const router = new Router();
 
@@ -226,6 +276,17 @@ router.delete("/users/:id", userController, "delete");
 
 // RESTful 리소스 라우트 (위 7개 라우트를 한 번에 생성)
 router.resource("users", userController);
+
+// 미들웨어가 적용된 리소스 라우트
+router.resource("admin", adminController, [authGuard]);
+
+// 라우트 그룹 (미들웨어 일괄 적용)
+router.group("/api", [authGuard], (router) => {
+  router.resource("posts", postController);
+});
+
+// 글로벌 미들웨어
+router.use(loggingMiddleware);
 
 export default router;
 ```
@@ -252,25 +313,49 @@ export default router;
 import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
 import userModel from "app/models/user_model.ts";
+import { validate } from "system/core/validator.ts";
+import { Upload } from "system/core/upload.ts";
+import { Auth } from "system/core/auth.ts";
 
 export class UserController extends Controller {
   // GET /users
   async index({ request, response }: Context) {
-    const users = await userModel.findAll();
-    return this.view("users/index", { users });
-  }
-
-  // GET /users/:id
-  async show({ request, params, response }: Context) {
-    const user = await userModel.findById(Number(params.id));
-    if (!user) return response.status(404).send("Not Found");
-    return this.view("users/show", { user });
+    const page = Number(request.query.page ?? 1);
+    const result = await userModel.paginate(page, 15);
+    return this.view("users/index", { users: result.data, pagination: result });
   }
 
   // POST /users
   async store({ request, response }: Context) {
     const data = request.body();
+
+    // 유효성 검사
+    const { valid, errors } = validate(data, {
+      name: "required|min:2",
+      email: "required|email",
+      password: "required|min:8|confirmed",
+    });
+
+    if (!valid) {
+      return this.json({ errors }, 422);
+    }
+
     await userModel.create(data);
+    return response.redirect("/users");
+  }
+
+  // POST /users/:id/avatar (파일 업로드)
+  async uploadAvatar({ request, params, response }: Context) {
+    const result = await Upload.save(request, "avatar", {
+      allowedMimeTypes: ["image/jpeg", "image/png"],
+      maxSize: 5 * 1024 * 1024,
+    });
+
+    if (!result.success) {
+      return this.json({ error: result.error }, 400);
+    }
+
+    await userModel.update(Number(params.id), { avatar: result.url });
     return response.redirect("/users");
   }
 
@@ -278,11 +363,6 @@ export class UserController extends Controller {
   async apiList({ request, response }: Context) {
     const users = await userModel.findAll();
     return this.json(users);
-  }
-
-  // 리다이렉트
-  async logout({ request, response }: Context) {
-    return this.redirect("/login");
   }
 }
 
@@ -522,7 +602,7 @@ return this.view("users/show", { user });
 
 ### 여러 레이아웃
 
-`app/views/layout/` 에 새 레이아웃을 추가하고 주석으로 지정:
+`app/views/layout/` 에 새 레이웃을 추가하고 주석으로 지정:
 
 ```html
 <!-- layout:admin -->
@@ -648,14 +728,46 @@ export async function down(sql: SQL): Promise<void> {
 }
 ```
 
-### 마이그레이션 실행
+### 마이그레이션 실행 / 롤백
 
 ```bash
-bun run migrate
+# 실행
+bun run igniter migrate
+
+# 최근 1개 롤백
+bun run igniter migrate:rollback
+
+# N개 롤백
+bun run igniter migrate:rollback --steps=3
+
+# 전체 롤백
+bun run igniter migrate:rollback --all
 ```
 
-실행기는 `database/migrations/` 폴더의 파일을 타임스탬프 순으로 실행하며,  
-`migrations` 추적 테이블로 이미 실행된 마이그레이션은 건너뜁니다.
+### 시드
+
+```bash
+# 시더 파일 생성
+bun run igniter make:seed user_seeder
+
+# 전체 시드 실행
+bun run igniter db:seed
+
+# 특정 시더만 실행
+bun run igniter db:seed --files=user_seeder,post_seeder
+```
+
+시더 구조:
+
+```typescript
+// database/seeds/user_seeder.ts
+import { SQL } from "bun";
+
+export async function run(sql: SQL): Promise<void> {
+  await sql`INSERT INTO users (name, email) VALUES (${"Alice"}, ${"alice@example.com"})`;
+  await sql`INSERT INTO users (name, email) VALUES (${"Bob"}, ${"bob@example.com"})`;
+}
+```
 
 ---
 
@@ -671,18 +783,15 @@ bun run igniter make:middleware auth
 
 ```typescript
 // app/middleware/auth_middleware.ts
-import type { MiddlewareContext } from "system/core/middleware.ts";
+import type { MiddlewareFn } from "system/core/middleware.ts";
 
-export async function authMiddleware({ request, response, next }: MiddlewareContext): Promise<Response | void> {
-  // 인증 로직
+export const authMiddleware: MiddlewareFn = async ({ request, response, next }) => {
   const token = request.headers.get("authorization");
   if (!token) {
     return response.redirect("/login");
   }
-
-  // 다음 핸들러로 진행
   return next();
-}
+};
 
 export default authMiddleware;
 ```
@@ -692,50 +801,367 @@ export default authMiddleware;
 ```typescript
 // app/config/routes.ts
 import { Router } from "system/core/router.ts";
+import { authGuard } from "system/core/auth.ts";
+import { csrfMiddleware } from "system/core/csrf.ts";
 import authMiddleware from "app/middleware/auth_middleware.ts";
 
 const router = new Router();
 
 // 글로벌 미들웨어
-router.use(authMiddleware);
+router.use(csrfMiddleware);
 
 // 리소스 라우트에 미들웨어 적용
-router.resource("admin", adminController, [authMiddleware]);
+router.resource("admin", adminController, [authGuard]);
+
+// 라우트 그룹 (미들웨어 일괄 적용)
+router.group("/api", [authMiddleware], (router) => {
+  router.resource("posts", postController);
+});
+```
+
+### 미들웨어 파이프라인
+
+미들웨어는 `next()` 체인 패턴으로 실행됩니다. `next()` 를 호출하지 않으면 파이프라인이 중단됩니다:
+
+```
+요청 → 글로벌 미들웨어 → 라우트 미들웨어 → 컨트롤러
+         ↓ next()          ↓ next()
 ```
 
 ---
 
-## 🔐 세션
+## 🔒 CSRF 보호
+
+CSRF(Cross-Site Request Forgery) 공격을 방지하는 미들웨어입니다.
+
+### 설정 (`app/config/app.ts`)
+
+```typescript
+csrf: {
+  enabled: true,      // CSRF 보호 활성화
+  tokenName: "csrf_token",
+  cookieName: "csrf_token",
+}
+```
+
+### 사용법
+
+**1. 라우트에 미들웨어 적용:**
+
+```typescript
+import { csrfMiddleware } from "system/core/csrf.ts";
+router.post("/form", controller, "store", [csrfMiddleware]);
+```
+
+**2. 폼에 hidden 필드 추가:**
+
+```html
+<form method="POST" action="/posts">
+  <?= csrfField(csrfToken) ?>
+  <!-- 폼 필드... -->
+</form>
+```
+
+**3. AJAX 요청 시 메타 태그 + 헤더:**
+
+```html
+<head>
+  <?= csrfMeta(csrfToken) ?>
+</head>
+```
+
+```javascript
+// JavaScript에서 헤더로 토큰 전송
+fetch("/api/posts", {
+  method: "POST",
+  headers: {
+    "X-CSRF-Token": document.querySelector('meta[name="csrf-token"]').content,
+  },
+  body: JSON.stringify(data),
+});
+```
+
+---
+
+## ✅ 유효성 검사
+
+20개 이상의 검증 규칙을 제공합니다.
+
+### 사용법
+
+```typescript
+import { validate, Validator } from "system/core/validator.ts";
+
+// 빠른 검증 (파이프 구분자)
+const { valid, errors, firstErrors } = validate(data, {
+  name: "required|min:2|max:100",
+  email: "required|email",
+  age: "required|integer|minValue:0",
+  password: "required|min:8|confirmed",
+  role: "required|in:admin,user,guest",
+});
+
+if (!valid) {
+  return this.json({ errors: firstErrors }, 422);
+}
+```
+
+### 지원 규칙
+
+| 규칙 | 설명 | 예시 |
+|------|------|------|
+| `required` | 필수 | `required` |
+| `email` | 이메일 형식 | `email` |
+| `url` | URL 형식 | `url` |
+| `min:N` | 최소 길이 | `min:8` |
+| `max:N` | 최대 길이 | `max:255` |
+| `between:N,M` | 길이 범위 | `between:2,50` |
+| `minValue:N` | 최소값 | `minValue:0` |
+| `maxValue:N` | 최대값 | `maxValue:100` |
+| `numeric` | 숫자 | `numeric` |
+| `integer` | 정수 | `integer` |
+| `alpha` | 알파벳만 | `alpha` |
+| `alphaNumeric` | 알파벳+숫자 | `alphaNumeric` |
+| `slug` | 슬러그 형식 | `slug` |
+| `regex:패턴` | 정규식 | `regex:^[a-z]+$` |
+| `in:값1,값2` | 목록 포함 | `in:admin,user` |
+| `notIn:값1,값2` | 목록 제외 | `notIn:root,admin` |
+| `confirmed` | 확인 필드 일치 | `confirmed` (`password_confirmation` 필요) |
+| `date` | 날짜 형식 | `date` |
+| `phone` | 전화번호 형식 | `phone` |
+
+### 커스텀 메시지
+
+```typescript
+const result = Validator.check(data, { name: ["required", "min:2"] }, {
+  "name.required": "이름을 입력해주세요",
+  "name.min": "이름은 최소 2자 이상이어야 합니다",
+});
+```
+
+### 단일 값 검증
+
+```typescript
+Validator.validate("alice@test.com", ["email"]); // true
+Validator.validate(25, ["integer", "minValue:0"]); // true
+```
+
+---
+
+## 🔐 인증 (Auth)
+
+세션 기반 인증 + bcrypt 패스워드 해싱을 제공합니다.
+
+### 사용법
+
+```typescript
+import { Auth, authGuard, guestGuard } from "system/core/auth.ts";
+
+// 로그인 시도
+const result = await Auth.attempt(request, "alice@example.com", "password123");
+if (result.success) {
+  console.log(result.user); // { id: 1, email: "alice@example.com", name: "Alice" }
+}
+
+// 로그인 상태 확인
+Auth.check(request); // true / false
+
+// 현재 사용자
+const user = Auth.user(request); // AuthUser | null
+
+// 현재 사용자 ID
+const userId = Auth.id(request); // number | null
+
+// 로그아웃
+Auth.logout(request);
+
+// 사용자 ID로 직접 로그인
+await Auth.loginById(request, userId);
+```
+
+### 비밀번호 해싱
+
+```typescript
+// 해싱
+const hash = await Auth.hashPassword("password123");
+
+// 검증
+const valid = await Auth.verifyPassword("password123", hash); // true
+```
+
+### 미들웨어
+
+```typescript
+import { authGuard, guestGuard } from "system/core/auth.ts";
+
+// authGuard: 로그인 필요 라우트
+router.resource("admin", adminController, [authGuard]);
+
+// guestGuard: 로그인한 사용자 접근 불가 (로그인/회원가입 페이지)
+router.get("/login", loginController, "show", [guestGuard]);
+```
+
+---
+
+## 🔑 세션
+
+### 인메모리 세션 (기본)
 
 ```typescript
 import { Session } from "system/core/session.ts";
 
-// 세션 생성 (요청에서)
 const session = new Session(request);
 
-// 데이터 설정
 session.set("userId", 42);
-session.set("username", "alice");
-
-// 데이터 조회
-const userId = session.get("userId"); // 42
-
-// 데이터 존재 확인
-session.has("userId"); // true
-
-// 데이터 삭제
+session.get("userId");        // 42
+session.has("userId");        // true
 session.remove("userId");
-
-// Flash 데이터 (1회성)
 session.flash("message", "저장되었습니다!");
-const msg = session.getFlash("message"); // "저장되었습니다!" (조회 후 자동 삭제)
-
-// 세션 파기
+session.getFlash("message");  // "저장되었습니다!" (조회 후 자동 삭제)
 session.destroy();
-
-// 응답에 세션 쿠키 설정
-const cookieHeader = session.getCookieHeader();
+session.getCookieHeader();
 ```
+
+### 파일 기반 세션 (서버 재시작 유지)
+
+```typescript
+import { FileSession } from "system/core/file_session.ts";
+
+const session = new FileSession(request);
+// API 동일: set(), get(), has(), remove(), flash(), getFlash(), destroy()
+
+// 세션 쿠키 (만료시간 설정 가능)
+session.getCookieHeader(7200); // 2시간
+
+// 만료된 세션 정리 (GC)
+FileSession.gc(7200); // 2시간 지난 세션 파일 삭제
+const count = FileSession.count(); // 활성 세션 수
+```
+
+세션 파일은 `storage/sessions/` 에 저장됩니다.
+
+---
+
+## 📤 파일 업로드
+
+```typescript
+import { Upload } from "system/core/upload.ts";
+
+// 단일 파일 업로드
+const result = await Upload.save(request, "avatar", {
+  allowedMimeTypes: ["image/jpeg", "image/png"],
+  maxSize: 5 * 1024 * 1024, // 5MB
+  uploadDir: "public/uploads",
+  naming: "uuid",           // "original" | "uuid" | "timestamp" | "hash"
+});
+
+if (result.success) {
+  console.log(result.url);       // "/uploads/xxxx-xxxx.jpg"
+  console.log(result.fileName);  // "xxxx-xxxx.jpg"
+  console.log(result.size);      // 102400
+}
+
+// 다중 파일 업로드
+const multiResult = await Upload.saveMany(request, "photos", {
+  allowedExtensions: ["jpg", "png", "gif"],
+});
+
+// 파일 삭제
+Upload.delete("/uploads/old-file.jpg");
+
+// 파일 크기 포맷
+Upload.formatFileSize(5 * 1024 * 1024); // "5.0 MB"
+
+// 이미지 확인
+Upload.isImage("image/jpeg"); // true
+```
+
+### Upload 옵션
+
+| 옵션 | 기본값 | 설명 |
+|------|--------|------|
+| `allowedMimeTypes` | 없음 | 허용 MIME 타입 |
+| `allowedExtensions` | 없음 | 허용 확장자 |
+| `maxSize` | 10MB | 최대 파일 크기 |
+| `uploadDir` | `public/uploads` | 저장 디렉토리 |
+| `naming` | `uuid` | 파일명 방식 |
+| `overwrite` | `false` | 덮어쓰기 |
+
+---
+
+## 📄 페이지네이션
+
+### 컨트롤러
+
+```typescript
+async index({ request, response }: Context) {
+  const page = Number(request.query.page ?? 1);
+  const result = await postModel.paginate(page, 15);
+  return this.view("posts/index", { posts: result.data, pagination: result });
+}
+```
+
+### 뷰 (HTML)
+
+```html
+<!-- layout:default -->
+
+<h1>게시글 목록</h1>
+
+<? for (const post of posts) { ?>
+  <div>{{ post.title }}</div>
+<? } ?>
+
+<?= paginationHtml(pagination) ?>
+```
+
+### API (JSON)
+
+```typescript
+import { paginationMeta } from "system/core/pagination.ts";
+
+async index({ request, response }: Context) {
+  const page = Number(request.query.page ?? 1);
+  const result = await postModel.paginate(page, 15);
+  return this.json({
+    data: result.data,
+    meta: paginationMeta(result),
+  });
+}
+```
+
+### 페이지네이션 유틸리티
+
+| 함수 | 설명 | 예시 출력 |
+|------|------|-----------|
+| `paginationHtml(pagination)` | HTML 네비게이션 | `<nav class="pagination">...` |
+| `paginationInfo(pagination)` | 정보 텍스트 | "총 150건 중 1-15건 (1/10 페이지)" |
+| `paginationMeta(pagination)` | API 메타데이터 | `{ current_page, total, has_prev, ... }` |
+
+---
+
+## 📝 로깅
+
+```typescript
+import { logger, logMessage } from "system/core/logger.ts";
+
+// 레벨별 로깅
+logger.debug("디버그 정보", { key: "value" });
+logger.info("서버 시작", { port: 3000 });
+logger.warn("메모리 부족", { used: "90%" });
+logger.error("DB 연결 실패", { error: err.message });
+logger.fatal("치명적 오류", { stack: err.stack });
+
+// CI3 호환 함수
+logMessage("info", "서버 시작");
+```
+
+### 로그 출력
+
+- **콘솔**: 색상 포함 (debug=cyan, info=green, warn=yellow, error=red, fatal=magenta)
+- **파일**: `storage/logs/app-YYYY-MM-DD.log` 에 저장
+- **레벨 필터링**: 개발 환경은 debug 이상, 프로덕션은 info 이상
+- **로그 회전**: 파일이 10MB 초과 시 자동 회전, 최대 30개 파일 유지
 
 ---
 
@@ -812,6 +1238,7 @@ formatCurrency(50000);      // "50,000원"
 - `/css/*` → `public/css/*`
 - `/js/*` → `public/js/*`
 - `/images/*` → `public/images/*`
+- `/uploads/*` → `public/uploads/*`
 
 ---
 
@@ -837,6 +1264,65 @@ PORT=3000
 
 ---
 
+## 🧪 테스트
+
+Bun 내장 테스트 러너(`bun:test`)를 사용합니다.
+
+### 실행
+
+```bash
+# 전체 테스트
+bun test
+
+# 워치 모드
+bun test --watch
+
+# 특정 파일만
+bun test tests/validator_test.ts
+```
+
+### 테스트 작성
+
+```typescript
+import { describe, test, expect } from "bun:test";
+import { validate } from "../system/core/validator.ts";
+
+describe("유효성 검사", () => {
+  test("이메일 검증", () => {
+    const { valid } = validate(
+      { email: "bad" },
+      { email: "required|email" },
+    );
+    expect(valid).toBe(false);
+  });
+});
+```
+
+### 테스트 헬퍼
+
+```typescript
+import { createTestDB, testRequest, parseJsonResponse } from "../system/core/test_helper.ts";
+
+// 인메모리 테스트 DB
+const db = await createTestDB();
+
+// HTTP 요청 테스트
+const res = await testRequest("GET", "/users");
+const json = await parseJsonResponse(res);
+```
+
+### 현재 테스트 현황
+
+```
+46 pass, 0 fail, 67 expect() calls
+tests/validator_test.ts   - 14 tests
+tests/helpers_test.ts     - 18 tests
+tests/pagination_test.ts  -  8 tests
+tests/upload_test.ts      -  6 tests
+```
+
+---
+
 ## 🔄 CodeIgniter3 ↔ BunIgniter 비교
 
 | CodeIgniter 3 | BunIgniter | 비고 |
@@ -857,6 +1343,10 @@ PORT=3000
 | `$this->config->load()` | `loadConfig()` | 설정 로드 |
 | `redirect()` | `this.redirect()` | 리다이렉트 |
 | `$route['default_controller']` | `router.get("/", ...)` | 기본 라우트 |
+| `$this->form_validation` | `validate()` / `Validator` | 유효성 검사 |
+| `$this->ion_auth->login()` | `Auth.attempt()` | 로그인 |
+| `$this->upload->do_upload()` | `Upload.save()` | 파일 업로드 |
+| `log_message()` | `logger.info()` | 로깅 |
 | PHP | TypeScript | 언어 |
 | MySQL | SQLite/PostgreSQL/MySQL | 데이터베이스 |
 | `.php` 뷰 | `.html` (Rendu) | 템플릿 |

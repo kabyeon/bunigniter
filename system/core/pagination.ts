@@ -124,7 +124,9 @@ export function paginationInfo(pagination: PaginationData): string {
 /**
  * API 응답용 페이지네이션 메타데이터
  */
-export function paginationMeta(pagination: PaginationData): Record<string, any> {
+export function paginationMeta(
+	pagination: PaginationData,
+): Record<string, any> {
 	const { total, page, perPage, totalPages } = pagination;
 	return {
 		current_page: page,

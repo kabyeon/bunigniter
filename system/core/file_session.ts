@@ -4,7 +4,15 @@
 // 서버 재시작해도 세션이 유지됩니다.
 // ============================================================
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync, statSync } from "node:fs";
+import {
+	readFileSync,
+	writeFileSync,
+	existsSync,
+	mkdirSync,
+	readdirSync,
+	unlinkSync,
+	statSync,
+} from "node:fs";
 import { join } from "node:path";
 
 const SESSION_DIR = join(process.cwd(), "storage", "sessions");
@@ -163,7 +171,8 @@ export class FileSession {
 	 */
 	static count(): number {
 		if (!existsSync(SESSION_DIR)) return 0;
-		return readdirSync(SESSION_DIR).filter((f) => f.startsWith(SESSION_PREFIX)).length;
+		return readdirSync(SESSION_DIR).filter((f) => f.startsWith(SESSION_PREFIX))
+			.length;
 	}
 
 	// ─── 내부 메서드 ──────────────────────────────────

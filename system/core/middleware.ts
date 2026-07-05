@@ -38,7 +38,9 @@ export async function runMiddlewarePipeline(
 	let index = 0;
 	let finalResponse: Response | null = null;
 
-	const createNext = (currentIndex: number): (() => Promise<Response | void>) => {
+	const createNext = (
+		currentIndex: number,
+	): (() => Promise<Response | void>) => {
 		return async () => {
 			index = currentIndex + 1;
 			if (index < middlewares.length) {

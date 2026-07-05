@@ -87,7 +87,9 @@ async function bootstrap() {
 	console.log(`  🎨 템플릿 엔진: Rendu`);
 	console.log("");
 
-	logger.info(`BunIgniter 서버 시작: http://localhost:${port} (${appConfig.env})`);
+	logger.info(
+		`BunIgniter 서버 시작: http://localhost:${port} (${appConfig.env})`,
+	);
 
 	// 종료 시 정리
 	process.on("SIGINT", async () => {

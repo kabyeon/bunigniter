@@ -259,7 +259,9 @@ code {
 	text-decoration: none;
 	color: var(--dark);
 	font-size: 0.9em;
-	transition: background 0.2s, border-color 0.2s;
+	transition:
+		background 0.2s,
+		border-color 0.2s;
 }
 
 .pagination__link:hover {

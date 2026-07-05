@@ -3,7 +3,15 @@
 // Bun 내장 테스트 러너(bun:test)를 위한 헬퍼
 // ============================================================
 
-import { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach } from "bun:test";
+import {
+	describe,
+	test,
+	expect,
+	beforeAll,
+	afterAll,
+	beforeEach,
+	afterEach,
+} from "bun:test";
 import { SQL } from "bun";
 
 export { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach };

@@ -4,7 +4,11 @@
 // ============================================================
 
 import { describe, test, expect } from "bun:test";
-import { paginationHtml, paginationInfo, paginationMeta } from "../system/core/pagination.ts";
+import {
+	paginationHtml,
+	paginationInfo,
+	paginationMeta,
+} from "../system/core/pagination.ts";
 
 describe("paginationHtml", () => {
 	test("단일 페이지면 빈 문자열", () => {

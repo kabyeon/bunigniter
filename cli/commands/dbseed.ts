@@ -91,7 +91,9 @@ export const dbSeed: Command = {
 
 		if (!existsSync(seedsDir)) {
 			console.log("  ⚠️  database/seeds/ 폴더가 없습니다.");
-			console.log("  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n");
+			console.log(
+				"  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n",
+			);
 			await db.close();
 			return;
 		}
@@ -109,7 +111,9 @@ export const dbSeed: Command = {
 
 		if (files.length === 0) {
 			console.log("  📋 실행할 시더가 없습니다.");
-			console.log("  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n");
+			console.log(
+				"  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n",
+			);
 			await db.close();
 			return;
 		}

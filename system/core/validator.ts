@@ -27,12 +27,17 @@ export interface ValidationResult {
 }
 
 /** 기본 에러 메시지 */
-const DEFAULT_MESSAGES: Record<string, (field: string, params?: any[]) => string> = {
+const DEFAULT_MESSAGES: Record<
+	string,
+	(field: string, params?: any[]) => string
+> = {
 	required: (field) => `${field} 필드는 필수입니다`,
 	email: (field) => `${field} 필드는 유효한 이메일이어야 합니다`,
 	url: (field) => `${field} 필드는 유효한 URL이어야 합니다`,
-	min: (field, params) => `${field} 필드는 최소 ${params?.[0] ?? 0}자여야 합니다`,
-	max: (field, params) => `${field} 필드는 최대 ${params?.[0] ?? 255}자여야 합니다`,
+	min: (field, params) =>
+		`${field} 필드는 최소 ${params?.[0] ?? 0}자여야 합니다`,
+	max: (field, params) =>
+		`${field} 필드는 최대 ${params?.[0] ?? 255}자여야 합니다`,
 	between: (field, params) =>
 		`${field} 필드는 ${params?.[0] ?? 0} ~ ${params?.[1] ?? 0} 사이여야 합니다`,
 	minValue: (field, params) =>
@@ -44,8 +49,7 @@ const DEFAULT_MESSAGES: Record<string, (field: string, params?: any[]) => string
 	alpha: (field) => `${field} 필드는 알파벳만 포함해야 합니다`,
 	alphaNumeric: (field) => `${field} 필드는 알파벳과 숫자만 포함해야 합니다`,
 	slug: (field) => `${field} 필드는 유효한 슬러그 형식이어야 합니다`,
-	regex: (field, params) =>
-		`${field} 필드가 패턴과 일치하지 않습니다`,
+	regex: (field, params) => `${field} 필드가 패턴과 일치하지 않습니다`,
 	in: (field, params) =>
 		`${field} 필드는 ${params?.[0]?.join(", ") ?? ""} 중 하나여야 합니다`,
 	notIn: (field, params) =>
@@ -85,19 +89,18 @@ export class Validator {
 			const value = data[field];
 
 			for (const rule of fieldRules) {
-				const parsed = typeof rule === "string"
-					? Validator.parseRule(rule)
-					: rule;
+				const parsed =
+					typeof rule === "string" ? Validator.parseRule(rule) : rule;
 
 				const valid = Validator.validateRule(value, parsed, data, field);
 
 				if (!valid) {
 					const message =
-						parsed.message
-						?? customMessages?.[`${field}.${parsed.rule}`]
-						?? customMessages?.[parsed.rule]
-						?? DEFAULT_MESSAGES[parsed.rule]?.(field, parsed.params)
-						?? `${field} 필드가 ${parsed.rule} 규칙에 실패했습니다`;
+						parsed.message ??
+						customMessages?.[`${field}.${parsed.rule}`] ??
+						customMessages?.[parsed.rule] ??
+						DEFAULT_MESSAGES[parsed.rule]?.(field, parsed.params) ??
+						`${field} 필드가 ${parsed.rule} 규칙에 실패했습니다`;
 
 					errors.push({
 						field,
@@ -127,14 +130,10 @@ export class Validator {
 	/**
 	 * 단일 값 유효성 검사
 	 */
-	static validate(
-		value: any,
-		rules: (string | ValidationRule)[],
-	): boolean {
+	static validate(value: any, rules: (string | ValidationRule)[]): boolean {
 		for (const rule of rules) {
-			const parsed = typeof rule === "string"
-				? Validator.parseRule(rule)
-				: rule;
+			const parsed =
+				typeof rule === "string" ? Validator.parseRule(rule) : rule;
 			if (!Validator.validateRule(value, parsed, {}, "")) {
 				return false;
 			}
@@ -147,13 +146,17 @@ export class Validator {
 	 */
 	private static parseRule(ruleStr: string): ValidationRule {
 		const [rule, ...paramParts] = ruleStr.split(":");
-		const params = paramParts.length > 0
-			? paramParts.join(":").split(",").map((p) => {
-					const trimmed = p.trim();
-					const num = Number(trimmed);
-					return Number.isNaN(num) ? trimmed : num;
-				})
-			: undefined;
+		const params =
+			paramParts.length > 0
+				? paramParts
+						.join(":")
+						.split(",")
+						.map((p) => {
+							const trimmed = p.trim();
+							const num = Number(trimmed);
+							return Number.isNaN(num) ? trimmed : num;
+						})
+				: undefined;
 
 		return { rule, params };
 	}
@@ -222,14 +225,20 @@ export class Validator {
 			}
 
 			case "in":
-				return !value || (Array.isArray(params[0])
-					? params[0].includes(value)
-					: params.includes(value));
+				return (
+					!value ||
+					(Array.isArray(params[0])
+						? params[0].includes(value)
+						: params.includes(value))
+				);
 
 			case "notIn":
-				return !value || (Array.isArray(params[0])
-					? !params[0].includes(value)
-					: !params.includes(value));
+				return (
+					!value ||
+					(Array.isArray(params[0])
+						? !params[0].includes(value)
+						: !params.includes(value))
+				);
 
 			case "confirmed":
 				return !value || value === data[`${field}_confirmation`];

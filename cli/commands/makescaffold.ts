@@ -39,7 +39,9 @@ export const makeScaffold: Command = {
 			console.log(
 				"   예: bun run igniter make:scaffold post --fields=title:string,content:text",
 			);
-			console.log("   예: bun run igniter make:scaffold post --api --fields=title:string");
+			console.log(
+				"   예: bun run igniter make:scaffold post --api --fields=title:string",
+			);
 			return;
 		}
 
@@ -362,9 +364,7 @@ export async function down(sql: SQL): Promise<void> {
 			`    import ${snake}_controller from "app/controllers/${snake}_controller.ts";`,
 		);
 		console.log(`    `);
-		console.log(
-			`    // ${pascal} ${isApi ? "API " : ""}리소스 라우트`,
-		);
+		console.log(`    // ${pascal} ${isApi ? "API " : ""}리소스 라우트`);
 		console.log(`    router.resource("${plural}", ${snake}_controller);`);
 		console.log(`\n  📌 마이그레이션 실행:`);
 		console.log(`    bun run igniter migrate\n`);
