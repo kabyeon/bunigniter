@@ -28,14 +28,20 @@ export async function getDB(group?: string): Promise<SQL> {
 	let sql: SQL;
 
 	switch (groupConfig.adapter) {
-		case "sqlite":
+		case "sqlite": {
+			let dbPath = groupConfig.filename ?? ":memory:";
+			// 상대 경로를 프로젝트 루트 기반 절대 경로로 변환
+			if (dbPath !== ":memory:" && !dbPath.startsWith("/")) {
+				dbPath = `${process.cwd()}/${dbPath.replace(/^\.\//, "")}`;
+			}
 			sql = new SQL({
 				adapter: "sqlite",
-				filename: groupConfig.filename ?? ":memory:",
+				filename: dbPath,
 				create: groupConfig.create ?? true,
 				readonly: groupConfig.readonly ?? false,
 			});
 			break;
+		}
 
 		case "postgres":
 			sql = new SQL({

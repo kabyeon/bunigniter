@@ -5,7 +5,10 @@
 
 import { join } from "node:path";
 
-const APP_ROOT = join(import.meta.dir, "..", "..", "app");
+/** APP_ROOT: 환경변수 > import.meta.dir 기반 추론 */
+function getAppRoot(): string {
+	return process.env.APP_ROOT ?? join(import.meta.dir, "..", "..", "app");
+}
 
 /** 설정 파일 캐시 */
 const configCache: Record<string, any> = {};
@@ -17,7 +20,8 @@ const configCache: Record<string, any> = {};
 export async function loadConfig<T = any>(name: string): Promise<T> {
 	if (configCache[name]) return configCache[name] as T;
 
-	const filePath = join(APP_ROOT, "config", `${name}.ts`);
+	const appRoot = getAppRoot();
+	const filePath = join(appRoot, "config", `${name}.ts`);
 	try {
 		const mod = await import(filePath);
 		const config = mod.default ?? mod;
@@ -35,4 +39,4 @@ export function clearConfigCache(): void {
 	}
 }
 
-export { APP_ROOT };
+export { getAppRoot as APP_ROOT };

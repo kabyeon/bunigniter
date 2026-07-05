@@ -206,29 +206,47 @@ export class Router {
 		routes: Record<string, (req: any) => Response | Promise<Response>>;
 		fetch: (req: Request) => Response | Promise<Response>;
 	} {
+		// Bun.serve routes 키는 경로만 사용 ("/users/:id")
+		// 같은 경로에 여러 메서드가 있으면 핸들러 내부에서 req.method로 분기
+		// 참고: https://bun.sh/docs/runtime/http/routing
+		const pathGroups: Record<string, Map<string, RouteDefinition>> = {};
+
+		for (const route of this.routes) {
+			if (!pathGroups[route.path]) {
+				pathGroups[route.path] = new Map();
+			}
+			pathGroups[route.path].set(route.method, route);
+		}
+
 		const routeMap: Record<string, (req: any) => Response | Promise<Response>> =
 			{};
 
-		for (const route of this.routes) {
-			const key = `${route.method} ${route.path}`;
+		for (const [path, methodMap] of Object.entries(pathGroups)) {
+			routeMap[path] = async (req: any) => {
+				const httpMethod = req.method?.toUpperCase() ?? "GET";
+				const route = methodMap.get(httpMethod);
 
-			routeMap[key] = async (req: any) => {
+				if (!route) {
+					const allowed = [...methodMap.keys()].join(", ");
+					return new Response(`Method Not Allowed. Allowed: ${allowed}`, {
+						status: 405,
+						headers: { Allow: allowed },
+					});
+				}
+
 				// ── 미들웨어 파이프라인 실행 ──
 				const allMiddleware = [
 					...this.globalMiddleware,
 					...(route.middleware ?? []),
 				];
-
 				const middlewareResponse = await runMiddlewarePipeline(
 					req,
 					allMiddleware,
 				);
 				if (middlewareResponse) return middlewareResponse;
 
-				// ── URL 파라미터 추출 ──
+				// ── URL 파라미터 추출 (BunRequest.params) ──
 				const params: Record<string, string> = {};
-
-				// Bun.serve BunRequest.params
 				if (req.params) {
 					Object.assign(params, req.params);
 				}
@@ -294,9 +312,7 @@ export class Router {
 				});
 
 				const controllerCtx: Context = {
-					request: Object.assign(req, {
-						body: () => bodyData,
-					}),
+					request: req as any,
 					response: {
 						status: statusBuilder,
 						redirect: (url: string) =>
@@ -316,7 +332,7 @@ export class Router {
 					params,
 					query,
 					body: () => bodyData,
-				};
+					};
 
 				const result = await route.handler(controllerCtx);
 
@@ -328,7 +344,7 @@ export class Router {
 			};
 		}
 
-		// Fatch 핸들러 (매칭되지 않는 요청)
+		// fetch 핸들러 (매칭되지 않는 요청)
 		const fetch = (_req: Request) => {
 			return new Response(
 				`<!DOCTYPE html><html><head><meta charset="utf-8"><title>404 - 페이지를 찾을 수 없습니다</title></head><body style="font-family:sans-serif;text-align:center;padding:50px"><h1>404</h1><p>요청하신 페이지를 찾을 수 없습니다.</p><a href="/">홈으로 돌아가기</a></body></html>`,

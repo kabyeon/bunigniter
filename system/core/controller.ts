@@ -15,10 +15,7 @@ export interface ResponseStatusBuilder {
 
 /** 컨트롤러 컨텍스트 타입 */
 export interface Context {
-	request: Request & {
-		/** 파싱된 요청 본문 반환 (JSON/Form/URL-encoded 자동 파싱) */
-		body: () => any;
-	};
+	request: Request;
 	response: {
 		/** 상태 코드 설정 (체이닝 지원: response.status(404).send("Not Found")) */
 		status: (code: number) => ResponseStatusBuilder;
@@ -30,6 +27,7 @@ export interface Context {
 	};
 	params: Record<string, string>;
 	query: Record<string, string>;
+	/** 파싱된 요청 본문 반환 (JSON/Form/URL-encoded 자동 파싱) */
 	body: () => any;
 }
 

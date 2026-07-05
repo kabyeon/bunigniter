@@ -1,0 +1,26 @@
+<!-- layout:default -->
+
+<h1>새 포스트 작성</h1>
+
+<form method="POST" action="/admin/posts">
+  <div class="form-group">
+    <label>제목</label>
+    <input type="text" name="title" required />
+  </div>
+  <div class="form-group">
+    <label>요약</label>
+    <input type="text" name="excerpt" />
+  </div>
+  <div class="form-group">
+    <label>내용</label>
+    <textarea name="content" rows="15" required></textarea>
+  </div>
+  <div class="form-group">
+    <label>
+      <input type="checkbox" name="published" value="1" />
+      공개
+    </label>
+  </div>
+  <button type="submit" class="btn btn-primary">저장</button>
+  <a href="/admin/posts" class="btn">취소</a>
+</form>

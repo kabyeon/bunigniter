@@ -1,0 +1,57 @@
+<!-- layout:default -->
+
+<article class="post-detail">
+  <h1>{{ post.title }}</h1>
+  <p class="post-meta">
+    <span>✍️ {{ post.author_name }}</span>
+    <span>📅 {{ post.created_at }}</span>
+  </p>
+
+  <div class="post-content">
+    <? for (const line of post.content.split("\n")) { ?> <? if
+    (line.startsWith("## ")) { ?>
+    <h2>{{ line.slice(3) }}</h2>
+    <? } else if (line.startsWith("# ")) { ?>
+    <h1>{{ line.slice(2) }}</h1>
+    <? } else if (line === "") { ?>
+    <br />
+    <? } else { ?>
+    <p>{{ line }}</p>
+    <? } ?> <? } ?>
+  </div>
+</article>
+
+<hr />
+
+<section class="comments">
+  <h2>댓글 ({{ comments.length }})</h2>
+
+  <? if (comments.length === 0) { ?>
+  <p>아직 댓글이 없습니다. 첫 댓글을 작성해보세요!</p>
+  <? } else { ?>
+  <ul class="comment-list">
+    <? for (const comment of comments) { ?>
+    <li class="comment-item">
+      <strong>{{ comment.author_name }}</strong>
+      <span class="comment-date">{{ comment.created_at }}</span>
+      <p>{{ comment.content }}</p>
+    </li>
+    <? } ?>
+  </ul>
+  <? } ?>
+
+  <h3>댓글 작성</h3>
+  <form method="POST" action="/posts/{{ post.slug }}/comments">
+    <div class="form-group">
+      <label>이름</label>
+      <input type="text" name="author_name" required />
+    </div>
+    <div class="form-group">
+      <label>댓글</label>
+      <textarea name="content" rows="3" required></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary">댓글 작성</button>
+  </form>
+</section>
+
+<p><a href="/" class="btn">← 목록으로</a></p>

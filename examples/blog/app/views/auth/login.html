@@ -1,0 +1,29 @@
+<!-- layout:default -->
+
+<div class="auth-form">
+  <h1>로그인</h1>
+
+  <? if (error) { ?>
+  <div class="alert alert-error">{{ error }}</div>
+  <? } ?>
+
+  <form method="POST" action="/login">
+    <div class="form-group">
+      <label>이메일</label>
+      <input type="email" name="email" required />
+    </div>
+    <div class="form-group">
+      <label>비밀번호</label>
+      <input type="password" name="password" required />
+    </div>
+    <button type="submit" class="btn btn-primary">로그인</button>
+  </form>
+
+  <div class="demo-accounts">
+    <h3>데모 계정</h3>
+    <ul>
+      <li>관리자: admin@blog.dev / admin123</li>
+      <li>작성자: author@blog.dev / author123</li>
+    </ul>
+  </div>
+</div>

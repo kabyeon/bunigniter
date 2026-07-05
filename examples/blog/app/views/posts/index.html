@@ -1,0 +1,32 @@
+<!-- layout:default -->
+
+<h1>최신 포스트</h1>
+
+<? if (count === 0) { ?>
+<p>아직 포스트가 없습니다.</p>
+<? } else { ?>
+<div class="post-list">
+  <? for (const post of posts) { ?>
+  <article class="post-card">
+    <h2><a href="/posts/{{ post.slug }}">{{ post.title }}</a></h2>
+    <p class="post-meta">
+      <span>✍️ {{ post.author_name }}</span>
+      <span>📅 {{ post.created_at }}</span>
+    </p>
+    <p class="post-excerpt">{{ post.excerpt }}</p>
+    <a href="/posts/{{ post.slug }}" class="btn">더 읽기 →</a>
+  </article>
+  <? } ?>
+</div>
+
+<? if (totalPages > 1) { ?>
+<nav class="pagination">
+  <? if (page > 1) { ?>
+  <a href="/?page={{ page - 1 }}" class="btn">← 이전</a>
+  <? } ?>
+  <span>{{ page }} / {{ totalPages }}</span>
+  <? if (page < totalPages) { ?>
+  <a href="/?page={{ page + 1 }}" class="btn">다음 →</a>
+  <? } ?>
+</nav>
+<? } ?> <? } ?>
