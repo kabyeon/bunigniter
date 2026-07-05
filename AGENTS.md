@@ -265,7 +265,7 @@ export const makeSomething: Command = {
 };
 ```
 
-3. `cli/index.ts` 에 등록합니다:
+1. `cli/index.ts` 에 등록합니다:
 
 ```typescript
 import { makeSomething } from "./commands/makesomething.ts";
