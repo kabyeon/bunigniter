@@ -2,8 +2,8 @@
 // BunIgniter - Integration Test Helpers
 // 서버 기동 + HTTP 요청 자동화
 // 통합 테스트 작성을 위한 헬퍼
+// Bun.serve 네이티브 서버 기반
 // ============================================================
-
 
 export interface IntegrationTestServer {
 	url: string;
@@ -13,7 +13,7 @@ export interface IntegrationTestServer {
 
 /**
  * 통합 테스트용 서버를 시작합니다.
- * 실제 Elysia 앱을 기동하고 HTTP 요청을 보낼 수 있습니다.
+ * 실제 Bun.serve 앱을 기동하고 HTTP 요청을 보낼 수 있습니다.
  *
  * 사용법:
  *   import { startTestServer, stopTestServer } from "system/core/integration_test.ts";
@@ -28,20 +28,38 @@ export interface IntegrationTestServer {
 export async function startTestServer(
 	port: number = 3999,
 ): Promise<IntegrationTestServer> {
-	// 동적 임포트로 bootstrap 실행 (사이드 이펙트 방지)
-	const { Elysia } = await import("elysia");
+	const server = Bun.serve({
+		port,
+		fetch(_req) {
+			return new Response("Test server", { status: 200 });
+		},
+	});
 
-	const app = new Elysia();
-
-	// 라우트 등록
+	// 라우트 등록 시도
 	try {
 		const router = (await import("../../app/config/routes.ts")).default;
-		router.register(app);
-	} catch {
-		// 라우트 로드 실패 시 빈 앱
-	}
+		const { routes, fetch: appFetch } = router.toBunServe();
 
-	const server = app.listen(port);
+		// 라우트가 있으면 서버 재시작
+		server.stop();
+		const newServer = Bun.serve({
+			port,
+			routes,
+			fetch(req) {
+				return appFetch(req);
+			},
+		});
+
+		return {
+			url: `http://localhost:${port}`,
+			server: newServer,
+			close: () => {
+				newServer.stop();
+			},
+		};
+	} catch {
+		// 라우트 로드 실패 시 기본 서버
+	}
 
 	return {
 		url: `http://localhost:${port}`,
@@ -152,7 +170,11 @@ export class IntegrationTestClient {
 	}
 
 	/** 상태 코드 확인 */
-	async assertStatus(path: string, expectedStatus: number, method: string = "GET"): Promise<boolean> {
+	async assertStatus(
+		path: string,
+		expectedStatus: number,
+		method: string = "GET",
+	): Promise<boolean> {
 		const res = await fetch(`${this.baseUrl}${path}`, { method });
 		return res.status === expectedStatus;
 	}

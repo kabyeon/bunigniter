@@ -1,10 +1,9 @@
 // ============================================================
 // BunIgniter - Router
 // CodeIgniter3 의 Routes 와 동일
-// Elysia 라우터 래핑
+// Bun.serve 네이티브 라우터 기반
 // ============================================================
 
-import type { Elysia } from "elysia";
 import type { Controller, Context } from "./controller.ts";
 import type { MiddlewareFn } from "./middleware.ts";
 import { runMiddlewarePipeline } from "./middleware.ts";
@@ -15,6 +14,20 @@ interface RouteDefinition {
 	path: string;
 	handler: (ctx: Context) => Promise<Response>;
 	middleware?: MiddlewareFn[];
+}
+
+/** Bun.serve 라우트 항목 타입 */
+export interface BunServeRoute {
+	method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
+	pattern: string;
+	handler: (req: Request) => Response | Promise<Response>;
+}
+
+/** Bun.serve 설정 타입 */
+export interface BunServeOptions {
+	port?: number;
+	hostname?: string;
+	websocket?: any;
 }
 
 /**
@@ -173,13 +186,28 @@ export class Router {
 	}
 
 	/**
-	 * Elysia 앱에 라우트를 등록합니다.
+	 * Bun.serve 라우트 객체 생성
+	 * Router에 등록된 모든 라우트를 Bun.serve routes 형식으로 변환합니다.
+	 *
+	 * @example
+	 * ```typescript
+	 * const router = new Router();
+	 * router.get("/users", controller, "index");
+	 *
+	 * const { routes, fetch } = router.toBunServe();
+	 * Bun.serve({ routes, fetch });
+	 * ```
 	 */
-	register(app: Elysia): Elysia {
-		for (const route of this.routes) {
-			const { method, path, handler } = route;
+	toBunServe(): {
+		routes: Record<string, (req: any) => Response | Promise<Response>>;
+		fetch: (req: Request) => Response | Promise<Response>;
+	} {
+		const routeMap: Record<string, (req: any) => Response | Promise<Response>> = {};
 
-			const elysiaHandler = async (ctx: any) => {
+		for (const route of this.routes) {
+			const key = `${route.method} ${route.path}`;
+
+			routeMap[key] = async (req: any) => {
 				// ── 미들웨어 파이프라인 실행 ──
 				const allMiddleware = [
 					...this.globalMiddleware,
@@ -187,23 +215,17 @@ export class Router {
 				];
 
 				const middlewareResponse = await runMiddlewarePipeline(
-					ctx.request,
+					req,
 					allMiddleware,
 				);
 				if (middlewareResponse) return middlewareResponse;
 
 				// ── URL 파라미터 추출 ──
 				const params: Record<string, string> = {};
-				let url: URL;
-				try {
-					url = new URL(ctx.request?.url ?? "http://localhost");
-				} catch {
-					url = new URL("http://localhost");
-				}
 
-				// Elysia params
-				if (ctx.params) {
-					Object.assign(params, ctx.params);
+				// Bun.serve BunRequest.params
+				if (req.params) {
+					Object.assign(params, req.params);
 				}
 
 				// ── 라우트 모델 바인딩 ──
@@ -227,15 +249,32 @@ export class Router {
 
 				// Query 파라미터
 				const query: Record<string, string> = {};
+				let url: URL;
+				try {
+					url = new URL(req.url);
+				} catch {
+					url = new URL("http://localhost");
+				}
 				url.searchParams.forEach((v, k) => {
 					query[k] = v;
 				});
 
-				// 요청 본문
+				// 요청 본문 파싱
 				let bodyData: any = {};
 				try {
-					if (ctx.body) {
-						bodyData = ctx.body;
+					const contentType = req.headers.get("content-type") ?? "";
+					if (contentType.includes("application/json")) {
+						bodyData = await req.json();
+					} else if (contentType.includes("multipart/form-data")) {
+						const formData = await req.formData();
+						bodyData = Object.fromEntries(formData.entries());
+					} else if (
+						contentType.includes("application/x-www-form-urlencoded")
+					) {
+						const text = await req.text();
+						bodyData = Object.fromEntries(
+							new URLSearchParams(text).entries(),
+						);
 					}
 				} catch {
 					// body 파싱 실패 시 빈 객체
@@ -243,11 +282,14 @@ export class Router {
 
 				// Context 객체 구성 (CodeIgniter3 스타일)
 				const controllerCtx: Context = {
-					request: ctx.request,
+					request: req,
 					response: {
 						status: (code: number) => new Response(null, { status: code }),
 						redirect: (url: string) =>
-							new Response(null, { status: 302, headers: { Location: url } }),
+							new Response(null, {
+								status: 302,
+								headers: { Location: url },
+							}),
 						json: (data: any) =>
 							new Response(JSON.stringify(data), {
 								headers: { "Content-Type": "application/json" },
@@ -262,7 +304,7 @@ export class Router {
 					body: () => bodyData,
 				};
 
-				const result = await handler(controllerCtx);
+				const result = await route.handler(controllerCtx);
 
 				if (result instanceof Response) {
 					return result;
@@ -270,28 +312,20 @@ export class Router {
 
 				return new Response(String(result));
 			};
-
-			// Elysia 에 라우트 등록
-			switch (method) {
-				case "GET":
-					app.get(path, elysiaHandler);
-					break;
-				case "POST":
-					app.post(path, elysiaHandler);
-					break;
-				case "PUT":
-					app.put(path, elysiaHandler);
-					break;
-				case "DELETE":
-					app.delete(path, elysiaHandler);
-					break;
-				case "PATCH":
-					app.patch(path, elysiaHandler);
-					break;
-			}
 		}
 
-		return app;
+		// Fatch 핸들러 (매칭되지 않는 요청)
+		const fetch = (_req: Request) => {
+			return new Response(
+				`<!DOCTYPE html><html><head><meta charset="utf-8"><title>404 - 페이지를 찾을 수 없습니다</title></head><body style="font-family:sans-serif;text-align:center;padding:50px"><h1>404</h1><p>요청하신 페이지를 찾을 수 없습니다.</p><a href="/">홈으로 돌아가기</a></body></html>`,
+				{
+					status: 404,
+					headers: { "Content-Type": "text/html; charset=utf-8" },
+				},
+			);
+		};
+
+		return { routes: routeMap, fetch };
 	}
 
 	/**

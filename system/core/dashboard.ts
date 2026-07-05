@@ -256,12 +256,12 @@ export async function collectDashboardData(
 
 /**
  * 대시보드 라우트 핸들러 생성
- * Elysia 라우트로 바로 사용 가능
+ * Bun.serve 라우트로 바로 사용 가능
  *
  * 사용법:
  *   import { createDashboardRoutes } from "system/core/dashboard.ts";
  *   const routes = createDashboardRoutes(["default", "emails"]);
- *   // routes를 Elysia 앱에 등록
+ *   // routes를 Bun.serve routes에 등록
  */
 export function createDashboardRoutes(
 	queueNames: string[] = ["default"],

@@ -260,7 +260,7 @@ document.addEventListener("keydown", (e) => {
 
 /**
  * 감사 로그 웹 UI 라우트 핸들러 생성
- * Bun.serve 또는 Elysia 라우트로 사용 가능
+ * Bun.serve 라우트로 사용 가능
  *
  * 사용법:
  *   import { createAuditLogRoutes } from "system/core/audit_log_ui.ts";

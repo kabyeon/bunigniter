@@ -1,9 +1,9 @@
 // ============================================================
 // BunIgniter - Bootstrap (진입점)
 // CodeIgniter3 의 index.php 와 동일
+// Bun.serve 네이티브 HTTP 서버
 // ============================================================
 
-import { Elysia, NotFound } from "elysia";
 import { loadConfig } from "./config.ts";
 import type { AppConfig } from "../../app/config/app.ts";
 import { closeAllConnections } from "./database.ts";
@@ -34,6 +34,27 @@ function safeStaticPath(urlPathname: string): string | null {
 	return resolvedPath;
 }
 
+/**
+ * 대시보드/감사 로그 라우트를 Bun.serve routes 형식으로 변환
+ */
+function adaptRoutes(
+	routes: Array<{ method: string; path: string; handler: (ctx: any) => any }>,
+): Record<string, (req: any) => Response | Promise<Response>> {
+	const result: Record<string, (req: any) => Response | Promise<Response>> = {};
+
+	for (const route of routes) {
+		result[route.path] = async (req: any) => {
+			// HTTP 메서드 검증
+			if (req.method !== route.method) {
+				return new Response("Method Not Allowed", { status: 405 });
+			}
+			return route.handler({ request: req, params: req.params ?? {} });
+		};
+	}
+
+	return result;
+}
+
 async function bootstrap() {
 	// 설정 로드
 	const appConfig = await loadConfig<AppConfig>("app");
@@ -45,13 +66,18 @@ async function bootstrap() {
 ╚══════════════════════════════════════════════════════════╝
   `);
 
-	// Elysia 앱 생성
-	const app = new Elysia();
+	// ── 라우트 구성 ──────────────────────────────────
+	const router = (await import("../../app/config/routes.ts")).default;
+	router.printRoutes();
+	const { routes: appRoutes, fetch: appFetch } = router.toBunServe();
 
-	// 정적 파일 서비스 (public/) — Path Traversal 방지 적용
-	const staticPrefixes = ["/css", "/js", "/images", "/uploads"];
-	for (const prefix of staticPrefixes) {
-		app.get(`${prefix}/*`, ({ request }) => {
+	// ── 정적 파일 라우트 ──────────────────────────────
+	const staticRoutes: Record<
+		string,
+		(req: any) => Response | Bun.BunFile | Promise<Response>
+	> = {};
+	for (const prefix of ["/css", "/js", "/images", "/uploads"]) {
+		staticRoutes[`${prefix}/*`] = ({ request }: { request: Request }) => {
 			try {
 				const url = new URL(request.url);
 				const safePath = safeStaticPath(url.pathname);
@@ -66,40 +92,70 @@ async function bootstrap() {
 			} catch {
 				return new Response("Not Found", { status: 404 });
 			}
-		});
+		};
 	}
 
-	// 에러 핸들링 - Elysia 2.0 error() API
-	app.error(NotFound, ({ set }) => {
-		set.status = 404;
-		return new Response(
-			`<!DOCTYPE html><html><head><meta charset="utf-8"><title>404 - 페이지를 찾을 수 없습니다</title></head><body style="font-family:sans-serif;text-align:center;padding:50px"><h1>404</h1><p>요청하신 페이지를 찾을 수 없습니다.</p><a href="/">홈으로 돌아가기</a></body></html>`,
-			{ headers: { "Content-Type": "text/html; charset=utf-8" } },
-		);
-	});
+	// ── 대시보드 라우트 ────────────────────────────────
+	let dashboardRoutes: Record<string, any> = {};
+	try {
+		const { createDashboardRoutes } = await import("./dashboard.ts");
+		dashboardRoutes = adaptRoutes(createDashboardRoutes());
+	} catch {
+		// 대시보드 비활성
+	}
 
-	app.error(({ error: err, set }) => {
-		console.error(`[ERROR] ${err.message}`);
-		set.status = 500;
-		return new Response(
-			`<!DOCTYPE html><html><head><meta charset="utf-8"><title>500 - 서버 오류</title></head><body style="font-family:sans-serif;text-align:center;padding:50px"><h1>500</h1><p>서버 내부 오류가 발생했습니다.</p>${appConfig.debug ? `<pre>${err.message}</pre>` : ""}<a href="/">홈으로 돌아가기</a></body></html>`,
-			{ headers: { "Content-Type": "text/html; charset=utf-8" } },
-		);
-	});
+	// ── 감사 로그 라우트 ──────────────────────────────
+	let auditRoutes: Record<string, any> = {};
+	try {
+		const { createAuditLogRoutes } = await import("./audit_log_ui.ts");
+		auditRoutes = adaptRoutes(createAuditLogRoutes());
+	} catch {
+		// 감사 로그 UI 비활성
+	}
 
-	// 라우트 등록
-	const router = (await import("../../app/config/routes.ts")).default;
-	router.register(app);
-	router.printRoutes();
+	// ── SSE 라우트 ────────────────────────────────────
+	let sseRoutes: Record<string, any> = {};
+	try {
+		const { createSSERoutes } = await import("./sse.ts");
+		sseRoutes = adaptRoutes(createSSERoutes());
+	} catch {
+		// SSE 비활성
+	}
 
-	// 서버 시작
+	// ── Bun.serve 서버 시작 ──────────────────────────
 	const port = Number(process.env.PORT ?? 3000);
-	app.listen(port);
+
+	const server = Bun.serve({
+		port,
+		routes: {
+			...staticRoutes,
+			...dashboardRoutes,
+			...auditRoutes,
+			...sseRoutes,
+			...appRoutes,
+		},
+		fetch(req) {
+			// Router에서 매칭되지 않은 요청 → 404
+			try {
+				return appFetch(req);
+			} catch (err: any) {
+				console.error(`[ERROR] ${err.message}`);
+				return new Response(
+					`<!DOCTYPE html><html><head><meta charset="utf-8"><title>500 - 서버 오류</title></head><body style="font-family:sans-serif;text-align:center;padding:50px"><h1>500</h1><p>서버 내부 오류가 발생했습니다.</p>${appConfig.debug ? `<pre>${err.message}</pre>` : ""}<a href="/">홈으로 돌아가기</a></body></html>`,
+					{
+						status: 500,
+						headers: { "Content-Type": "text/html; charset=utf-8" },
+					},
+				);
+			}
+		},
+	});
 
 	console.log(`  🚀 서버 실행 중: http://localhost:${port}`);
 	console.log(`  📦 환경: ${appConfig.env}`);
 	console.log(`  🗄️  데이터베이스: SQLite`);
 	console.log(`  🎨 템플릿 엔진: Rendu`);
+	console.log(`  ⚡ 서버: Bun.serve (네이티브)`);
 	console.log("");
 
 	logger.info(
@@ -111,6 +167,7 @@ async function bootstrap() {
 		logger.info("서버 종료 신호 수신 (SIGINT)");
 		console.log("\n\n  🔇 서버를 종료합니다...");
 		await closeAllConnections();
+		server.stop();
 		process.exit(0);
 	});
 }

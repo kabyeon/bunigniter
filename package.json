@@ -1,7 +1,7 @@
 {
   "name": "bunigniter",
   "version": "1.0.0",
-  "description": "CodeIgniter 3-style Full Stack MVC Framework for Bun + Elysia + Rendu",
+  "description": "CodeIgniter 3-style Full Stack MVC Framework for Bun + Rendu",
   "type": "module",
   "scripts": {
     "dev": "bun run --hot system/core/bootstrap.ts",
@@ -12,7 +12,6 @@
     "test:watch": "bun test --watch"
   },
   "dependencies": {
-    "elysia": "2.0.0-exp.25",
     "rendu": "^0.1.0"
   },
   "devDependencies": {

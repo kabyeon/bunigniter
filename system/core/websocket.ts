@@ -1,7 +1,7 @@
 // ============================================================
 // BunIgniter - WebSocket Server
 // Bun 내장 WebSocket 지원
-// Elysia 2.0 WebSocket 래핑
+// Bun.serve websocket 구성 래핑
 // ============================================================
 
 export type WebSocketHandler = (ws: any, message: any) => void;
@@ -115,9 +115,9 @@ export class WebSocketManager {
 }
 
 /**
- * WebSocket 설정을 Elysia 플러그인 형태로 생성
+ * WebSocket 설정을 Bun.serve websocket 형태로 생성
  *
- * 사용법 (app/config/routes.ts 또는 bootstrap.ts):
+ * 사용법 (bootstrap.ts):
  *
  *   import { createWebSocketConfig, WebSocketManager } from "system/core/websocket.ts";
  *
@@ -125,24 +125,13 @@ export class WebSocketManager {
  *
  *   const wsConfig = createWebSocketConfig({
  *     path: "/ws",
- *     open(ws) {
- *       wsManager.addClient(ws);
- *       console.log("WebSocket 연결:", wsManager.clientCount());
- *     },
- *     message(ws, message) {
- *       const data = JSON.parse(message);
- *       if (data.channel) {
- *         wsManager.subscribe(data.channel, ws);
- *       }
- *       wsManager.publish(data.channel, data);
- *     },
- *     close(ws) {
- *       wsManager.removeClient(ws);
- *     },
+ *     open(ws) { wsManager.addClient(ws); },
+ *     message(ws, message) { wsManager.publish(data.channel, data); },
+ *     close(ws) { wsManager.removeClient(ws); },
  *   });
  *
- *   // Elysia 앱에 등록
- *   app.ws(wsConfig.path, wsConfig);
+ *   // Bun.serve에 websocket 옵션으로 전달
+ *   Bun.serve({ websocket: wsConfig, fetch(req, server) { server.upgrade(req); } });
  */
 export function createWebSocketConfig(config: WebSocketConfig): any {
 	return {

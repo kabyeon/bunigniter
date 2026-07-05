@@ -75,8 +75,8 @@ export class SSEManager {
 	 *
 	 * @example
 	 * ```typescript
-	 * // Elysia
-	 * app.get("/events", (ctx) => sse.handleConnection(ctx.request, { userId: "1" }));
+	 * // Bun.serve routes
+	 * routes: { "/events": (req) => sse.handleConnection(req, { userId: "1" }) }
 	 * ```
 	 */
 	handleConnection(
@@ -438,10 +438,10 @@ export class SSEManager {
 
 export const sse = new SSEManager();
 
-// ─── Elysia 통합 헬퍼 ─────────────────────────────────
+// ─── Bun.serve 통합 헬퍼 ──────────────────────────────
 
 /**
- * SSE 라우트 생성 (Elysia 또는 Bun.serve용)
+ * SSE 라우트 생성 (Bun.serve routes용)
  *
  * @example
  * ```typescript
