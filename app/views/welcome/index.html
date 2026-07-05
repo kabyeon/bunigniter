@@ -1,0 +1,62 @@
+<!-- layout:default -->
+
+<div class="hero">
+  <h1>🔥 BunIgniter</h1>
+  <p class="subtitle">CodeIgniter 3-Style MVC Framework for Bun</p>
+  <p class="version">v{{ version }}</p>
+</div>
+
+<div class="features">
+  <div class="feature-card">
+    <h3>⚡ 빠름</h3>
+    <p>Bun 런타임 기반으로 초고속 실행</p>
+  </div>
+  <div class="feature-card">
+    <h3>🏗️ MVC</h3>
+    <p>CodeIgniter 3 스타일의 친숙한 MVC 패턴</p>
+  </div>
+  <div class="feature-card">
+    <h3>🗄️ SQL</h3>
+    <p>Bun SQL 통합 (SQLite / PostgreSQL / MySQL)</p>
+  </div>
+  <div class="feature-card">
+    <h3>🎨 Rendu</h3>
+    <p>PHP 스타일 템플릿 엔진으로 서버 사이드 렌더링</p>
+  </div>
+</div>
+
+<div class="quick-start">
+  <h2>빠른 시작</h2>
+  <pre><code># 스캐폴딩으로 MVC 전체 생성
+bun run igniter make:scaffold post --fields=title:string,content:text
+
+# 컨트롤러만 생성
+bun run igniter make:controller users --resource
+
+# 마이그레이션 실행
+bun run igniter migrate
+
+# 개발 서버 실행
+bun run dev</code></pre>
+</div>
+
+<div class="commands">
+  <h2>CLI 명령어</h2>
+  <table class="table">
+    <thead>
+      <tr><th>명령어</th><th>설명</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><code>make:scaffold &lt;name&gt;</code></td><td>Controller + Model + View + Migration 전체 생성</td></tr>
+      <tr><td><code>make:controller &lt;name&gt;</code></td><td>컨트롤러 생성</td></tr>
+      <tr><td><code>make:model &lt;name&gt;</code></td><td>모델 생성</td></tr>
+      <tr><td><code>make:view &lt;path&gt;</code></td><td>뷰 템플릿 생성</td></tr>
+      <tr><td><code>make:migration &lt;name&gt;</code></td><td>마이그레이션 생성</td></tr>
+      <tr><td><code>make:middleware &lt;name&gt;</td><td>미들웨어 생성</td></tr>
+      <tr><td><code>make:helper &lt;name&gt;</code></td><td>헬퍼 파일 생성</td></tr>
+      <tr><td><code>make:library &lt;name&gt;</code></td><td>라이브러리 클래스 생성</td></tr>
+      <tr><td><code>migrate</code></td><td>마이그레이션 실행</td></tr>
+      <tr><td><code>list:routes</code></td><td>라우트 목록 출력</td></tr>
+    </tbody>
+  </table>
+</div>

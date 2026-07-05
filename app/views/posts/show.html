@@ -1,0 +1,17 @@
+<!-- layout:default -->
+
+<h1>게시글 상세</h1>
+
+<dl>
+  <dt>ID</dt>
+  <dd>{{ post.id }}</dd>
+  <dt>제목</dt>
+  <dd>{{ post.title }}</dd>
+  <dt>내용</dt>
+  <dd>{{ post.content }}</dd>
+  <dt>작성자</dt>
+  <dd>{{ post.author }}</dd>
+</dl>
+
+<a href="/posts" class="btn">목록으로</a>
+<a href="/posts/{{ post.id }}/edit" class="btn">수정</a>

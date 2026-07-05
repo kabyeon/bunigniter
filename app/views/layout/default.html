@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ title ?? "BunIgniter" }}</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <nav class="navbar">
+      <div class="container">
+        <a href="/" class="navbar-brand">🔥 {{ appName ?? "BunIgniter" }}</a>
+        <ul class="navbar-nav">
+          <li><a href="/">홈</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main class="container">{{{ content }}}</main>
+
+    <footer class="footer">
+      <div class="container">
+        <p>
+          &copy; 2025 BunIgniter - CodeIgniter 3-Style MVC Framework for Bun
+        </p>
+      </div>
+    </footer>
+
+    <script src="/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,38 @@
+<!-- layout:default -->
+
+<h1>{{ title }}</h1>
+<a href="/posts/create" class="btn btn-primary">새로 만들기</a>
+
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>제목</th>
+      <th>작성자</th>
+      <th>작업</th>
+    </tr>
+  </thead>
+  <tbody>
+    <? for (const item of posts) { ?>
+    <tr>
+      <td>{{ item.id }}</td>
+      <td>{{ item.title }}</td>
+      <td>{{ item.author }}</td>
+      <td>
+        <a href="/posts/{{ item.id }}">보기</a> |
+        <a href="/posts/{{ item.id }}/edit">수정</a> |
+        <form
+          method="POST"
+          action="/posts/{{ item.id }}"
+          style="display: inline"
+        >
+          <input type="hidden" name="_method" value="DELETE" />
+          <button type="submit" onclick="return confirm('삭제하시겠습니까?');">
+            삭제
+          </button>
+        </form>
+      </td>
+    </tr>
+    <? } ?>
+  </tbody>
+</table>
