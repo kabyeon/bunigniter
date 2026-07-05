@@ -9,10 +9,7 @@ process.env.APP_ROOT = APP_ROOT;
 
 function safeStaticPath(urlPathname: string): string | null {
 	const publicDir = resolve(process.cwd(), "public");
-	const resolvedPath = resolve(
-		publicDir,
-		urlPathname.replace(/^\//, ""),
-	);
+	const resolvedPath = resolve(publicDir, urlPathname.replace(/^\//, ""));
 	const relPath = relative(publicDir, resolvedPath);
 	if (relPath.startsWith("..")) return null;
 	return resolvedPath;
@@ -27,10 +24,22 @@ async function bootstrap() {
 ╚══════════════════════════════════════════╝
   `);
 
-	// ── 라우트 구성 ──
+	// ── 웹 라우트 구성 ──
 	const router = (await import("./config/routes.ts")).default;
 	router.printRoutes();
-	const { routes: appRoutes, fetch: appFetch } = router.toBunServe();
+
+	// ── API 라우트 구성 ──
+	const apiRouter = (await import("./config/api_routes.ts")).default;
+	const { routes: webRoutes, fetch: webFetch } = router.toBunServe();
+	const { routes: apiRoutes } = apiRouter.toBunServe();
+
+	// ── OpenAPI ──
+	const { getOpenApiSpec, getSwaggerUiHtml } = await import("./config/openapi.ts");
+	const openApiSpec = getOpenApiSpec();
+	const swaggerHtml = getSwaggerUiHtml();
+
+	console.log("  📖 API 문서: http://localhost:" + (process.env.PORT ?? 3001) + "/api/docs");
+	console.log("");
 
 	// ── 정적 파일 라우트 ──
 	const staticRoutes: Record<
@@ -52,6 +61,20 @@ async function bootstrap() {
 		};
 	}
 
+	// ── OpenAPI 라우트 ──
+	const openApiRoutes: Record<string, (req: any) => Response | Promise<Response>> = {
+		"/api/docs": () => {
+			return new Response(swaggerHtml, {
+				headers: { "Content-Type": "text/html; charset=utf-8" },
+			});
+		},
+		"/api/docs/json": () => {
+			return new Response(JSON.stringify(openApiSpec, null, 2), {
+				headers: { "Content-Type": "application/json" },
+			});
+		},
+	};
+
 	// ── Bun.serve 서버 시작 ──
 	const port = Number(process.env.PORT ?? 3001);
 
@@ -59,11 +82,13 @@ async function bootstrap() {
 		port,
 		routes: {
 			...staticRoutes,
-			...appRoutes,
+			...openApiRoutes,
+			...apiRoutes,
+			...webRoutes,
 		} as any,
 		fetch(req) {
 			try {
-				return appFetch(req);
+				return webFetch(req);
 			} catch (err: any) {
 				console.error(`[ERROR] ${err.message}`);
 				return new Response(
