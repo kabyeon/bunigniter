@@ -34,11 +34,17 @@ async function bootstrap() {
 	const { routes: apiRoutes } = apiRouter.toBunServe();
 
 	// ── OpenAPI ──
-	const { getOpenApiSpec, getSwaggerUiHtml } = await import("./config/openapi.ts");
+	const { getOpenApiSpec, getSwaggerUiHtml } = await import(
+		"./config/openapi.ts"
+	);
 	const openApiSpec = getOpenApiSpec();
 	const swaggerHtml = getSwaggerUiHtml();
 
-	console.log("  📖 API 문서: http://localhost:" + (process.env.PORT ?? 3001) + "/api/docs");
+	console.log(
+		"  📖 API 문서: http://localhost:" +
+			(process.env.PORT ?? 3001) +
+			"/api/docs",
+	);
 	console.log("");
 
 	// ── 정적 파일 라우트 ──
@@ -62,7 +68,10 @@ async function bootstrap() {
 	}
 
 	// ── OpenAPI 라우트 ──
-	const openApiRoutes: Record<string, (req: any) => Response | Promise<Response>> = {
+	const openApiRoutes: Record<
+		string,
+		(req: any) => Response | Promise<Response>
+	> = {
 		"/api/docs": () => {
 			return new Response(swaggerHtml, {
 				headers: { "Content-Type": "text/html; charset=utf-8" },

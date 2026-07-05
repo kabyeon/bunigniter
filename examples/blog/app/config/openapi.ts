@@ -173,8 +173,7 @@ openApiGenerator.describe("POST", "/api/posts", {
 						title: { type: "string", description: "포스트 제목" },
 						slug: {
 							type: "string",
-							description:
-								"포스트 슬러그 (미지정시 자동 생성)",
+							description: "포스트 슬러그 (미지정시 자동 생성)",
 						},
 						content: {
 							type: "string",
@@ -363,8 +362,7 @@ openApiGenerator.describe("DELETE", "/api/comments/:id", {
 // ─── Auth API 문서 ────────────────────────────────
 openApiGenerator.describe("POST", "/api/auth/login", {
 	summary: "API 로그인",
-	description:
-		"이메일/비밀번호로 인증하고 API 토큰을 발급받습니다.",
+	description: "이메일/비밀번호로 인증하고 API 토큰을 발급받습니다.",
 	tags: ["Auth"],
 	requestBody: {
 		required: true,

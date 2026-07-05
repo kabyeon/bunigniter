@@ -46,10 +46,10 @@ export class ApiAuthController extends Controller {
 		}
 
 		// 간단한 토큰 생성 (실제 프로덕션에서는 JWT 등 사용)
-		const token = await Bun.password.hash(
-			`${user.id}:${Date.now()}`,
-			{ algorithm: "bcrypt", cost: 4 },
-		);
+		const token = await Bun.password.hash(`${user.id}:${Date.now()}`, {
+			algorithm: "bcrypt",
+			cost: 4,
+		});
 
 		return this.json({
 			data: {
