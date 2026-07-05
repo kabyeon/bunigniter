@@ -332,7 +332,7 @@ export class Router {
 					params,
 					query,
 					body: () => bodyData,
-					};
+				};
 
 				const result = await route.handler(controllerCtx);
 

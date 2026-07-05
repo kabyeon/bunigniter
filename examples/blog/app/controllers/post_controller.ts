@@ -10,7 +10,10 @@ function safeRedirect(url: string): string {
 
 /** 검증된 경로로 302 리다이렉트 응답 생성 */
 function redirect(url: string): Response {
-	return new Response(null, { status: 302, headers: { Location: safeRedirect(url) } });
+	return new Response(null, {
+		status: 302,
+		headers: { Location: safeRedirect(url) },
+	});
 }
 
 export class PostController extends Controller {

@@ -22,7 +22,10 @@ export class CommentController extends Controller {
 
 		await sql`INSERT INTO comments (post_id, author_name, content) VALUES (${post.id}, ${data.author_name}, ${data.content})`;
 
-		return new Response(null, { status: 302, headers: { Location: safeRedirect(`/posts/${params.postId}`) } });
+		return new Response(null, {
+			status: 302,
+			headers: { Location: safeRedirect(`/posts/${params.postId}`) },
+		});
 	}
 
 	// DELETE /comments/:id
