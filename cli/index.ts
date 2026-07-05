@@ -17,6 +17,7 @@ import { serve } from "./commands/serve.ts";
 import { migrate } from "./commands/migrate.ts";
 import { migrateRollback } from "./commands/migraterollback.ts";
 import { makeSeed, dbSeed } from "./commands/dbseed.ts";
+import { replCommand } from "./commands/repl.ts";
 
 const registry = new CommandRegistry();
 
@@ -35,6 +36,7 @@ registry.register("serve", serve);
 registry.register("migrate", migrate);
 registry.register("migrate:rollback", migrateRollback);
 registry.register("db:seed", dbSeed);
+registry.register("repl", replCommand);
 
 // CLI 실행
 const args = process.argv.slice(2);

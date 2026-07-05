@@ -179,3 +179,44 @@ export {
 	createAuditLogRoutes,
 } from "./audit_log_ui.ts";
 export type { AuditLogUIConfig } from "./audit_log_ui.ts";
+export {
+	SSEManager,
+	sse,
+	createSSERoutes,
+} from "./sse.ts";
+export type {
+	SSEClient,
+	SSEEvent,
+	SSEConfig,
+} from "./sse.ts";
+export {
+	ImageEditor,
+} from "./image.ts";
+export type {
+	ImageFormat,
+	ResizeFit,
+	ResizeFilter,
+	ResizeOptions,
+	ImageInputOptions,
+	JpegOptions,
+	PngOptions,
+	WebpOptions,
+	HeicOptions,
+	AvifOptions,
+	ModulateOptions,
+	ImageInfo,
+	EditOptions,
+} from "./image.ts";
+export {
+	Crypto,
+} from "./crypto.ts";
+export type {
+	CryptoAlgorithm,
+	HmacAlgorithm,
+	PasswordAlgorithm,
+	NonCryptoAlgorithm,
+	DigestEncoding,
+	HashOptions,
+	HmacOptions,
+	PasswordHashOptions,
+} from "./crypto.ts";
