@@ -302,7 +302,9 @@ export class AuditLog {
 		if (!AuditLog.modelInstance) {
 			AuditLog.modelInstance = new AuditLogModel();
 		}
-		const all = await AuditLog.modelInstance.findWhere({ user_id: userId } as any);
+		const all = await AuditLog.modelInstance.findWhere({
+			user_id: userId,
+		} as any);
 		return all.slice(0, limit) as AuditLogEntry[];
 	}
 
@@ -312,7 +314,10 @@ export class AuditLog {
 	 * 모델에 감사 추적 설정
 	 * 모델의 create/update/delete 후 자동 로그 기록
 	 */
-	static track(model: any, events: string[] = ["create", "update", "delete"]): void {
+	static track(
+		model: any,
+		events: string[] = ["create", "update", "delete"],
+	): void {
 		const tableName = model.tableName ?? "unknown";
 		AuditLog.trackedModels.set(tableName, { model, events });
 	}

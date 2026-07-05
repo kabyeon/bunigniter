@@ -66,7 +66,7 @@ export class Shell {
 		const result = Bun.spawnSync({
 			cmd,
 			cwd: options?.cwd,
-			env: options?.env ?? process.env as any,
+			env: options?.env ?? (process.env as any),
 			timeout: options?.timeout,
 		});
 
@@ -85,11 +85,14 @@ export class Shell {
 	 * Bun.spawn() 내장 사용
 	 * HTTP 서버/앱에 적합
 	 */
-	static async run(command: string, options?: ShellOptions): Promise<ShellResult> {
+	static async run(
+		command: string,
+		options?: ShellOptions,
+	): Promise<ShellResult> {
 		const cmd = command.split(" ");
 		const spawnOptions: any = {
 			cwd: options?.cwd,
-			env: options?.env ?? process.env as any,
+			env: options?.env ?? (process.env as any),
 			timeout: options?.timeout,
 			stdout: "pipe" as const,
 			stderr: "pipe" as const,
@@ -98,7 +101,7 @@ export class Shell {
 		if (options?.input) {
 			if (typeof options.input === "string") {
 				spawnOptions.stdin = new Response(options.input);
-				} else if (options.input instanceof Uint8Array) {
+			} else if (options.input instanceof Uint8Array) {
 				spawnOptions.stdin = new Response(options.input as any);
 			} else {
 				spawnOptions.stdin = options.input;
@@ -133,7 +136,7 @@ export class Shell {
 		const cmd = [command, ...args];
 		const proc = Bun.spawn(cmd, {
 			cwd: options?.cwd,
-			env: options?.env ?? process.env as any,
+			env: options?.env ?? (process.env as any),
 			timeout: options?.timeout,
 			stdout: "pipe",
 			stderr: "pipe",
@@ -170,7 +173,7 @@ export class Shell {
 		const spawnOptions: any = {
 			cmd: command,
 			cwd: options?.cwd,
-			env: options?.env ?? process.env as any,
+			env: options?.env ?? (process.env as any),
 			timeout: options?.timeout,
 			stdout: "pipe",
 			stderr: "pipe",
@@ -211,7 +214,10 @@ export class Shell {
 	/**
 	 * 명령어 실행 후 표준 출력만 반환
 	 */
-	static async output(command: string, options?: ShellOptions): Promise<string> {
+	static async output(
+		command: string,
+		options?: ShellOptions,
+	): Promise<string> {
 		const result = await Shell.run(command, options);
 		return result.stdout.trim();
 	}
@@ -219,7 +225,10 @@ export class Shell {
 	/**
 	 * 명령어 실행 후 성공 여부만 반환
 	 */
-	static async success(command: string, options?: ShellOptions): Promise<boolean> {
+	static async success(
+		command: string,
+		options?: ShellOptions,
+	): Promise<boolean> {
 		const result = await Shell.run(command, options);
 		return result.success;
 	}
@@ -235,7 +244,10 @@ export class Shell {
 	/**
 	 * 파이프라인 실행
 	 */
-	static async pipe(commands: string[], options?: ShellOptions): Promise<ShellResult> {
+	static async pipe(
+		commands: string[],
+		options?: ShellOptions,
+	): Promise<ShellResult> {
 		const pipedCommand = commands.join(" | ");
 		return await Shell.run(pipedCommand, options);
 	}

@@ -4,7 +4,7 @@
 // HTML UI + JSON API
 // ============================================================
 
-import { Queue, type JobPayload } from "./queue.ts";
+import { Queue } from "./queue.ts";
 import { Scheduler } from "./scheduler.ts";
 
 // ─── 대시보드 데이터 인터페이스 ──────────────────────────
@@ -132,12 +132,16 @@ export function dashboardHtml(data: DashboardData): string {
     <tr><th>Queue</th><th>Pending</th><th>Failed</th><th>Actions</th></tr>
   </thead>
   <tbody>
-    ${data.queues.map((q) => `<tr>
+    ${data.queues
+			.map(
+				(q) => `<tr>
       <td><code>${q.name}</code></td>
       <td>${q.size}</td>
       <td class="${q.failedSize > 0 ? "error-text" : ""}">${q.failedSize}</td>
       <td>${q.failedSize > 0 ? `<button class="btn btn-danger" onclick="flushFailed('${q.name}')">Flush Failed</button>` : "-"}</td>
-    </tr>`).join("\n    ")}
+    </tr>`,
+			)
+			.join("\n    ")}
   </tbody>
 </table>
 </div>
@@ -149,7 +153,9 @@ export function dashboardHtml(data: DashboardData): string {
     <tr><th>Name</th><th>Schedule</th><th>Status</th><th>Runs</th><th>Errors</th><th>Last Run</th><th>Next Run</th></tr>
   </thead>
   <tbody>
-    ${data.scheduledJobs.map((j) => `<tr>
+    ${data.scheduledJobs
+			.map(
+				(j) => `<tr>
       <td><code>${j.name}</code></td>
       <td>${j.schedule}</td>
       <td><span class="status-badge ${j.enabled ? "status-running" : "status-stopped"}">${j.enabled ? "Active" : "Disabled"}</span></td>
@@ -157,16 +163,22 @@ export function dashboardHtml(data: DashboardData): string {
       <td class="${j.errorCount > 0 ? "error-text" : ""}">${j.errorCount}</td>
       <td>${j.lastRunAt ? new Date(j.lastRunAt).toLocaleString() : "-"}</td>
       <td>${j.nextRun ?? "-"}</td>
-    </tr>`).join("\n    ")}
+    </tr>`,
+			)
+			.join("\n    ")}
   </tbody>
 </table>
 </div>
 
 <h2>🔧 Registered Handlers</h2>
 <div class="card">
-  ${data.registeredHandlers.length > 0
-    ? data.registeredHandlers.map((h) => `<span class="tag">${h}</span>`).join(" ")
-    : '<p style="color:#666">No handlers registered</p>'}
+  ${
+		data.registeredHandlers.length > 0
+			? data.registeredHandlers
+					.map((h) => `<span class="tag">${h}</span>`)
+					.join(" ")
+			: '<p style="color:#666">No handlers registered</p>'
+	}
 </div>
 
 <h2>🖥 Runtime</h2>
@@ -182,6 +194,7 @@ export function dashboardHtml(data: DashboardData): string {
 <div class="actions">
   <button class="btn btn-success" onclick="fetch('/_dashboard/api/worker/start',{method:'POST'}).then(()=>location.reload())">Start Worker</button>
   <button class="btn btn-danger" onclick="fetch('/_dashboard/api/worker/stop',{method:'POST'}).then(()=>location.reload())">Stop Worker</button>
+  <a href="/_audit" class="btn btn-primary" style="text-decoration:none">📋 Audit Log</a>
   <button class="btn btn-primary" onclick="location.reload()">Refresh</button>
 </div>
 <div class="refresh-info">Auto-refresh every 10 seconds</div>
@@ -262,7 +275,7 @@ export function createDashboardRoutes(
 		{
 			method: "GET",
 			path: "/_dashboard",
-			async handler(ctx: any) {
+			async handler(_ctx: any) {
 				const data = await collectDashboardData(queueNames);
 				const html = dashboardHtml(data);
 				return new Response(html, {
@@ -274,7 +287,7 @@ export function createDashboardRoutes(
 		{
 			method: "GET",
 			path: "/_dashboard/api",
-			async handler(ctx: any) {
+			async handler(_ctx: any) {
 				const data = await collectDashboardData(queueNames);
 				return Response.json(data);
 			},
@@ -283,7 +296,7 @@ export function createDashboardRoutes(
 		{
 			method: "POST",
 			path: "/_dashboard/api/worker/start",
-			handler(ctx: any) {
+			handler(_ctx: any) {
 				Queue.work(queueNames[0]);
 				return Response.json({ ok: true, action: "worker_start" });
 			},
@@ -292,7 +305,7 @@ export function createDashboardRoutes(
 		{
 			method: "POST",
 			path: "/_dashboard/api/worker/stop",
-			handler(ctx: any) {
+			handler(_ctx: any) {
 				Queue.stop();
 				return Response.json({ ok: true, action: "worker_stop" });
 			},
@@ -326,7 +339,7 @@ export function createDashboardRoutes(
 		{
 			method: "GET",
 			path: "/_dashboard/api/scheduler",
-			handler(ctx: any) {
+			handler(_ctx: any) {
 				return Response.json(Scheduler.list());
 			},
 		},

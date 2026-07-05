@@ -76,7 +76,8 @@ export class BroadcastQueue {
 
 	constructor(config?: Partial<BroadcastQueueConfig>) {
 		this.config = {
-			redisUrl: config?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379",
+			redisUrl:
+				config?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379",
 			channelPrefix: config?.channelPrefix ?? "bunigniter:broadcast:",
 			queues: config?.queues ?? ["default"],
 			maxRetries: config?.maxRetries ?? 10,
@@ -149,10 +150,13 @@ export class BroadcastQueue {
 	 * 잡 브로드캐스트
 	 * 모든 구독자에게 새 잡을 알림
 	 */
-	async broadcastJob(queueName: string, jobData: {
-		type: string;
-		data: any;
-	}): Promise<void> {
+	async broadcastJob(
+		queueName: string,
+		jobData: {
+			type: string;
+			data: any;
+		},
+	): Promise<void> {
 		const message: BroadcastMessage = {
 			type: "job",
 			payload: { queue: queueName, ...jobData },
@@ -170,10 +174,7 @@ export class BroadcastQueue {
 	 * 명령 브로드캐스트
 	 * 모든 워커에 제어 명령 전파
 	 */
-	async broadcastCommand(
-		command: string,
-		params: any = {},
-	): Promise<void> {
+	async broadcastCommand(command: string, params: any = {}): Promise<void> {
 		const message: BroadcastMessage = {
 			type: "command",
 			payload: { command, ...params },
@@ -188,10 +189,7 @@ export class BroadcastQueue {
 	 * 이벤트 브로드캐스트
 	 * 잡 완료/실패 등의 이벤트를 모든 대시보드에 전달
 	 */
-	async broadcastEvent(
-		eventName: string,
-		data: any = {},
-	): Promise<void> {
+	async broadcastEvent(eventName: string, data: any = {}): Promise<void> {
 		const message: BroadcastMessage = {
 			type: "event",
 			payload: { event: eventName, ...data },
@@ -232,7 +230,9 @@ export class BroadcastQueue {
 		message: BroadcastMessage,
 	): Promise<void> {
 		if (!this.publisher || !this.connected) {
-			console.warn("[BunIgniter] BroadcastQueue not connected, skipping publish");
+			console.warn(
+				"[BunIgniter] BroadcastQueue not connected, skipping publish",
+			);
 			return;
 		}
 
@@ -288,13 +288,17 @@ export class BroadcastQueue {
 			case "worker:start": {
 				const queue = message.payload?.queue ?? "default";
 				Queue.work(queue);
-				console.log(`[BunIgniter] Received worker:start command for "${queue}"`);
+				console.log(
+					`[BunIgniter] Received worker:start command for "${queue}"`,
+				);
 				break;
 			}
 			case "flush:failed": {
 				const queue = message.payload?.queue ?? "default";
 				Queue.flushFailed(queue);
-				console.log(`[BunIgniter] Received flush:failed command for "${queue}"`);
+				console.log(
+					`[BunIgniter] Received flush:failed command for "${queue}"`,
+				);
 				break;
 			}
 			case "scheduler:stop":
@@ -324,7 +328,8 @@ export class BroadcastQueue {
 function Scheduler_stopAll(): void {
 	try {
 		// 동적 임포트 대신 직접 호출
-		const { Scheduler } = require("./scheduler.ts") as typeof import("./scheduler.ts");
+		const { Scheduler } =
+			require("./scheduler.ts") as typeof import("./scheduler.ts");
 		Scheduler.stopAll();
 	} catch {
 		console.error("[BunIgniter] Failed to stop scheduler via broadcast");

@@ -4,6 +4,8 @@
 // 인프로세스 + OS-레벨 크론잡 지원
 // ============================================================
 
+import { DistributedLock } from "./distributed_lock.ts";
+
 // ─── 스케줄드 잡 인터페이스 ──────────────────────────
 
 export interface ScheduledJobConfig {
@@ -87,33 +89,27 @@ export class Scheduler {
 		let cronJob: any = null;
 
 		if (enabled) {
-			cronJob = Bun.cron(schedule, function (this: any) {
+			cronJob = Bun.cron(schedule, async function (this: any) {
 				const job = Scheduler.jobs.get(name);
 				if (!job || !job.enabled) return;
 
-				job.lastRunAt = Date.now();
-				try {
-					const result = handler.call(this);
-					// Promise면 에러 캐치
-					if (result instanceof Promise) {
-						result.catch((err: any) => {
-							job.lastError = err?.message ?? String(err);
-							job.errorCount++;
-							console.error(
-								`[BunIgniter] Scheduled job "${name}" failed:`,
-								err,
-							);
-						});
+				// 분산 잠금이 활성화된 경우
+				if (Scheduler.lockEnabled) {
+					const result = await DistributedLock.runScheduled(name, async () => {
+						await Scheduler.executeJob(job, handler, this);
+					});
+					if (!result.executed) {
+						console.log(`[BunIgniter] Scheduled job "${name}" skipped (locked by another server)`);
+						return;
 					}
-					job.runCount++;
-				} catch (err: any) {
-					job.lastError = err?.message ?? String(err);
-					job.errorCount++;
-					console.error(
-						`[BunIgniter] Scheduled job "${name}" failed:`,
-						err,
-					);
+					if (result.error) {
+						job.lastError = result.error;
+						job.errorCount++;
+					}
+					return;
 				}
+
+				await Scheduler.executeJob(job, handler, this);
 			});
 		}
 
@@ -172,22 +168,25 @@ export class Scheduler {
 
 		if (!job.enabled) {
 			job.enabled = true;
-			job.cronJob = Bun.cron(job.schedule, function (this: any) {
+			job.cronJob = Bun.cron(job.schedule, async function (this: any) {
 				if (!job.enabled) return;
-				job.lastRunAt = Date.now();
-				try {
-					const result = job.handler.call(this);
-					if (result instanceof Promise) {
-						result.catch((err: any) => {
-							job.lastError = err?.message ?? String(err);
-							job.errorCount++;
-						});
+
+				if (Scheduler.lockEnabled) {
+					const result = await DistributedLock.runScheduled(name, async () => {
+						await Scheduler.executeJob(job, job.handler, this);
+					});
+					if (!result.executed) {
+						console.log(`[BunIgniter] Scheduled job "${name}" skipped (locked)`);
+						return;
 					}
-					job.runCount++;
-				} catch (err: any) {
-					job.lastError = err?.message ?? String(err);
-					job.errorCount++;
+					if (result.error) {
+						job.lastError = result.error;
+						job.errorCount++;
+					}
+					return;
 				}
+
+				await Scheduler.executeJob(job, job.handler, this);
 			});
 		}
 		return true;
@@ -218,9 +217,7 @@ export class Scheduler {
 			}
 		}
 		Scheduler.started = true;
-		console.log(
-			`[BunIgniter] Scheduler started: ${Scheduler.jobs.size} jobs`,
-		);
+		console.log(`[BunIgniter] Scheduler started: ${Scheduler.jobs.size} jobs${Scheduler.lockEnabled ? " (distributed lock enabled)" : ""}`);
 	}
 
 	/**
@@ -235,6 +232,28 @@ export class Scheduler {
 		}
 		Scheduler.started = false;
 		console.log("[BunIgniter] Scheduler stopped");
+	}
+
+	// ─── 잡 실행 헬퍼 ──────────────────────────────────
+
+	/** 잡 실행 (분산 잠금 래퍼에서도 사용) */
+	private static async executeJob(
+		job: TrackedJob,
+		handler: () => unknown,
+		context: any,
+	): Promise<void> {
+		job.lastRunAt = Date.now();
+		try {
+			const result = handler.call(context);
+			if (result instanceof Promise) {
+				await result;
+			}
+			job.runCount++;
+		} catch (err: any) {
+			job.lastError = err?.message ?? String(err);
+			job.errorCount++;
+			console.error(`[BunIgniter] Scheduled job "${job.name}" failed:`, err);
+		}
 	}
 
 	// ─── OS-레벨 크론 ─────────────────────────────────
@@ -259,7 +278,24 @@ export class Scheduler {
 		console.log(`[BunIgniter] OS cron removed: "${title}"`);
 	}
 
-	// ─── 크론 표현식 파싱 ──────────────────────────────
+	private static lockEnabled: boolean = false;
+
+	/** 분산 잠금 활성화 (Redis 드라이버 필요) */
+	static enableDistributedLock(driver: "memory" | "redis" = "memory"): void {
+		DistributedLock.configure({ driver });
+		Scheduler.lockEnabled = true;
+	}
+
+	/** 분산 잠금 비활성화 */
+	static disableDistributedLock(): void {
+		Scheduler.lockEnabled = false;
+	}
+
+	/** 분산 잠금 상태 */
+	static isDistributedLockEnabled(): boolean {
+		return Scheduler.lockEnabled;
+	}
+
 
 	/**
 	 * 크론 표현식의 다음 실행 시각 조회

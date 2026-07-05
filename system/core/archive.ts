@@ -128,10 +128,7 @@ export class Archive {
 	 * 아카이브 추출
 	 * Bun.Archive.extract() 내장 사용
 	 */
-	async extract(
-		targetDir: string,
-		options?: ExtractOptions,
-	): Promise<number> {
+	async extract(targetDir: string, options?: ExtractOptions): Promise<number> {
 		if (options?.glob) {
 			return await this.bunArchive.extract(targetDir, {
 				glob: options.glob,
@@ -144,9 +141,7 @@ export class Archive {
 	 * 아카이브 내용 조회 (추출 없이)
 	 * Bun.Archive.files() 내장 사용
 	 */
-	async files(
-		glob?: string | readonly string[],
-	): Promise<Map<string, File>> {
+	async files(glob?: string | readonly string[]): Promise<Map<string, File>> {
 		if (glob) {
 			return await this.bunArchive.files(glob);
 		}

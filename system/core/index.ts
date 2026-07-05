@@ -139,9 +139,7 @@ export type {
 	ArchiveOptions as BunIgniterArchiveOptions,
 	ExtractOptions as BunIgniterExtractOptions,
 } from "./archive.ts";
-export {
-	Shell,
-} from "./shell.ts";
+export { Shell } from "./shell.ts";
 export type {
 	ShellResult,
 	ShellOptions,
@@ -155,3 +153,31 @@ export type {
 	AuditLogEntry,
 	AuditLogConfig,
 } from "./audit_log.ts";
+export {
+	WorkerPool,
+	getWorkerPool,
+	resetWorkerPool,
+} from "./worker_pool.ts";
+export type {
+	WorkerPoolConfig,
+	WorkerPoolEvents,
+	WorkerInMessage,
+	WorkerOutMessage,
+} from "./worker_pool.ts";
+export {
+	DistributedLock,
+	distributedLock,
+	RedisLockDriver,
+	MemoryLockDriver,
+} from "./distributed_lock.ts";
+export type {
+	DistributedLockDriver,
+	DistributedLockConfig,
+} from "./distributed_lock.ts";
+export {
+	auditLogHtml,
+	createAuditLogRoutes,
+} from "./audit_log_ui.ts";
+export type {
+	AuditLogUIConfig,
+} from "./audit_log_ui.ts";

@@ -227,7 +227,10 @@ describe("Shell", () => {
 
 describe("AuditLog", () => {
 	beforeEach(() => {
-		AuditLog.configure({ enabled: true, trackEvents: ["create", "update", "delete", "login"] });
+		AuditLog.configure({
+			enabled: true,
+			trackEvents: ["create", "update", "delete", "login"],
+		});
 	});
 
 	test("설정 변경", () => {
@@ -253,7 +256,10 @@ describe("AuditLog", () => {
 		// "update"는 trackEvents에 없으므로 무시됨
 		const result = await AuditLog.log("update", "test", "1", {});
 		expect(result).toBeNull();
-		AuditLog.configure({ enabled: true, trackEvents: ["create", "update", "delete", "login"] });
+		AuditLog.configure({
+			enabled: true,
+			trackEvents: ["create", "update", "delete", "login"],
+		});
 	});
 
 	test("모델 추적 등록", () => {
