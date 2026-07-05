@@ -25,6 +25,12 @@ export interface AppConfig {
 	session: {
 		cookieName: string;
 		expiration: number;
+		/** 세션 드라이버: "memory" | "file" | "redis" */
+		driver: string;
+		/** 파일 세션 경로 (file 드라이버 시) */
+		path?: string;
+		/** Redis URL (redis 드라이버 시) */
+		redisUrl?: string;
 	};
 	/** CSRF 보호 */
 	csrf: {
@@ -46,6 +52,8 @@ const config: AppConfig = {
 	session: {
 		cookieName: "bunigniter_session",
 		expiration: 7200,
+		driver: "file",
+		path: "./storage/sessions",
 	},
 	csrf: {
 		enabled: false,

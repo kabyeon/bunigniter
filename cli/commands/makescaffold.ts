@@ -356,16 +356,28 @@ export async function down(sql: SQL): Promise<void> {
 `,
 		);
 
+		// ─── 5. 라우트 자동 등록 ──────────────────────────────
+		console.log(`\n🛤  Route`);
+		const { appendRouteToFile } = await import("./routegen.ts");
+		const added = appendRouteToFile(process.cwd(), { name, isApi });
+
+		if (added) {
+			console.log(`  ✅ routes.ts 에 ${isApi ? "API " : ""}라우트 자동 등록됨`);
+		} else {
+			console.log(`  ⚠️  routes.ts 에 수동으로 추가하세요:`);
+			console.log(`    import ${snake}_controller from "app/controllers/${snake}_controller.ts";`);
+			if (isApi) {
+				console.log(`    router.group("/api", [], (apiRouter) => {`);
+				console.log(`      apiRouter.resource("${plural}", ${snake}_controller);`);
+				console.log(`    });`);
+			} else {
+				console.log(`    router.resource("${plural}", ${snake}_controller);`);
+			}
+		}
+
 		// ─── 완료 안내 ──────────────────────────────────
 		console.log("\n─────────────────────────────────────");
 		console.log(`\n✨ ${pascal} 스캐폴딩 완료!\n`);
-		console.log(`  📌 routes.ts 에 다음을 추가하세요:\n`);
-		console.log(
-			`    import ${snake}_controller from "app/controllers/${snake}_controller.ts";`,
-		);
-		console.log(`    `);
-		console.log(`    // ${pascal} ${isApi ? "API " : ""}리소스 라우트`);
-		console.log(`    router.resource("${plural}", ${snake}_controller);`);
 		console.log(`\n  📌 마이그레이션 실행:`);
 		console.log(`    bun run igniter migrate\n`);
 	},

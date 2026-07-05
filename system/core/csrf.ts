@@ -1,9 +1,30 @@
 // ============================================================
 // BunIgniter - CSRF Protection Middleware
-// CodeIgniter3 의 CSRF 보호와 동일
+// Double Submit Cookie 방식
+// 쿠키에 서명된 토큰을 저장하고, 요청 시 쿠키 토큰과
+// 전송된 토큰이 일치하는지 검증합니다.
 // ============================================================
 
-/** CSRF 토큰 생성 */
+/** CSRF 설정 */
+export interface CsrfConfig {
+	/** CSRF 토큰 쿠키명 (HttpOnly=false, JavaScript에서 읽기 가능) */
+	cookieName: string;
+	/** 폼 필드명 / 헤더명 */
+	tokenName: string;
+	/** 쿠키 SameSite 설정 */
+	sameSite: "Strict" | "Lax" | "None";
+	/** 쿠키 Secure 플래그 (HTTPS에서만) */
+	secure: boolean;
+}
+
+const DEFAULT_CONFIG: CsrfConfig = {
+	cookieName: "csrf_token",
+	tokenName: "csrf_token",
+	sameSite: "Lax",
+	secure: false,
+};
+
+/** CSRF 토큰 생성 (32바이트 난수) */
 export function generateCsrfToken(): string {
 	const bytes = new Uint8Array(32);
 	crypto.getRandomValues(bytes);
@@ -11,36 +32,42 @@ export function generateCsrfToken(): string {
 }
 
 /**
- * CSRF 토큰을 쿠키에서 읽거나 새로 생성
+ * Double Submit Cookie 방식 CSRF 토큰 처리
+ *
+ * 1. GET 요청: 쿠키에 CSRF 토큰을 설정합니다.
+ *    - 쿠키는 HttpOnly=false (JavaScript에서 읽을 수 있음)
+ *    - JavaScript에서 쿠키 값을 읽어 헤더나 폼 필드로 전송
+ *
+ * 2. POST/PUT/PATCH/DELETE: 쿠키의 토큰과 요청의 토큰이 일치하는지 검증
  */
-export function getCsrfToken(request: Request): {
-	token: string;
-	cookieHeader: string;
-} {
-	const cookieName = "csrf_token";
+export function getCsrfToken(
+	request: Request,
+	config?: Partial<CsrfConfig>,
+): { token: string; cookieHeader: string } {
+	const cfg = { ...DEFAULT_CONFIG, ...config };
 	const cookies = parseCookies(request);
-	let token = cookies[cookieName];
+	let token = cookies[cfg.cookieName];
 
 	if (!token) {
 		token = generateCsrfToken();
 	}
 
-	const cookieHeader = `${cookieName}=${token}; Path=/; SameSite=Lax; HttpOnly`;
+	const secureFlag = cfg.secure ? "; Secure" : "";
+	const cookieHeader = `${cfg.cookieName}=${token}; Path=/; SameSite=${cfg.sameSite}${secureFlag}`;
 	return { token, cookieHeader };
 }
 
 /**
- * CSRF 검증 미들웨어
- * POST/PUT/PATCH/DELETE 요청에 대해 토큰을 검증합니다.
+ * CSRF 검증 미들웨어 (Double Submit Cookie)
+ *
+ * 동작 방식:
+ *   GET 요청 → 쿠키에 CSRF 토큰 설정 (JavaScript에서 읽을 수 있음)
+ *   POST/PUT/PATCH/DELETE → 쿠키 토큰 == 요청 토큰 검증
  *
  * 사용법:
- *   1. 폼에 hidden 필드 추가: <input type="hidden" name="csrf_token" value="{{ csrfToken }}" />
- *   2. 라우트에 미들웨어 적용: router.post("/form", controller, "store", [csrfMiddleware])
- *
- * 토큰 전달 방법 (우선순위):
- *   1. 요청 본문의 csrf_token 필드
- *   2. X-CSRF-Token 헤더
- *   3. csrf_token 쿼리 파라미터
+ *   1. 폼: <?= csrfField(csrfToken) ?>
+ *   2. AJAX: 메타 태그에서 토큰 읽어 X-CSRF-Token 헤더로 전송
+ *   3. 라우트: router.post("/form", controller, "store", [csrfMiddleware])
  */
 export async function csrfMiddleware({
 	request,
@@ -58,7 +85,10 @@ export async function csrfMiddleware({
 	}
 
 	// 쿠키에서 토큰 읽기
-	const { token: cookieToken } = getCsrfToken(request);
+	const cfg = DEFAULT_CONFIG;
+	const cookies = parseCookies(request);
+	const cookieToken = cookies[cfg.cookieName];
+
 	if (!cookieToken) {
 		return new Response(
 			JSON.stringify({ error: "CSRF token missing from cookies" }),
@@ -72,20 +102,20 @@ export async function csrfMiddleware({
 	// 요청에서 토큰 찾기
 	let requestToken: string | null = null;
 
-	// 1. 본문에서 찾기
+	// 1. 본문 (JSON)
 	try {
 		const body = await request.clone().json();
-		requestToken = body?.csrf_token ?? body?._token ?? null;
+		requestToken = body?.[cfg.tokenName] ?? body?._token ?? null;
 	} catch {
 		// JSON이 아닌 경우
 	}
 
-	// 2. 폼 데이터에서 찾기
+	// 2. 폼 데이터
 	if (!requestToken) {
 		try {
 			const formData = await request.clone().formData();
 			requestToken =
-				(formData.get("csrf_token") as string) ??
+				(formData.get(cfg.tokenName) as string) ??
 				(formData.get("_token") as string) ??
 				null;
 		} catch {
@@ -93,7 +123,7 @@ export async function csrfMiddleware({
 		}
 	}
 
-	// 3. 헤더에서 찾기
+	// 3. 헤더
 	if (!requestToken) {
 		requestToken =
 			request.headers.get("x-csrf-token") ??
@@ -101,17 +131,17 @@ export async function csrfMiddleware({
 			null;
 	}
 
-	// 4. 쿼리 파라미터에서 찾기
+	// 4. 쿼리 파라미터
 	if (!requestToken) {
 		try {
 			const url = new URL(request.url);
-			requestToken = url.searchParams.get("csrf_token");
+			requestToken = url.searchParams.get(cfg.tokenName);
 		} catch {
 			// URL 파싱 실패
 		}
 	}
 
-	// 토큰 검증
+	// Double Submit Cookie 검증: 쿠키 토큰 == 요청 토큰
 	if (!requestToken || requestToken !== cookieToken) {
 		return new Response(JSON.stringify({ error: "CSRF token mismatch" }), {
 			status: 403,
@@ -133,6 +163,9 @@ export function csrfField(token: string): string {
 /**
  * 뷰에서 CSRF 메타 태그를 생성하는 헬퍼
  * AJAX 요청에서 사용: <meta name="csrf-token" content="..." />
+ *
+ * Double Submit Cookie 방식에서는 JavaScript가 쿠키에서도 토큰을 읽을 수 있지만,
+ * 메타 태그 방식도 지원합니다.
  */
 export function csrfMeta(token: string): string {
 	return `<meta name="csrf-token" content="${token}" />`;

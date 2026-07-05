@@ -5,5 +5,7 @@ database/*.db
 .pi-lens/
 storage/logs/*.log
 storage/sessions/sess_*
+storage/cache/*
+!storage/cache/.gitkeep
 public/uploads/*
 !public/uploads/.gitkeep

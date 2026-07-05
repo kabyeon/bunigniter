@@ -9,7 +9,10 @@ export { getDB, closeAllConnections } from "./database.ts";
 export { loadConfig, clearConfigCache, APP_ROOT } from "./config.ts";
 export { Input } from "./input.ts";
 export { Session } from "./session.ts";
+export type { SessionDriver, SessionConfig } from "./session_driver.ts";
+export { MemorySession } from "./memory_session.ts";
 export { FileSession } from "./file_session.ts";
+export { createSession, getSessionDriverName } from "./session_manager.ts";
 export { renderView } from "./view.ts";
 export type { MiddlewareContext, MiddlewareFn } from "./middleware.ts";
 export { runMiddlewarePipeline } from "./middleware.ts";
@@ -43,3 +46,40 @@ export {
 	getCsrfToken,
 	generateCsrfToken,
 } from "./csrf.ts";
+export type { CsrfConfig } from "./csrf.ts";
+export { Email, email } from "./email.ts";
+export type { EmailConfig, EmailMessage, EmailResult } from "./email.ts";
+export { Cache, cache } from "./cache.ts";
+export type {
+	CacheDriver,
+	CacheConfig,
+	MemoryCacheDriver,
+	FileCacheDriver,
+} from "./cache.ts";
+export {
+	WebSocketManager,
+	wsManager,
+	createWebSocketConfig,
+} from "./websocket.ts";
+export type {
+	WebSocketConfig,
+	WebSocketHandler,
+} from "./websocket.ts";
+export { RouteModelBinding } from "./route_model_binding.ts";
+export { corsMiddleware, createCorsMiddleware } from "./cors.ts";
+export type { CorsConfig } from "./cors.ts";
+export {
+	rateLimitMiddleware,
+	createRateLimitMiddleware,
+	cleanupRateLimitStore,
+	resetRateLimitStore,
+} from "./rate_limit.ts";
+export type { RateLimitConfig } from "./rate_limit.ts";
+export { OpenApiGenerator } from "./openapi.ts";
+export type { OpenApiConfig, OpenApiInfo } from "./openapi.ts";
+export {
+	startTestServer,
+	stopTestServer,
+	IntegrationTestClient,
+	createIntegrationTestClient,
+} from "./integration_test.ts";

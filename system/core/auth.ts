@@ -2,9 +2,11 @@
 // BunIgniter - Auth Library
 // CodeIgniter3 의 간소화된 인증 라이브러리
 // 세션 기반 인증 + bcrypt 패스워드 해싱
+// SessionDriver 인터페이스 기반으로 리팩토링
 // ============================================================
 
-import { FileSession } from "./file_session.ts";
+import { createSession } from "./session_manager.ts";
+import type { SessionDriver } from "./session_driver.ts";
 import { getDB } from "./database.ts";
 
 export interface AuthUser {
@@ -19,6 +21,13 @@ export interface AuthResult {
 	user?: AuthUser;
 	error?: string;
 }
+
+/** Auth에서 사용할 세션 설정 */
+const AUTH_SESSION_CONFIG = {
+	driver: "file" as const,
+	cookieName: "bunigniter_session",
+	expiration: 7200,
+};
 
 /**
  * 인증 라이브러리
@@ -39,9 +48,13 @@ export interface AuthResult {
 export class Auth {
 	private static USER_SESSION_KEY = "auth_user_id";
 
+	/** 세션 드라이버 생성 (설정에 따라 자동 선택) */
+	private static getSession(request: Request): SessionDriver {
+		return createSession(request, AUTH_SESSION_CONFIG);
+	}
+
 	/**
 	 * 이메일/비밀번호로 로그인 시도
-	 * CodeIgniter3: $this->ion_auth->login($identity, $password)
 	 */
 	static async attempt(
 		request: Request,
@@ -51,7 +64,6 @@ export class Auth {
 	): Promise<AuthResult> {
 		const sql = await getDB();
 
-		// 사용자 조회
 		const users =
 			await sql`SELECT * FROM ${sql(tableName)} WHERE email = ${email}`;
 		const user = users[0] as AuthUser | undefined;
@@ -60,7 +72,6 @@ export class Auth {
 			return { success: false, error: "사용자를 찾을 수 없습니다" };
 		}
 
-		// 비밀번호 검증 (bcrypt)
 		if (user.password) {
 			const valid = await Auth.verifyPassword(password, user.password);
 			if (!valid) {
@@ -68,8 +79,7 @@ export class Auth {
 			}
 		}
 
-		// 세션에 사용자 ID 저장
-		const session = new FileSession(request);
+		const session = Auth.getSession(request);
 		session.set(Auth.USER_SESSION_KEY, user.id);
 		session.set("auth_user", {
 			id: user.id,
@@ -78,7 +88,6 @@ export class Auth {
 		});
 		session.save();
 
-		// 비밀번호 필드 제거 후 반환
 		const { password: _, ...safeUser } = user;
 		return { success: true, user: safeUser as AuthUser };
 	}
@@ -100,7 +109,7 @@ export class Auth {
 			return { success: false, error: "사용자를 찾을 수 없습니다" };
 		}
 
-		const session = new FileSession(request);
+		const session = Auth.getSession(request);
 		session.set(Auth.USER_SESSION_KEY, user.id);
 		session.set("auth_user", {
 			id: user.id,
@@ -115,19 +124,17 @@ export class Auth {
 
 	/**
 	 * 로그인 상태 확인
-	 * CodeIgniter3: $this->ion_auth->logged_in()
 	 */
 	static check(request: Request): boolean {
-		const session = new FileSession(request);
+		const session = Auth.getSession(request);
 		return session.has(Auth.USER_SESSION_KEY);
 	}
 
 	/**
 	 * 현재 로그인한 사용자 조회
-	 * CodeIgniter3: $this->ion_auth->user()->row()
 	 */
 	static user(request: Request): AuthUser | null {
-		const session = new FileSession(request);
+		const session = Auth.getSession(request);
 		return session.get("auth_user") ?? null;
 	}
 
@@ -135,16 +142,15 @@ export class Auth {
 	 * 현재 로그인한 사용자 ID
 	 */
 	static id(request: Request): number | null {
-		const session = new FileSession(request);
+		const session = Auth.getSession(request);
 		return session.get(Auth.USER_SESSION_KEY) ?? null;
 	}
 
 	/**
 	 * 로그아웃
-	 * CodeIgniter3: $this->ion_auth->logout()
 	 */
 	static logout(request: Request): void {
-		const session = new FileSession(request);
+		const session = Auth.getSession(request);
 		session.remove(Auth.USER_SESSION_KEY);
 		session.remove("auth_user");
 		session.save();
@@ -174,9 +180,6 @@ export class Auth {
 /**
  * 인증 미들웨어
  * 로그인하지 않은 사용자를 /login 으로 리다이렉트합니다.
- *
- * 사용법:
- *   router.resource("admin", adminController, [authGuard]);
  */
 export async function authGuard({
 	request,

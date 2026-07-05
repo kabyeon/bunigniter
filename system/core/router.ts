@@ -8,6 +8,7 @@ import type { Elysia } from "elysia";
 import type { Controller, Context } from "./controller.ts";
 import type { MiddlewareFn } from "./middleware.ts";
 import { runMiddlewarePipeline } from "./middleware.ts";
+import { RouteModelBinding } from "./route_model_binding.ts";
 
 interface RouteDefinition {
 	method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -203,6 +204,25 @@ export class Router {
 				// Elysia params
 				if (ctx.params) {
 					Object.assign(params, ctx.params);
+				}
+
+				// ── 라우트 모델 바인딩 ──
+				const hasBinding = Object.keys(params).some((p) =>
+					RouteModelBinding.has(p),
+				);
+				if (hasBinding) {
+					const { params: resolvedParams, notFound } =
+						await RouteModelBinding.resolve(params);
+					if (notFound) {
+						return new Response(
+							JSON.stringify({ error: `${notFound} not found` }),
+							{
+								status: 404,
+								headers: { "Content-Type": "application/json" },
+							},
+						);
+					}
+					Object.assign(params, resolvedParams);
 				}
 
 				// Query 파라미터
