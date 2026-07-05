@@ -111,7 +111,10 @@ export class ImageEditor {
 	/**
 	 * BunFile에서 이미지 로드
 	 */
-	static fromBunFile(file: Bun.BunFile, options?: ImageInputOptions): ImageEditor {
+	static fromBunFile(
+		file: Bun.BunFile,
+		options?: ImageInputOptions,
+	): ImageEditor {
 		const img = (file as any).image(options);
 		return new ImageEditor(img);
 	}
@@ -119,7 +122,10 @@ export class ImageEditor {
 	/**
 	 * 바이트에서 이미지 로드
 	 */
-	static fromBytes(bytes: Uint8Array | ArrayBuffer, options?: ImageInputOptions): ImageEditor {
+	static fromBytes(
+		bytes: Uint8Array | ArrayBuffer,
+		options?: ImageInputOptions,
+	): ImageEditor {
 		const img = new (Bun as any).Image(bytes, options);
 		return new ImageEditor(img);
 	}
@@ -146,7 +152,15 @@ export class ImageEditor {
 	/**
 	 * 리사이즈
 	 */
-	resize(width: number, height?: number, options?: { fit?: ResizeFit; withoutEnlargement?: boolean; filter?: ResizeFilter }): ImageEditor {
+	resize(
+		width: number,
+		height?: number,
+		options?: {
+			fit?: ResizeFit;
+			withoutEnlargement?: boolean;
+			filter?: ResizeFilter;
+		},
+	): ImageEditor {
 		this.pipeline = this.pipeline.resize(width, height, options);
 		return this;
 	}
@@ -313,7 +327,10 @@ export class ImageEditor {
 		} else if (options.input instanceof Blob) {
 			editor = ImageEditor.fromBlob(options.input, options.inputOptions);
 		} else {
-			editor = ImageEditor.fromBytes(options.input as Uint8Array, options.inputOptions);
+			editor = ImageEditor.fromBytes(
+				options.input as Uint8Array,
+				options.inputOptions,
+			);
 		}
 
 		if (options.resize) {
@@ -330,11 +347,16 @@ export class ImageEditor {
 		if (options.flop) editor = editor.flop();
 		if (options.modulate) editor = editor.modulate(options.modulate);
 
-		if (options.outputFormat === "jpeg" || options.jpeg) editor = editor.jpeg(options.jpeg);
-		if (options.outputFormat === "png" || options.png) editor = editor.png(options.png);
-		if (options.outputFormat === "webp" || options.webp) editor = editor.webp(options.webp);
-		if (options.outputFormat === "heic" || options.heic) editor = editor.heic(options.heic);
-		if (options.outputFormat === "avif" || options.avif) editor = editor.avif(options.avif);
+		if (options.outputFormat === "jpeg" || options.jpeg)
+			editor = editor.jpeg(options.jpeg);
+		if (options.outputFormat === "png" || options.png)
+			editor = editor.png(options.png);
+		if (options.outputFormat === "webp" || options.webp)
+			editor = editor.webp(options.webp);
+		if (options.outputFormat === "heic" || options.heic)
+			editor = editor.heic(options.heic);
+		if (options.outputFormat === "avif" || options.avif)
+			editor = editor.avif(options.avif);
 
 		return editor;
 	}
@@ -349,19 +371,30 @@ export class ImageEditor {
 		format: ImageFormat = "webp",
 		quality: number = 80,
 	): Promise<number> {
-		const editor = (typeof input === "string"
-			? ImageEditor.fromFile(input)
-			: input instanceof Blob
-				? ImageEditor.fromBlob(input)
-				: ImageEditor.fromBytes(input as Uint8Array))
-			.resize(size, size, { fit: "inside" });
+		const editor = (
+			typeof input === "string"
+				? ImageEditor.fromFile(input)
+				: input instanceof Blob
+					? ImageEditor.fromBlob(input)
+					: ImageEditor.fromBytes(input as Uint8Array)
+		).resize(size, size, { fit: "inside" });
 
 		switch (format) {
-			case "jpeg": editor.jpeg({ quality }); break;
-			case "png": editor.png(); break;
-			case "webp": editor.webp({ quality }); break;
-			case "heic": editor.heic({ quality }); break;
-			case "avif": editor.avif({ quality }); break;
+			case "jpeg":
+				editor.jpeg({ quality });
+				break;
+			case "png":
+				editor.png();
+				break;
+			case "webp":
+				editor.webp({ quality });
+				break;
+			case "heic":
+				editor.heic({ quality });
+				break;
+			case "avif":
+				editor.avif({ quality });
+				break;
 		}
 
 		return await editor.write(outputPath);
@@ -371,11 +404,12 @@ export class ImageEditor {
 	 * 이미지 메타데이터만 조회
 	 */
 	static async info(input: string | Blob | Uint8Array): Promise<ImageInfo> {
-		const editor = typeof input === "string"
-			? ImageEditor.fromFile(input)
-			: input instanceof Blob
-				? ImageEditor.fromBlob(input)
-				: ImageEditor.fromBytes(input as Uint8Array);
+		const editor =
+			typeof input === "string"
+				? ImageEditor.fromFile(input)
+				: input instanceof Blob
+					? ImageEditor.fromBlob(input)
+					: ImageEditor.fromBytes(input as Uint8Array);
 		return await editor.metadata();
 	}
 
@@ -388,18 +422,29 @@ export class ImageEditor {
 		format: ImageFormat,
 		options?: JpegOptions | PngOptions | WebpOptions,
 	): Promise<number> {
-		const editor = typeof input === "string"
-			? ImageEditor.fromFile(input)
-			: input instanceof Blob
-				? ImageEditor.fromBlob(input)
-				: ImageEditor.fromBytes(input as Uint8Array);
+		const editor =
+			typeof input === "string"
+				? ImageEditor.fromFile(input)
+				: input instanceof Blob
+					? ImageEditor.fromBlob(input)
+					: ImageEditor.fromBytes(input as Uint8Array);
 
 		switch (format) {
-			case "jpeg": editor.jpeg(options as JpegOptions); break;
-			case "png": editor.png(options as PngOptions); break;
-			case "webp": editor.webp(options as WebpOptions); break;
-			case "heic": editor.heic(options as HeicOptions); break;
-			case "avif": editor.avif(options as AvifOptions); break;
+			case "jpeg":
+				editor.jpeg(options as JpegOptions);
+				break;
+			case "png":
+				editor.png(options as PngOptions);
+				break;
+			case "webp":
+				editor.webp(options as WebpOptions);
+				break;
+			case "heic":
+				editor.heic(options as HeicOptions);
+				break;
+			case "avif":
+				editor.avif(options as AvifOptions);
+				break;
 		}
 
 		return await editor.write(outputPath);
@@ -408,19 +453,33 @@ export class ImageEditor {
 	/**
 	 * Base64로 인코딩
 	 */
-	static async toBase64(input: string | Blob | Uint8Array, format: ImageFormat = "webp"): Promise<string> {
-		const editor = typeof input === "string"
-			? ImageEditor.fromFile(input)
-			: input instanceof Blob
-				? ImageEditor.fromBlob(input)
-				: ImageEditor.fromBytes(input as Uint8Array);
+	static async toBase64(
+		input: string | Blob | Uint8Array,
+		format: ImageFormat = "webp",
+	): Promise<string> {
+		const editor =
+			typeof input === "string"
+				? ImageEditor.fromFile(input)
+				: input instanceof Blob
+					? ImageEditor.fromBlob(input)
+					: ImageEditor.fromBytes(input as Uint8Array);
 
 		switch (format) {
-			case "jpeg": editor.jpeg(); break;
-			case "png": editor.png(); break;
-			case "webp": editor.webp(); break;
-			case "heic": editor.heic(); break;
-			case "avif": editor.avif(); break;
+			case "jpeg":
+				editor.jpeg();
+				break;
+			case "png":
+				editor.png();
+				break;
+			case "webp":
+				editor.webp();
+				break;
+			case "heic":
+				editor.heic();
+				break;
+			case "avif":
+				editor.avif();
+				break;
 		}
 
 		return await editor.encodeToBase64();
@@ -429,19 +488,33 @@ export class ImageEditor {
 	/**
 	 * Data URL로 인코딩
 	 */
-	static async toDataURL(input: string | Blob | Uint8Array, format: ImageFormat = "webp"): Promise<string> {
-		const editor = typeof input === "string"
-			? ImageEditor.fromFile(input)
-			: input instanceof Blob
-				? ImageEditor.fromBlob(input)
-				: ImageEditor.fromBytes(input as Uint8Array);
+	static async toDataURL(
+		input: string | Blob | Uint8Array,
+		format: ImageFormat = "webp",
+	): Promise<string> {
+		const editor =
+			typeof input === "string"
+				? ImageEditor.fromFile(input)
+				: input instanceof Blob
+					? ImageEditor.fromBlob(input)
+					: ImageEditor.fromBytes(input as Uint8Array);
 
 		switch (format) {
-			case "jpeg": editor.jpeg(); break;
-			case "png": editor.png(); break;
-			case "webp": editor.webp(); break;
-			case "heic": editor.heic(); break;
-			case "avif": editor.avif(); break;
+			case "jpeg":
+				editor.jpeg();
+				break;
+			case "png":
+				editor.png();
+				break;
+			case "webp":
+				editor.webp();
+				break;
+			case "heic":
+				editor.heic();
+				break;
+			case "avif":
+				editor.avif();
+				break;
 		}
 
 		return await editor.dataurl();

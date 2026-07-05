@@ -6,14 +6,24 @@
 // ─── 타입 정의 ────────────────────────────────────────
 
 export type CryptoAlgorithm =
-	| "blake2b256" | "blake2b512"
-	| "md4" | "md5"
+	| "blake2b256"
+	| "blake2b512"
+	| "md4"
+	| "md5"
 	| "ripemd160"
 	| "sha1"
-	| "sha224" | "sha256" | "sha384" | "sha512"
-	| "sha512-224" | "sha512-256"
-	| "sha3-224" | "sha3-256" | "sha3-384" | "sha3-512"
-	| "shake128" | "shake256";
+	| "sha224"
+	| "sha256"
+	| "sha384"
+	| "sha512"
+	| "sha512-224"
+	| "sha512-256"
+	| "sha3-224"
+	| "sha3-256"
+	| "sha3-384"
+	| "sha3-512"
+	| "shake128"
+	| "shake256";
 
 export type HmacAlgorithm =
 	| "blake2b512"
@@ -83,7 +93,10 @@ export class Crypto {
 	 * Crypto.hash("hello world", { encoding: "base64" });  // sha256 base64
 	 * ```
 	 */
-	static hash(data: string | Uint8Array | ArrayBuffer, options?: HashOptions): string {
+	static hash(
+		data: string | Uint8Array | ArrayBuffer,
+		options?: HashOptions,
+	): string {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
 
@@ -116,7 +129,10 @@ export class Crypto {
 	 * const fileHash = await Crypto.hashFile("photo.jpg", { algorithm: "sha256" });
 	 * ```
 	 */
-	static async hashFile(filePath: string, options?: HashOptions): Promise<string> {
+	static async hashFile(
+		filePath: string,
+		options?: HashOptions,
+	): Promise<string> {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
 
@@ -138,7 +154,11 @@ export class Crypto {
 	 * Crypto.hmac("hello world", "secret-key", { algorithm: "sha512" });
 	 * ```
 	 */
-	static hmac(data: string | Uint8Array | ArrayBuffer, key: string, options?: HmacOptions): string {
+	static hmac(
+		data: string | Uint8Array | ArrayBuffer,
+		key: string,
+		options?: HmacOptions,
+	): string {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
 
@@ -156,7 +176,12 @@ export class Crypto {
 	 * Crypto.hmacVerify("payload", "secret", signature); // true
 	 * ```
 	 */
-	static hmacVerify(data: string | Uint8Array | ArrayBuffer, key: string, expected: string, options?: HmacOptions): boolean {
+	static hmacVerify(
+		data: string | Uint8Array | ArrayBuffer,
+		key: string,
+		expected: string,
+		options?: HmacOptions,
+	): boolean {
 		const actual = Crypto.hmac(data, key, options);
 		return Crypto.secureCompare(actual, expected);
 	}
@@ -173,7 +198,11 @@ export class Crypto {
 	 * Crypto.fastHash("data", undefined, "crc32"); // CRC32
 	 * ```
 	 */
-	static fastHash(data: string | Uint8Array | ArrayBuffer | DataView, seed?: number | bigint, algorithm: NonCryptoAlgorithm = "wyhash"): number | bigint {
+	static fastHash(
+		data: string | Uint8Array | ArrayBuffer | DataView,
+		seed?: number | bigint,
+		algorithm: NonCryptoAlgorithm = "wyhash",
+	): number | bigint {
 		const hasher = (Bun.hash as any)[algorithm] ?? Bun.hash;
 		return hasher(data, seed);
 	}
@@ -188,7 +217,10 @@ export class Crypto {
 	/**
 	 * xxHash64
 	 */
-	static xxHash64(data: string | Uint8Array | ArrayBuffer, seed?: bigint): bigint {
+	static xxHash64(
+		data: string | Uint8Array | ArrayBuffer,
+		seed?: bigint,
+	): bigint {
 		return Bun.hash.xxHash64(data, seed);
 	}
 
@@ -203,7 +235,10 @@ export class Crypto {
 	 * const hash = await Crypto.hashPassword("mypassword", { algorithm: "bcrypt", cost: 12 });
 	 * ```
 	 */
-	static async hashPassword(password: string, options?: PasswordHashOptions): Promise<string> {
+	static async hashPassword(
+		password: string,
+		options?: PasswordHashOptions,
+	): Promise<string> {
 		const algorithm = options?.algorithm ?? "argon2id";
 
 		if (algorithm === "bcrypt") {
@@ -223,7 +258,10 @@ export class Crypto {
 	/**
 	 * 비밀번호 해시 (동기)
 	 */
-	static hashPasswordSync(password: string, options?: PasswordHashOptions): string {
+	static hashPasswordSync(
+		password: string,
+		options?: PasswordHashOptions,
+	): string {
 		const algorithm = options?.algorithm ?? "argon2id";
 
 		if (algorithm === "bcrypt") {
@@ -248,7 +286,10 @@ export class Crypto {
 	 * const valid = await Crypto.verifyPassword("mypassword", storedHash);
 	 * ```
 	 */
-	static async verifyPassword(password: string, hash: string): Promise<boolean> {
+	static async verifyPassword(
+		password: string,
+		hash: string,
+	): Promise<boolean> {
 		return await Bun.password.verify(password, hash);
 	}
 
@@ -315,7 +356,11 @@ export class Crypto {
 	/**
 	 * 암호화 서명 토큰 (HMAC 기반)
 	 */
-	static createSignedToken(payload: string, secret: string, algorithm: HmacAlgorithm = "sha256"): string {
+	static createSignedToken(
+		payload: string,
+		secret: string,
+		algorithm: HmacAlgorithm = "sha256",
+	): string {
 		const signature = Crypto.hmac(payload, secret, { algorithm });
 		return `${payload}.${signature}`;
 	}
@@ -323,7 +368,11 @@ export class Crypto {
 	/**
 	 * 서명 토큰 검증
 	 */
-	static verifySignedToken(token: string, secret: string, algorithm: HmacAlgorithm = "sha256"): { valid: boolean; payload: string | null } {
+	static verifySignedToken(
+		token: string,
+		secret: string,
+		algorithm: HmacAlgorithm = "sha256",
+	): { valid: boolean; payload: string | null } {
 		const idx = token.lastIndexOf(".");
 		if (idx === -1) return { valid: false, payload: null };
 
@@ -356,14 +405,24 @@ export class Crypto {
 	 */
 	static getAlgorithms(): CryptoAlgorithm[] {
 		return [
-			"blake2b256", "blake2b512",
-			"md4", "md5",
+			"blake2b256",
+			"blake2b512",
+			"md4",
+			"md5",
 			"ripemd160",
 			"sha1",
-			"sha224", "sha256", "sha384", "sha512",
-			"sha512-224", "sha512-256",
-			"sha3-224", "sha3-256", "sha3-384", "sha3-512",
-			"shake128", "shake256",
+			"sha224",
+			"sha256",
+			"sha384",
+			"sha512",
+			"sha512-224",
+			"sha512-256",
+			"sha3-224",
+			"sha3-256",
+			"sha3-384",
+			"sha3-512",
+			"shake128",
+			"shake256",
 		];
 	}
 

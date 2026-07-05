@@ -54,7 +54,7 @@ describe("SSEManager", () => {
 		expect(clients.length).toBe(1);
 		manager.subscribe(clients[0].id, "notifications");
 		const channels = manager.getChannels();
-		expect(channels.some(c => c.name === "notifications")).toBe(true);
+		expect(channels.some((c) => c.name === "notifications")).toBe(true);
 	});
 
 	test("채널 구독 해제", () => {
@@ -63,7 +63,7 @@ describe("SSEManager", () => {
 		manager.subscribe(clients[0].id, "notifications");
 		manager.unsubscribe(clients[0].id, "notifications");
 		const channels = manager.getChannels();
-		expect(channels.some(c => c.name === "notifications")).toBe(false);
+		expect(channels.some((c) => c.name === "notifications")).toBe(false);
 	});
 
 	test("클라이언트 채널 조회", () => {
@@ -122,7 +122,7 @@ describe("SSEManager", () => {
 		const clients = manager.getClients();
 		manager.subscribe(clients[0].id, "alerts");
 		const channels = manager.getChannels();
-		expect(channels.some(c => c.name === "alerts")).toBe(true);
+		expect(channels.some((c) => c.name === "alerts")).toBe(true);
 	});
 
 	test("커스텀 메타데이터", () => {
@@ -138,9 +138,13 @@ describe("SSEManager", () => {
 	});
 
 	test("CORS 설정", () => {
-		const corsManager = new SSEManager({ allowedOrigin: "https://example.com" });
+		const corsManager = new SSEManager({
+			allowedOrigin: "https://example.com",
+		});
 		const response = corsManager.handleConnection();
-		expect(response.headers.get("Access-Control-Allow-Origin")).toBe("https://example.com");
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+			"https://example.com",
+		);
 	});
 });
 
@@ -162,7 +166,7 @@ describe("createSSERoutes", () => {
 
 	test("API 라우트 포함", () => {
 		const routes = createSSERoutes();
-		const apiRoutes = routes.filter(r => r.path.includes("/api"));
+		const apiRoutes = routes.filter((r) => r.path.includes("/api"));
 		expect(apiRoutes.length).toBeGreaterThanOrEqual(3);
 	});
 });
@@ -201,7 +205,9 @@ describe("ImageEditor", () => {
 	});
 
 	test("체인 메서드 - resize", () => {
-		const editor = ImageEditor.fromFile("test.jpg").resize(800, 600, { fit: "inside" });
+		const editor = ImageEditor.fromFile("test.jpg").resize(800, 600, {
+			fit: "inside",
+		});
 		expect(editor).toBeInstanceOf(ImageEditor);
 	});
 
@@ -221,7 +227,10 @@ describe("ImageEditor", () => {
 	});
 
 	test("체인 메서드 - modulate", () => {
-		const editor = ImageEditor.fromFile("test.jpg").modulate({ brightness: 1.2, saturation: 0 });
+		const editor = ImageEditor.fromFile("test.jpg").modulate({
+			brightness: 1.2,
+			saturation: 0,
+		});
 		expect(editor).toBeInstanceOf(ImageEditor);
 	});
 
@@ -245,7 +254,9 @@ describe("ImageEditor", () => {
 describe("Crypto", () => {
 	test("hash - SHA-256 기본", () => {
 		const hash = Crypto.hash("hello world");
-		expect(hash).toBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+		expect(hash).toBe(
+			"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+		);
 	});
 
 	test("hash - SHA-512", () => {
@@ -261,7 +272,9 @@ describe("Crypto", () => {
 	test("hash - Uint8Array 입력", () => {
 		const data = new TextEncoder().encode("hello world");
 		const hash = Crypto.hash(data);
-		expect(hash).toBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+		expect(hash).toBe(
+			"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+		);
 	});
 
 	test("createHasher - 증분 해시", () => {
@@ -270,16 +283,22 @@ describe("Crypto", () => {
 		hasher.update(" ");
 		hasher.update("world");
 		const result = hasher.digest("hex");
-		expect(result).toBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
+		expect(result).toBe(
+			"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
+		);
 	});
 
 	test("hmac - SHA-256", () => {
 		const hmac = Crypto.hmac("hello world", "secret-key");
-		expect(hmac).toBe("095d5a21fe6d0646db223fdf3de6436bb8dfb2fab0b51677ecf6441fcf5f2a67");
+		expect(hmac).toBe(
+			"095d5a21fe6d0646db223fdf3de6436bb8dfb2fab0b51677ecf6441fcf5f2a67",
+		);
 	});
 
 	test("hmac - base64 인코딩", () => {
-		const hmac = Crypto.hmac("hello world", "secret-key", { encoding: "base64" });
+		const hmac = Crypto.hmac("hello world", "secret-key", {
+			encoding: "base64",
+		});
 		expect(hmac.length).toBeGreaterThan(0);
 	});
 
@@ -314,7 +333,10 @@ describe("Crypto", () => {
 	});
 
 	test("hashPassword + verifyPassword (bcrypt)", async () => {
-		const hash = await Crypto.hashPassword("mypassword", { algorithm: "bcrypt", cost: 4 });
+		const hash = await Crypto.hashPassword("mypassword", {
+			algorithm: "bcrypt",
+			cost: 4,
+		});
 		expect(hash).toContain("$2b$");
 		const valid = await Crypto.verifyPassword("mypassword", hash);
 		expect(valid).toBe(true);
@@ -323,7 +345,10 @@ describe("Crypto", () => {
 	});
 
 	test("hashPasswordSync + verifyPasswordSync (bcrypt)", () => {
-		const hash = Crypto.hashPasswordSync("mypassword", { algorithm: "bcrypt", cost: 4 });
+		const hash = Crypto.hashPasswordSync("mypassword", {
+			algorithm: "bcrypt",
+			cost: 4,
+		});
 		expect(hash).toContain("$2b$");
 		expect(Crypto.verifyPasswordSync("mypassword", hash)).toBe(true);
 		expect(Crypto.verifyPasswordSync("wrongpassword", hash)).toBe(false);
@@ -331,7 +356,9 @@ describe("Crypto", () => {
 
 	test("uuid", () => {
 		const uuid = Crypto.uuid();
-		expect(uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+		expect(uuid).toMatch(
+			/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+		);
 	});
 
 	test("uuidBatch", () => {

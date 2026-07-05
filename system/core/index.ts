@@ -189,9 +189,7 @@ export type {
 	SSEEvent,
 	SSEConfig,
 } from "./sse.ts";
-export {
-	ImageEditor,
-} from "./image.ts";
+export { ImageEditor } from "./image.ts";
 export type {
 	ImageFormat,
 	ResizeFit,
@@ -207,9 +205,7 @@ export type {
 	ImageInfo,
 	EditOptions,
 } from "./image.ts";
-export {
-	Crypto,
-} from "./crypto.ts";
+export { Crypto } from "./crypto.ts";
 export type {
 	CryptoAlgorithm,
 	HmacAlgorithm,
