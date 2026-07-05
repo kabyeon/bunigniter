@@ -1,13 +1,27 @@
 import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
-import { getDB } from "system/core/database.ts";
+import { Model } from "system/core/model.ts";
+
+interface UserRow {
+	id: number;
+	email: string;
+	password: string;
+	name: string;
+	role: string;
+}
+
+class UserModel extends Model<UserRow> {
+	override tableName = "users";
+}
+
+const userModel = new UserModel();
 
 /**
  * Auth API 컨트롤러
- * JSON 기반 인증 API
+ * QueryBuilder (Active Record) 패턴 사용
  */
 export class ApiAuthController extends Controller {
-	// POST /api/auth/login — API 로그인 (토큰 반환)
+	// POST /api/auth/login — API 로그인
 	async login({ body, response }: Context) {
 		const data = body();
 
@@ -18,18 +32,11 @@ export class ApiAuthController extends Controller {
 			});
 		}
 
-		const sql = await getDB();
-		const users = await sql<
-			{
-				id: number;
-				email: string;
-				password: string;
-				name: string;
-				role: string;
-			}[]
-		>`SELECT id, email, password, name, role FROM users WHERE email = ${data.email}`;
+		const user = await userModel.qb()
+			.select("id, email, password, name, role")
+			.where("email", data.email)
+			.first<UserRow>();
 
-		const user = users[0];
 		if (!user) {
 			return response.status(401).json({
 				error: "Unauthorized",
@@ -45,11 +52,11 @@ export class ApiAuthController extends Controller {
 			});
 		}
 
-		// 간단한 토큰 생성 (실제 프로덕션에서는 JWT 등 사용)
-		const token = await Bun.password.hash(`${user.id}:${Date.now()}`, {
-			algorithm: "bcrypt",
-			cost: 4,
-		});
+		// 간단한 토큰 생성
+		const token = await Bun.password.hash(
+			`${user.id}:${Date.now()}`,
+			{ algorithm: "bcrypt", cost: 4 },
+		);
 
 		return this.json({
 			data: {
@@ -64,7 +71,7 @@ export class ApiAuthController extends Controller {
 		});
 	}
 
-	// GET /api/auth/me — 현재 사용자 정보 (간이 구현)
+	// GET /api/auth/me — 현재 사용자 정보
 	async me({ request, response }: Context) {
 		const authHeader = request.headers.get("Authorization");
 		if (!authHeader?.startsWith("Bearer ")) {
@@ -74,21 +81,20 @@ export class ApiAuthController extends Controller {
 			});
 		}
 
-		// 간이 구현: 실제로는 토큰 검증 필요
-		// 데모에서는 항상 admin 사용자 반환
-		const sql = await getDB();
-		const users = await sql<
-			{ id: number; email: string; name: string; role: string }[]
-		>`SELECT id, email, name, role FROM users WHERE id = 1`;
+		// 데모: admin 사용자 반환
+		const user = await userModel.qb()
+			.select("id, email, name, role")
+			.where("id", 1)
+			.first();
 
-		if (users.length === 0) {
+		if (!user) {
 			return response.status(401).json({
 				error: "Unauthorized",
 				message: "유효하지 않은 토큰입니다",
 			});
 		}
 
-		return this.json({ data: users[0] });
+		return this.json({ data: user });
 	}
 }
 

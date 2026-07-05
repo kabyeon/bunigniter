@@ -87,3 +87,24 @@ export async function closeAllConnections(): Promise<void> {
 		delete connections[name];
 	}
 }
+
+/**
+ * 테스트용: DB 연결 직접 주입
+ * 메모리 DB 등을 직접 설정할 때 사용
+ */
+export function setDB(sql: SQL, group: string = "default"): void {
+	connections[group] = sql;
+}
+
+/**
+ * 테스트용: DB 연결 초기화
+ */
+export function resetDB(group?: string): void {
+	if (group) {
+		delete connections[group];
+	} else {
+		for (const name of Object.keys(connections)) {
+			delete connections[name];
+		}
+	}
+}
