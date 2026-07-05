@@ -7,6 +7,7 @@ import { Elysia, NotFound } from "elysia";
 import { loadConfig } from "./config.ts";
 import type { AppConfig } from "../../app/config/app.ts";
 import { closeAllConnections } from "./database.ts";
+import { logger } from "./logger.ts";
 
 async function bootstrap() {
 	// 설정 로드
@@ -86,8 +87,11 @@ async function bootstrap() {
 	console.log(`  🎨 템플릿 엔진: Rendu`);
 	console.log("");
 
+	logger.info(`BunIgniter 서버 시작: http://localhost:${port} (${appConfig.env})`);
+
 	// 종료 시 정리
 	process.on("SIGINT", async () => {
+		logger.info("서버 종료 신호 수신 (SIGINT)");
 		console.log("\n\n  🔇 서버를 종료합니다...");
 		await closeAllConnections();
 		process.exit(0);

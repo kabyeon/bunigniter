@@ -15,6 +15,8 @@ import { makeLibrary } from "./commands/makelibrary.ts";
 import { listRoutes } from "./commands/listroutes.ts";
 import { serve } from "./commands/serve.ts";
 import { migrate } from "./commands/migrate.ts";
+import { migrateRollback } from "./commands/migraterollback.ts";
+import { makeSeed, dbSeed } from "./commands/dbseed.ts";
 
 const registry = new CommandRegistry();
 
@@ -27,9 +29,12 @@ registry.register("make:middleware", makeMiddleware);
 registry.register("make:scaffold", makeScaffold);
 registry.register("make:helper", makeHelper);
 registry.register("make:library", makeLibrary);
+registry.register("make:seed", makeSeed);
 registry.register("list:routes", listRoutes);
 registry.register("serve", serve);
 registry.register("migrate", migrate);
+registry.register("migrate:rollback", migrateRollback);
+registry.register("db:seed", dbSeed);
 
 // CLI 실행
 const args = process.argv.slice(2);

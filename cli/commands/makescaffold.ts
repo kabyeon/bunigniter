@@ -1,7 +1,8 @@
 // ============================================================
 // make:scaffold - MVC 스캐폴딩 전체 생성
 // bun run igniter make:scaffold post
-// bun run igniter make:scaffold post --fields=title:string,content:text,author:string
+// bun run igniter make:scaffold post --fields=title:string,content:text
+// bun run igniter make:scaffold post --api --fields=title:string
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -16,11 +17,16 @@ import {
 export const makeScaffold: Command = {
 	name: "make:scaffold",
 	description: "Controller + Model + Views + Migration 전체 생성",
-	usage: "bun run igniter make:scaffold <name> [--fields=name:type,...]",
+	usage:
+		"bun run igniter make:scaffold <name> [--fields=name:type,...] [--api]",
 	options: [
 		{
 			flag: "--fields",
 			description: "필드 정의 (예: --fields=title:string,content:text)",
+		},
+		{
+			flag: "--api",
+			description: "뷰 없이 JSON API 컨트롤러 + 모델 + 마이그레이션만 생성",
 		},
 	],
 	async run(args: string[]): Promise<void> {
@@ -33,6 +39,7 @@ export const makeScaffold: Command = {
 			console.log(
 				"   예: bun run igniter make:scaffold post --fields=title:string,content:text",
 			);
+			console.log("   예: bun run igniter make:scaffold post --api --fields=title:string");
 			return;
 		}
 
@@ -50,11 +57,12 @@ export const makeScaffold: Command = {
 				})
 			: [{ name: "name", type: "string" }];
 
-		console.log(`\n🔥 스캐폴딩 생성: ${pascal}\n`);
+		const isApi = !!flags["api"];
+
+		console.log(`\n🔥 스캐폴딩 생성: ${pascal}${isApi ? " (API 모드)" : ""}\n`);
 		console.log("─────────────────────────────────────");
 
-		// 1. Model
-		console.log(`\n📦 Model`);
+		// TypeScript 타입 매핑
 		const tsType = (t: string) => {
 			const map: Record<string, string> = {
 				string: "string",
@@ -71,6 +79,8 @@ export const makeScaffold: Command = {
 			return map[t.toLowerCase()] ?? "string";
 		};
 
+		// ─── 1. Model ────────────────────────────────────
+		console.log(`\n📦 Model`);
 		createFile(
 			`app/models/${snake}_model.ts`,
 			`import { Model } from "system/core/model.ts";
@@ -90,11 +100,60 @@ export default new ${pascal}Model();
 `,
 		);
 
-		// 2. Controller (Resource)
+		// ─── 2. Controller ───────────────────────────────
 		console.log(`\n🎮 Controller`);
-		createFile(
-			`app/controllers/${snake}_controller.ts`,
-			`import { Controller } from "system/core/controller.ts";
+
+		if (isApi) {
+			createFile(
+				`app/controllers/${snake}_controller.ts`,
+				`import { Controller } from "system/core/controller.ts";
+import type { Context } from "system/core/controller.ts";
+import ${model}Model from "app/models/${snake}_model.ts";
+
+export class ${pascal}Controller extends Controller {
+  // GET /${plural}
+  async index({ request, response }: Context) {
+    const ${modelPlural} = await ${model}Model.findAll();
+    return this.json(${modelPlural});
+  }
+
+  // GET /${plural}/:id
+  async show({ request, params, response }: Context) {
+    const ${model} = await ${model}Model.findById(Number(params.id));
+    if (!${model}) return this.json({ error: "Not Found" }, 404);
+    return this.json(${model});
+  }
+
+  // POST /${plural}
+  async store({ request, response }: Context) {
+    const data = request.body();
+    const ${model} = await ${model}Model.create(data);
+    return this.json(${model}, 201);
+  }
+
+  // PUT /${plural}/:id
+  async update({ request, params, response }: Context) {
+    const data = request.body();
+    const ${model} = await ${model}Model.update(Number(params.id), data);
+    if (!${model}) return this.json({ error: "Not Found" }, 404);
+    return this.json(${model});
+  }
+
+  // DELETE /${plural}/:id
+  async delete({ request, params, response }: Context) {
+    const ok = await ${model}Model.delete(Number(params.id));
+    if (!ok) return this.json({ error: "Not Found" }, 404);
+    return this.json({ success: true });
+  }
+}
+
+export default new ${pascal}Controller();
+`,
+			);
+		} else {
+			createFile(
+				`app/controllers/${snake}_controller.ts`,
+				`import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
 import ${model}Model from "app/models/${snake}_model.ts";
 
@@ -147,13 +206,16 @@ export class ${pascal}Controller extends Controller {
 
 export default new ${pascal}Controller();
 `,
-		);
+			);
+		}
 
-		// 3. Views
-		console.log(`\n🎨 Views`);
-		createFile(
-			`app/views/${plural}/index.html`,
-			`<!-- layout:default -->
+		// ─── 3. Views (API 모드에서는 건너뜀) ──────────
+		if (!isApi) {
+			console.log(`\n🎨 Views`);
+
+			createFile(
+				`app/views/${plural}/index.html`,
+				`<!-- layout:default -->
 
 <h1>${pascal} 목록</h1>
 <a href="/${plural}/create" class="btn btn-primary">새로 만들기</a>
@@ -184,11 +246,11 @@ ${fields.map((f) => `      <td>{{ item.${f.name} }}</td>`).join("\n")}
   </tbody>
 </table>
 `,
-		);
+			);
 
-		createFile(
-			`app/views/${plural}/show.html`,
-			`<!-- layout:default -->
+			createFile(
+				`app/views/${plural}/show.html`,
+				`<!-- layout:default -->
 
 <h1>${pascal} 상세</h1>
 
@@ -206,11 +268,11 @@ ${fields
 <a href="/${plural}" class="btn">목록으로</a>
 <a href="/${plural}/{{ ${model}.id }}/edit" class="btn">수정</a>
 `,
-		);
+			);
 
-		createFile(
-			`app/views/${plural}/create.html`,
-			`<!-- layout:default -->
+			createFile(
+				`app/views/${plural}/create.html`,
+				`<!-- layout:default -->
 
 <h1>${pascal} 만들기</h1>
 
@@ -232,11 +294,11 @@ ${fields
   <a href="/${plural}" class="btn">취소</a>
 </form>
 `,
-		);
+			);
 
-		createFile(
-			`app/views/${plural}/edit.html`,
-			`<!-- layout:default -->
+			createFile(
+				`app/views/${plural}/edit.html`,
+				`<!-- layout:default -->
 
 <h1>${pascal} 수정</h1>
 
@@ -259,9 +321,10 @@ ${fields
   <a href="/${plural}" class="btn">취소</a>
 </form>
 `,
-		);
+			);
+		}
 
-		// 4. Migration
+		// ─── 4. Migration ────────────────────────────────
 		console.log(`\n📄 Migration`);
 		const timestamp = Date.now();
 		createFile(
@@ -291,6 +354,7 @@ export async function down(sql: SQL): Promise<void> {
 `,
 		);
 
+		// ─── 완료 안내 ──────────────────────────────────
 		console.log("\n─────────────────────────────────────");
 		console.log(`\n✨ ${pascal} 스캐폴딩 완료!\n`);
 		console.log(`  📌 routes.ts 에 다음을 추가하세요:\n`);
@@ -298,7 +362,9 @@ export async function down(sql: SQL): Promise<void> {
 			`    import ${snake}_controller from "app/controllers/${snake}_controller.ts";`,
 		);
 		console.log(`    `);
-		console.log(`    // ${pascal} 리소스 라우트`);
+		console.log(
+			`    // ${pascal} ${isApi ? "API " : ""}리소스 라우트`,
+		);
 		console.log(`    router.resource("${plural}", ${snake}_controller);`);
 		console.log(`\n  📌 마이그레이션 실행:`);
 		console.log(`    bun run igniter migrate\n`);

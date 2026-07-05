@@ -7,6 +7,7 @@
 import type { Elysia } from "elysia";
 import type { Controller, Context } from "./controller.ts";
 import type { MiddlewareFn } from "./middleware.ts";
+import { runMiddlewarePipeline } from "./middleware.ts";
 
 interface RouteDefinition {
 	method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
@@ -145,6 +146,26 @@ export class Router {
 		return this;
 	}
 
+	/** API 전용 라우트 그룹 (미들웨어 적용) */
+	group(
+		prefix: string,
+		middleware: MiddlewareFn[],
+		callback: (router: Router) => void,
+	): Router {
+		const subRouter = new Router();
+		callback(subRouter);
+
+		for (const route of subRouter.getRoutes()) {
+			this.routes.push({
+				...route,
+				path: `${prefix}${route.path}`,
+				middleware: [...middleware, ...(route.middleware ?? [])],
+			});
+		}
+
+		return this;
+	}
+
 	/** 등록된 라우트 목록 반환 */
 	getRoutes(): RouteDefinition[] {
 		return this.routes;
@@ -158,9 +179,26 @@ export class Router {
 			const { method, path, handler } = route;
 
 			const elysiaHandler = async (ctx: any) => {
-				// URL 파라미터 추출
+				// ── 미들웨어 파이프라인 실행 ──
+				const allMiddleware = [
+					...this.globalMiddleware,
+					...(route.middleware ?? []),
+				];
+
+				const middlewareResponse = await runMiddlewarePipeline(
+					ctx.request,
+					allMiddleware,
+				);
+				if (middlewareResponse) return middlewareResponse;
+
+				// ── URL 파라미터 추출 ──
 				const params: Record<string, string> = {};
-				const url = new URL(ctx.request?.url ?? "http://localhost");
+				let url: URL;
+				try {
+					url = new URL(ctx.request?.url ?? "http://localhost");
+				} catch {
+					url = new URL("http://localhost");
+				}
 
 				// Elysia params
 				if (ctx.params) {

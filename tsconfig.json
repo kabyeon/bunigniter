@@ -21,7 +21,8 @@
     "system/**/*.ts",
     "app/**/*.ts",
     "cli/**/*.ts",
-    "database/**/*.ts"
+    "database/**/*.ts",
+    "tests/**/*.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

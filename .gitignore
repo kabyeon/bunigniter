@@ -3,3 +3,7 @@ dist/
 database/*.db
 .env
 .pi-lens/
+storage/logs/*.log
+storage/sessions/sess_*
+public/uploads/*
+!public/uploads/.gitkeep
