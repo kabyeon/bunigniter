@@ -1,6 +1,6 @@
 # 🔌 WebSocket
 
-Bun 내장 WebSocket + Elysia WebSocket 래핑을 지원합니다.
+Bun 내장 WebSocket을 지원합니다. `Bun.serve`의 `websocket` 옵션으로 네이티브 Pub/Sub을 사용합니다.
 
 ## WebSocketManager (Pub/Sub)
 
@@ -22,7 +22,7 @@ ws.clientCount();         // 전체 연결 수
 ws.getChannels();         // 채널 목록
 ```
 
-## Elysia WebSocket 설정
+## Bun.serve WebSocket 설정
 
 ```typescript
 import { createWebSocketConfig, wsManager } from "system/core/websocket.ts";
@@ -42,8 +42,16 @@ const wsConfig = createWebSocketConfig({
   },
 });
 
-// Elysia 앱에 등록
-app.ws("/ws", wsConfig);
+// Bun.serve에 websocket 옵션으로 전달
+const server = Bun.serve({
+  fetch(req, server) {
+    if (req.headers.get("upgrade") === "websocket") {
+      return server.upgrade(req);
+    }
+    return new Response("Not found", { status: 404 });
+  },
+  websocket: wsConfig,
+});
 ```
 
 ## 클라이언트 예시

@@ -37,7 +37,7 @@ bun run start
 | 구성요소 | 기술 | 버전 |
 |---------|------|------|
 | 런타임 | [Bun](https://bun.sh) | 최신 |
-| HTTP 프레임워크 | [Elysia](https://elysiajs.com) | 2.0.0-exp.25 |
+| HTTP 서버 | [Bun.serve](https://bun.sh/docs/runtime/http) | 내장 (SIMD 가속 라우팅) |
 | 데이터베이스 | [Bun SQL](https://bun.sh/docs/runtime/sql) | 내장 (SQLite/PostgreSQL/MySQL) |
 | 템플릿 엔진 | [Rendu](https://github.com/h3js/rendu) | ^0.1.0 |
 | 테스트 | [bun:test](https://bun.sh/docs/cli/test) | 내장 |

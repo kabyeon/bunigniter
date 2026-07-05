@@ -9,8 +9,12 @@ import { SSEManager } from "system/core/sse.ts";
 
 const sse = new SSEManager();
 
-// Elysia 라우트에서 연결
-app.get("/events", (ctx) => sse.handleConnection(ctx.request));
+// Bun.serve 라우트에서 연결
+Bun.serve({
+  routes: {
+    "/events": (req) => sse.handleConnection(req, { userId: "1" }),
+  },
+});
 
 // 이벤트 브로드캐스트
 sse.broadcast({ event: "update", data: JSON.stringify({ count: 1 }) });
@@ -33,7 +37,7 @@ const sse = new SSEManager({
 });
 ```
 
-## Elysia 통합
+## Bun.serve 통합
 
 ```typescript
 import { createSSERoutes } from "system/core/sse.ts";

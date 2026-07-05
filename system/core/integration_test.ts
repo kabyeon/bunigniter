@@ -88,10 +88,7 @@ export class IntegrationTestClient {
 	}
 
 	/** GET 요청 */
-	async get(
-		path: string,
-		headers?: Record<string, string>,
-	): Promise<Response> {
+	async get(path: string, headers?: Record<string, string>): Promise<Response> {
 		return fetch(`${this.baseUrl}${path}`, {
 			method: "GET",
 			headers: { "Content-Type": "application/json", ...headers },

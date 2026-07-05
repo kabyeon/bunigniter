@@ -20,7 +20,7 @@
 import { createDashboardRoutes } from "system/core/dashboard.ts";
 
 const routes = createDashboardRoutes(["default", "emails"]);
-// routes를 Elysia 앱에 등록
+// routes를 Bun.serve routes에 등록
 ```
 
 ## JSON API

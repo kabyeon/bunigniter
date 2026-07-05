@@ -108,6 +108,6 @@ const safe = verifyCsrfTokenSafe(token, { secret: "my-secret" });
 | `verifyCsrfToken(token, config?)` | `Bun.CSRF.verify()` 래퍼 |
 | `verifyCsrfTokenSafe(token, config?)` | 에러 시 false 반환 안전 래퍼 |
 | `getCsrfToken(request, config?)` | Double Submit Cookie 토큰 처리 |
-| `csrfMiddleware(ctx)` | Elysia 미들웨어 |
+| `csrfMiddleware(ctx)` | 라우트 미들웨어 |
 | `csrfField(token)` | `<input type="hidden">` 생성 |
 | `csrfMeta(token)` | `<meta name="csrf-token">` 생성 |

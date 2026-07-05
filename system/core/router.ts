@@ -202,7 +202,8 @@ export class Router {
 		routes: Record<string, (req: any) => Response | Promise<Response>>;
 		fetch: (req: Request) => Response | Promise<Response>;
 	} {
-		const routeMap: Record<string, (req: any) => Response | Promise<Response>> = {};
+		const routeMap: Record<string, (req: any) => Response | Promise<Response>> =
+			{};
 
 		for (const route of this.routes) {
 			const key = `${route.method} ${route.path}`;
@@ -272,9 +273,7 @@ export class Router {
 						contentType.includes("application/x-www-form-urlencoded")
 					) {
 						const text = await req.text();
-						bodyData = Object.fromEntries(
-							new URLSearchParams(text).entries(),
-						);
+						bodyData = Object.fromEntries(new URLSearchParams(text).entries());
 					}
 				} catch {
 					// body 파싱 실패 시 빈 객체

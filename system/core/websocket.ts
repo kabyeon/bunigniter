@@ -6,7 +6,11 @@
 
 export type WebSocketHandler = (ws: any, message: any) => void;
 export type WebSocketOpenHandler = (ws: any) => void;
-export type WebSocketCloseHandler = (ws: any, code: number, reason: string) => void;
+export type WebSocketCloseHandler = (
+	ws: any,
+	code: number,
+	reason: string,
+) => void;
 
 export interface WebSocketConfig {
 	/** 경로 (기본값: "/ws") */
