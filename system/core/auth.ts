@@ -43,14 +43,14 @@ const AUTH_SESSION_CONFIG = {
  *   const isLoggedIn = await Auth.check(request);
  *
  *   // 로그아웃
- *   Auth.logout(request);
+ *   await Auth.logout(request);
  */
 export class Auth {
 	private static USER_SESSION_KEY = "auth_user_id";
 
 	/** 세션 드라이버 생성 (설정에 따라 자동 선택) */
-	private static getSession(request: Request): SessionDriver {
-		return createSession(request, AUTH_SESSION_CONFIG);
+	private static async getSession(request: Request): Promise<SessionDriver> {
+		return await createSession(request, AUTH_SESSION_CONFIG);
 	}
 
 	/**
@@ -79,7 +79,7 @@ export class Auth {
 			}
 		}
 
-		const session = Auth.getSession(request);
+		const session = await Auth.getSession(request);
 		session.set(Auth.USER_SESSION_KEY, user.id);
 		session.set("auth_user", {
 			id: user.id,
@@ -109,7 +109,7 @@ export class Auth {
 			return { success: false, error: "사용자를 찾을 수 없습니다" };
 		}
 
-		const session = Auth.getSession(request);
+		const session = await Auth.getSession(request);
 		session.set(Auth.USER_SESSION_KEY, user.id);
 		session.set("auth_user", {
 			id: user.id,
@@ -125,32 +125,32 @@ export class Auth {
 	/**
 	 * 로그인 상태 확인
 	 */
-	static check(request: Request): boolean {
-		const session = Auth.getSession(request);
+	static async check(request: Request): Promise<boolean> {
+		const session = await Auth.getSession(request);
 		return session.has(Auth.USER_SESSION_KEY);
 	}
 
 	/**
 	 * 현재 로그인한 사용자 조회
 	 */
-	static user(request: Request): AuthUser | null {
-		const session = Auth.getSession(request);
+	static async user(request: Request): Promise<AuthUser | null> {
+		const session = await Auth.getSession(request);
 		return session.get("auth_user") ?? null;
 	}
 
 	/**
 	 * 현재 로그인한 사용자 ID
 	 */
-	static id(request: Request): number | null {
-		const session = Auth.getSession(request);
+	static async id(request: Request): Promise<number | null> {
+		const session = await Auth.getSession(request);
 		return session.get(Auth.USER_SESSION_KEY) ?? null;
 	}
 
 	/**
 	 * 로그아웃
 	 */
-	static logout(request: Request): void {
-		const session = Auth.getSession(request);
+	static async logout(request: Request): Promise<void> {
+		const session = await Auth.getSession(request);
 		session.remove(Auth.USER_SESSION_KEY);
 		session.remove("auth_user");
 		session.save();
@@ -189,7 +189,7 @@ export async function authGuard({
 	response: any;
 	next: () => Promise<Response | void>;
 }): Promise<Response | void> {
-	if (!Auth.check(request)) {
+	if (!(await Auth.check(request))) {
 		return new Response(null, {
 			status: 302,
 			headers: { Location: "/login" },
@@ -210,7 +210,7 @@ export async function guestGuard({
 	response: any;
 	next: () => Promise<Response | void>;
 }): Promise<Response | void> {
-	if (Auth.check(request)) {
+	if (await Auth.check(request)) {
 		return new Response(null, {
 			status: 302,
 			headers: { Location: "/" },

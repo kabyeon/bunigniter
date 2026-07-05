@@ -2,6 +2,42 @@
 
 SMTP / sendmail / log 드라이버를 지원하는 이메일 라이브러리입니다.
 
+## 설정
+
+`app/config/email.ts` 에서 설정합니다:
+
+```typescript
+// app/config/email.ts
+export default {
+  driver: "log",
+  smtp: {
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    username: "",
+    password: "",
+  },
+  from: {
+    email: "noreply@bunigniter.dev",
+    name: "BunIgniter",
+  },
+  logDir: "./storage/logs",
+};
+```
+
+또는 환경 변수로 설정:
+
+```env
+# .env
+EMAIL_DRIVER=log
+EMAIL_SMTP_HOST=smtp.gmail.com
+EMAIL_SMTP_PORT=587
+EMAIL_SMTP_USERNAME=your@gmail.com
+EMAIL_SMTP_PASSWORD=app-password
+EMAIL_FROM_ADDRESS=noreply@example.com
+EMAIL_FROM_NAME=My App
+```
+
 ## 기본 사용법
 
 ```typescript
@@ -29,22 +65,6 @@ await mailer.sendSimple("user@example.com", "제목", "<h1>내용</h1>");
 ```typescript
 await mailer.sendTemplate("user@example.com", "가입 환영", "emails/welcome", {
   name: "Alice",
-});
-```
-
-## SMTP 설정
-
-```typescript
-const mailer = new Email({
-  driver: "smtp",
-  smtp: {
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    username: "your@gmail.com",
-    password: "app-password",
-  },
-  from: { email: "noreply@example.com", name: "My App" },
 });
 ```
 

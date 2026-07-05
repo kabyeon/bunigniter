@@ -21,7 +21,7 @@ session: {
 ```typescript
 import { createSession } from "system/core/session_manager.ts";
 
-const session = createSession(request, { driver: "file" });
+const session = await createSession(request, { driver: "file" });
 
 session.set("userId", 42);
 session.get("userId");         // 42
@@ -35,6 +35,8 @@ session.destroy();             // 파기
 session.getId();               // 세션 ID
 session.getCookieHeader();     // 쿠키 헤더
 ```
+
+> **참고**: `createSession`은 비동기 함수입니다. Redis 드라이버 사용 시 `await`이 필요합니다.
 
 ## 드라이버
 
@@ -59,9 +61,33 @@ const session = new FileSession(request);
 - GC: `FileSession.gc(7200)` — 만료된 세션 정리
 - 카운트: `FileSession.count()` — 활성 세션 수
 
+### RedisSession (Redis 기반)
+
+```typescript
+import { RedisSession } from "system/core/redis_session.ts";
+const session = new RedisSession(request, {
+  redisUrl: "redis://localhost:6379",
+  expiration: 7200,
+});
+await session.load(); // 반드시 load() 호출
+```
+
+- 분산 환경에서 세션 공유 가능
+- Bun 내장 `RedisClient` 사용
+- TTL 자동 관리 (Redis EXPIRE)
+- 비동기 API: `saveAsync()`, `destroyAsync()`, `getCookieHeaderAsync()`
+- 카운트: `await RedisSession.count()` — 활성 세션 수
+- 정리: `RedisSession.closeAll()` — 연결 종료
+
+```env
+# .env
+REDIS_URL=redis://localhost:6379
+SESSION_DRIVER=redis
+```
+
 ### 세션 매니저 (자동 선택)
 
 ```typescript
 import { createSession } from "system/core/session_manager.ts";
-const session = createSession(request); // 설정에 따라 자동 선택
+const session = await createSession(request); // 설정에 따라 자동 선택
 ```

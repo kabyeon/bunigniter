@@ -1,6 +1,6 @@
 # 🗄 캐시
 
-인메모리 + 파일 기반 캐시 드라이버를 제공합니다.
+인메모리 + 파일 + Redis 기반 캐시 드라이버를 제공합니다.
 
 ## 기본 사용법 (Cache 매니저)
 
@@ -8,11 +8,11 @@
 import { Cache } from "system/core/cache.ts";
 
 Cache.put("key", "value", 600);     // 10분 TTL
-Cache.get("key");                    // "value"
-Cache.has("key");                    // true
+await Cache.get("key");              // "value"
+await Cache.has("key");              // true
 Cache.forever("key", "value");       // 영구 저장
-Cache.forget("key");                 // 삭제
-Cache.pull("key");                   // 조회 후 삭제
+await Cache.forget("key");           // 삭제
+await Cache.pull("key");             // 조회 후 삭제
 Cache.flush();                       // 전체 삭제
 ```
 
@@ -32,11 +32,23 @@ const config = await Cache.rememberForever("app:config", async () => {
 
 ```typescript
 Cache.configure({
-  driver: "memory",    // "memory" | "file"
+  driver: "memory",    // "memory" | "file" | "redis"
   prefix: "app:",
   defaultTtl: 3600,
   path: "./storage/cache",
+  redisUrl: "redis://localhost:6379",
+  redisPrefix: "bunigniter:cache:",
 });
+```
+
+또는 `app/config/cache.ts`에서 설정합니다:
+
+```typescript
+export default {
+  driver: "redis",
+  redisUrl: "redis://localhost:6379",
+  redisPrefix: "bunigniter:cache:",
+};
 ```
 
 ## 드라이버 직접 사용
@@ -58,6 +70,30 @@ const driver = new FileCacheDriver({ path: "./storage/cache" });
 driver.set("key", { data: 123 }, 300);
 driver.get("key"); // { data: 123 }
 driver.gc();       // 만료 항목 정리
+```
+
+### RedisCacheDriver
+
+```typescript
+import { RedisCacheDriver } from "system/core/redis_cache.ts";
+const driver = new RedisCacheDriver({
+  redisUrl: "redis://localhost:6379",
+  keyPrefix: "myapp:cache:",
+});
+await driver.set("key", { data: 123 }, 300);
+const val = await driver.get("key"); // { data: 123 }
+await driver.flush();  // 전체 삭제
+```
+
+- 분산 환경에서 캐시 공유 가능
+- Bun 내장 `RedisClient` 사용
+- Redis `SET ... EX`로 TTL 자동 관리
+- `RedisCacheDriver.closeAll()` — 연결 종료
+
+```env
+# .env
+CACHE_DRIVER=redis
+REDIS_URL=redis://localhost:6379
 ```
 
 ## TTL

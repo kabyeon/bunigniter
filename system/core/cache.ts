@@ -1,28 +1,28 @@
 // ============================================================
 // BunIgniter - Cache Library
-// 인메모리 + 파일 기반 캐시 드라이버
+// 인메모리 + 파일 + Redis 기반 캐시 드라이버
 // CodeIgniter3 의 $this->cache 와 유사
 // ============================================================
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync, statSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
-/** 캐시 드라이버 인터페이스 */
+/** 캐시 드라이버 인터페이스 (비동기) */
 export interface CacheDriver {
 	/** 캐시 저장 */
-	set(key: string, value: any, ttl?: number): void;
+	set(key: string, value: any, ttl?: number): void | Promise<void>;
 	/** 캐시 조회 */
-	get<T = any>(key: string): T | null;
+	get<T = any>(key: string): T | null | Promise<T | null>;
 	/** 캐시 존재 여부 */
-	has(key: string): boolean;
+	has(key: string): boolean | Promise<boolean>;
 	/** 캐시 삭제 */
-	forget(key: string): boolean;
+	forget(key: string): boolean | Promise<boolean>;
 	/** 캐시 조회 후 삭제 */
-	pull<T = any>(key: string): T | null;
+	pull<T = any>(key: string): T | null | Promise<T | null>;
 	/** 전체 캐시 삭제 */
-	flush(): void;
+	flush(): void | Promise<void>;
 	/** 만료된 캐시 정리 */
-	gc(): number;
+	gc(): number | Promise<number>;
 }
 
 /** 캐시 설정 */
@@ -31,6 +31,8 @@ export interface CacheConfig {
 	prefix: string;
 	path: string;
 	defaultTtl: number;
+	redisUrl: string;
+	redisPrefix: string;
 }
 
 const DEFAULT_CONFIG: CacheConfig = {
@@ -38,6 +40,8 @@ const DEFAULT_CONFIG: CacheConfig = {
 	prefix: "bunigniter:",
 	path: "./storage/cache",
 	defaultTtl: 3600,
+	redisUrl: "redis://localhost:6379",
+	redisPrefix: "bunigniter:cache:",
 };
 
 // ─── 인메모리 캐시 드라이버 ──────────────────────────
@@ -244,7 +248,6 @@ export class FileCacheDriver implements CacheDriver {
 	}
 
 	private hashKey(key: string): string {
-		// 간단한 해시 (Bun 내장 crypto 사용)
 		const prefixedKey = `${this.prefix}${key}`;
 		let hash = 0;
 		for (let i = 0; i < prefixedKey.length; i++) {
@@ -265,34 +268,15 @@ export class FileCacheDriver implements CacheDriver {
  * 사용법:
  *   import { Cache } from "system/core/cache.ts";
  *
- *   // 저장 (기본 TTL: 3600초)
  *   Cache.put("key", { data: 123 });
- *
- *   // 저장 (커스텀 TTL)
- *   Cache.put("key", "value", 600); // 10분
- *
- *   // 영구 저장 (TTL 없음)
+ *   Cache.put("key", "value", 600);
  *   Cache.forever("key", "value");
- *
- *   // 조회
  *   const val = Cache.get("key");
- *
- *   // 존재 여부
  *   Cache.has("key");
- *
- *   // 삭제
  *   Cache.forget("key");
- *
- *   // 조회 후 삭제
  *   const val = Cache.pull("key");
- *
- *   // 전체 삭제
  *   Cache.flush();
- *
- *   // 만료된 캐시 정리
  *   Cache.gc();
- *
- *   // 콜백 캐시 (값이 없으면 콜백 실행 후 저장)
  *   const data = await Cache.remember("users", 300, async () => {
  *     return await userModel.findAll();
  *   });
@@ -314,52 +298,58 @@ export class Cache {
 				case "file":
 					Cache.driver = new FileCacheDriver(Cache.config);
 					break;
+				case "redis": {
+					// Lazy import to avoid Redis dependency when not used
+					const { RedisCacheDriver } = require("./redis_cache.ts");
+					Cache.driver = new RedisCacheDriver(Cache.config);
+					break;
+				}
 				case "memory":
 				default:
 					Cache.driver = new MemoryCacheDriver(Cache.config);
 					break;
 			}
 		}
-		return Cache.driver;
+		return Cache.driver!;
 	}
 
 	/** 캐시 저장 */
-	static put(key: string, value: any, ttl?: number): void {
-		Cache.getDriver().set(key, value, ttl);
+	static put(key: string, value: any, ttl?: number): void | Promise<void> {
+		return Cache.getDriver().set(key, value, ttl);
 	}
 
 	/** 영구 캐시 저장 */
-	static forever(key: string, value: any): void {
-		Cache.getDriver().set(key, value, 0);
+	static forever(key: string, value: any): void | Promise<void> {
+		return Cache.getDriver().set(key, value, 0);
 	}
 
 	/** 캐시 조회 */
-	static get<T = any>(key: string): T | null {
+	static get<T = any>(key: string): T | null | Promise<T | null> {
 		return Cache.getDriver().get<T>(key);
 	}
 
 	/** 캐시 존재 여부 */
-	static has(key: string): boolean {
+	static has(key: string): boolean | Promise<boolean> {
 		return Cache.getDriver().has(key);
 	}
 
 	/** 캐시 삭제 */
-	static forget(key: string): boolean {
+	static forget(key: string): boolean | Promise<boolean> {
 		return Cache.getDriver().forget(key);
 	}
 
 	/** 조회 후 삭제 */
-	static pull<T = any>(key: string): T | null {
+	static pull<T = any>(key: string): T | null | Promise<T | null> {
 		return Cache.getDriver().pull<T>(key);
 	}
 
 	/** 전체 삭제 */
-	static flush(): void {
-		Cache.getDriver().flush();
+	static flush(): void | Promise<void> {
+		return Cache.getDriver().flush();
 	}
 
 	/** 만료된 캐시 정리 */
-	static gc(): number {
+	static gc(): number | Promise<number> {
 		return Cache.getDriver().gc();
 	}
 
@@ -372,11 +362,11 @@ export class Cache {
 		ttl: number,
 		callback: () => Promise<T>,
 	): Promise<T> {
-		const cached = Cache.get<T>(key);
+		const cached = await Cache.getDriver().get<T>(key);
 		if (cached !== null) return cached;
 
 		const value = await callback();
-		Cache.put(key, value, ttl);
+		await Cache.getDriver().set(key, value, ttl);
 		return value;
 	}
 
@@ -387,11 +377,11 @@ export class Cache {
 		key: string,
 		callback: () => Promise<T>,
 	): Promise<T> {
-		const cached = Cache.get<T>(key);
+		const cached = await Cache.getDriver().get<T>(key);
 		if (cached !== null) return cached;
 
 		const value = await callback();
-		Cache.forever(key, value);
+		await Cache.getDriver().set(key, value, 0);
 		return value;
 	}
 }

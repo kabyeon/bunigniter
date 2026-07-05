@@ -12,6 +12,7 @@ export { Session } from "./session.ts";
 export type { SessionDriver, SessionConfig } from "./session_driver.ts";
 export { MemorySession } from "./memory_session.ts";
 export { FileSession } from "./file_session.ts";
+export { RedisSession } from "./redis_session.ts";
 export { createSession, getSessionDriverName } from "./session_manager.ts";
 export { renderView } from "./view.ts";
 export type { MiddlewareContext, MiddlewareFn } from "./middleware.ts";
@@ -56,6 +57,7 @@ export type {
 	MemoryCacheDriver,
 	FileCacheDriver,
 } from "./cache.ts";
+export { RedisCacheDriver } from "./redis_cache.ts";
 export {
 	WebSocketManager,
 	wsManager,
@@ -83,3 +85,15 @@ export {
 	IntegrationTestClient,
 	createIntegrationTestClient,
 } from "./integration_test.ts";
+export {
+	Queue,
+	queue,
+	MemoryQueueDriver,
+	RedisQueueDriver,
+} from "./queue.ts";
+export type {
+	QueueDriver,
+	QueueConfig,
+	JobPayload,
+	JobHandler,
+} from "./queue.ts";
