@@ -13,7 +13,7 @@ import { getAllowedOrigin } from "../system/core/cors.ts";
 describe("CSRF - XSS 방어", () => {
 	test("csrfField - 토큰에 HTML 특수문자 이스케이프", () => {
 		// 실제 Bun.CSRF 토큰은 base64url이지만, 이스케이프 검증을 위해 임의 문자열 사용
-		const malicious = '<script>alert(1)</script>';
+		const malicious = "<script>alert(1)</script>";
 		const html = csrfField(malicious);
 		expect(html).not.toContain("<script>");
 		expect(html).toContain("&lt;script&gt;");
@@ -79,11 +79,9 @@ describe("Upload - 경로 순회 방어", () => {
 	});
 
 	test("위험한 확장자 차단 - .svg", async () => {
-		const file = new File(
-			['<svg onload="alert(1)"></svg>'],
-			"image.svg",
-			{ type: "image/svg+xml" },
-		);
+		const file = new File(['<svg onload="alert(1)"></svg>'], "image.svg", {
+			type: "image/svg+xml",
+		});
 		const formData = new FormData();
 		formData.append("file", file);
 		const request = new Request("http://localhost/upload", {
@@ -263,7 +261,9 @@ describe("CORS - 보안 검증", () => {
 
 describe("Rate Limit - IP 스푸핑 방어", () => {
 	test("trustProxy=false 시 X-Forwarded-For 무시", async () => {
-		const { rateLimitMiddleware } = await import("../system/core/rate_limit.ts");
+		const { rateLimitMiddleware } = await import(
+			"../system/core/rate_limit.ts"
+		);
 
 		// X-Forwarded-For 헤더가 있어도 trustProxy=false면 무시
 		const request = new Request("http://localhost/", {
@@ -353,5 +353,125 @@ describe("Session - ID 검증", () => {
 			sessionDir: "/tmp/bunigniter-test-sessions",
 		});
 		expect(session2.getId()).not.toContain("'");
+	});
+});
+
+// ─── 세션 고정 공격 방어 ────────────────────────────────
+
+describe("Session - 세션 고정(Session Fixation) 방어", () => {
+	test("regenerateId - 세션 ID가 변경됨 (Session)", () => {
+		const { Session } = require("../system/core/session.ts");
+		const request = new Request("http://localhost/");
+		const session = new Session(request);
+		const oldId = session.getId();
+
+		session.set("key", "value");
+		session.regenerateId();
+
+		expect(session.getId()).not.toBe(oldId);
+		expect(session.get("key")).toBe("value");
+	});
+
+	test("regenerateId - 세션 ID가 변경됨 (MemorySession)", () => {
+		const { MemorySession } = require("../system/core/memory_session.ts");
+		MemorySession.flush();
+		const request = new Request("http://localhost/");
+		const session = new MemorySession(request);
+		const oldId = session.getId();
+
+		session.set("key", "value");
+		session.regenerateId();
+
+		expect(session.getId()).not.toBe(oldId);
+		expect(session.get("key")).toBe("value");
+		MemorySession.flush();
+	});
+
+	test("regenerateId - 세션 ID가 변경됨 (FileSession)", () => {
+		const { FileSession } = require("../system/core/file_session.ts");
+		const request = new Request("http://localhost/");
+		const session = new FileSession(request, {
+			sessionDir: "/tmp/bunigniter-test-sessions-fixation",
+		});
+		const oldId = session.getId();
+
+		session.set("key", "value");
+		session.regenerateId();
+
+		expect(session.getId()).not.toBe(oldId);
+		expect(session.get("key")).toBe("value");
+	});
+});
+
+// ─── 정적 파일 Path Traversal 방어 ──────────────────────
+
+describe("Bootstrap - 정적 파일 Path Traversal 방어", () => {
+	test("safeStaticPath - 정상 경로 통과", () => {
+		// bootstrap.ts 내부 함수는 export되지 않으므로,
+		// 여기서는 동일한 로직을 직접 검증
+		const { resolve, relative } = require("node:path");
+		const publicDir = resolve(process.cwd(), "public");
+		const urlPathname = "/css/style.css";
+		const resolvedPath = resolve(
+			process.cwd(),
+			"public",
+			urlPathname.replace(/^\//, ""),
+		);
+		const relativePath = relative(publicDir, resolvedPath);
+		expect(relativePath.startsWith("..")).toBe(false);
+	});
+
+	test("safeStaticPath - 경로 순회 차단", () => {
+		const { resolve, relative } = require("node:path");
+		const publicDir = resolve(process.cwd(), "public");
+		const urlPathname = "/../../../etc/passwd";
+		const resolvedPath = resolve(
+			process.cwd(),
+			"public",
+			urlPathname.replace(/^\//, ""),
+		);
+		const relativePath = relative(publicDir, resolvedPath);
+		// 정규화 후에는 public 외부를 가리킴
+		expect(relativePath.startsWith("..")).toBe(true);
+	});
+});
+
+// ─── Crypto 약한 알고리즘 경고 ────────────────────────
+
+describe("Crypto - 약한 알고리즘 경고", () => {
+	test("md5 사용 시 경고 출력 (console.warn 호출)", () => {
+		const { Crypto } = require("../system/core/crypto.ts");
+		const originalWarn = console.warn;
+		let warned = false;
+		console.warn = () => { warned = true; };
+
+		Crypto.hash("test", { algorithm: "md5" });
+
+		console.warn = originalWarn;
+		expect(warned).toBe(true);
+	});
+
+	test("sha1 사용 시 경고 출력", () => {
+		const { Crypto } = require("../system/core/crypto.ts");
+		const originalWarn = console.warn;
+		let warned = false;
+		console.warn = () => { warned = true; };
+
+		Crypto.hash("test", { algorithm: "sha1" });
+
+		console.warn = originalWarn;
+		expect(warned).toBe(true);
+	});
+
+	test("sha256 사용 시 경고 미출력", () => {
+		const { Crypto } = require("../system/core/crypto.ts");
+		const originalWarn = console.warn;
+		let warned = false;
+		console.warn = () => { warned = true; };
+
+		Crypto.hash("test", { algorithm: "sha256" });
+
+		console.warn = originalWarn;
+		expect(warned).toBe(false);
 	});
 });

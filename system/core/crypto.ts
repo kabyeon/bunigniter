@@ -83,6 +83,9 @@ export interface PasswordHashOptions {
 export class Crypto {
 	// ─── 해시 ────────────────────────────────────────
 
+	/** 약한 해시 알고리즘 (보안 목적 사용 금지) */
+	private static WEAK_ALGORITHMS = new Set(["md4", "md5", "ripemd160", "sha1"]);
+
 	/**
 	 * 데이터 해시 (Bun.CryptoHasher)
 	 *
@@ -99,6 +102,13 @@ export class Crypto {
 	): string {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
+
+		// 약한 알고리즘 사용 시 경고
+		if (Crypto.WEAK_ALGORITHMS.has(algorithm)) {
+			console.warn(
+				`[BunIgniter Crypto] ⚠️ ${algorithm}은(는) 보안 목적으로 사용할 수 없습니다. sha256 이상을 사용하세요.`,
+			);
+		}
 
 		const hasher = new Bun.CryptoHasher(algorithm);
 		hasher.update(data);

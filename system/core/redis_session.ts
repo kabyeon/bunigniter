@@ -170,6 +170,21 @@ export class RedisSession implements SessionDriver {
 	}
 
 	/**
+	 * 세션 ID 재생성 (세션 고정 공격 방어)
+	 * 로그인 성공 후 호출하여 공격자가 알고 있는 세션 ID를 무효화합니다.
+	 * 기존 세션 데이터는 새 ID로 이전됩니다.
+	 */
+	regenerateId(): void {
+		const oldKey = this.getRedisKey();
+		this.sessionId = crypto.randomUUID();
+		// 이전 Redis 키 삭제
+		this.client.del(oldKey).catch(() => {});
+		// 데이터는 유지한 채 새 ID로 저장
+		this.isDirty = true;
+		this.save();
+	}
+
+	/**
 	 * 비동기 세션 파기
 	 */
 	async destroyAsync(): Promise<void> {

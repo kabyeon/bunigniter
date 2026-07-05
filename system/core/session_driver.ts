@@ -29,6 +29,8 @@ export interface SessionDriver {
 	save(): void;
 	/** 세션 파기 */
 	destroy(): void;
+	/** 세션 ID 재생성 (세션 고정 공격 방어) */
+	regenerateId(): void;
 	/** 쿠키 헤더 값 생성 */
 	getCookieHeader(expiration?: number): string;
 }

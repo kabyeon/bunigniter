@@ -110,6 +110,20 @@ export class Session {
 		this.sessionId = generateSessionId();
 	}
 
+	/**
+	 * 세션 ID 재생성 (세션 고정 공격 방어)
+	 * 로그인 성공 후 호출하여 공격자가 알고 있는 세션 ID를 무효화합니다.
+	 * 기존 세션 데이터는 새 ID로 이전됩니다.
+	 */
+	regenerateId(): void {
+		const oldId = this.sessionId;
+		this.sessionId = generateSessionId();
+		// 이전 세션 삭제
+		sessions.delete(oldId);
+		// 데이터는 유지한 채 새 ID로 저장
+		this.save();
+	}
+
 	private save(): void {
 		sessions.set(this.sessionId, this.data);
 	}

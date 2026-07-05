@@ -8,6 +8,24 @@ import { loadConfig } from "./config.ts";
 import type { AppConfig } from "../../app/config/app.ts";
 import { closeAllConnections } from "./database.ts";
 import { logger } from "./logger.ts";
+import { resolve, relative } from "node:path";
+
+/**
+ * 정적 파일 경로 검증 (Path Traversal 방지)
+ * 요청 경로가 public/ 디렉토리 내부인지 확인
+ */
+function safeStaticPath(urlPathname: string): string | null {
+	const publicDir = resolve(process.cwd(), "public");
+	const resolvedPath = resolve(process.cwd(), "public", urlPathname.replace(/^\//, ""));
+	const relativePath = relative(publicDir, resolvedPath);
+
+	// 경로가 public/ 외부를 가리키면 거부
+	if (relativePath.startsWith("..") || resolve(publicDir) !== resolvedPath && !relativePath.startsWith("public")) {
+		return null;
+	}
+
+	return resolvedPath;
+}
 
 async function bootstrap() {
 	// 설정 로드
@@ -23,36 +41,26 @@ async function bootstrap() {
 	// Elysia 앱 생성
 	const app = new Elysia();
 
-	// 정적 파일 서비스 (public/)
-	app.get("/css/*", ({ request }) => {
-		try {
-			const url = new URL(request.url);
-			const filePath = `./public${url.pathname}`;
-			return Bun.file(filePath);
-		} catch {
-			return new Response("Not Found", { status: 404 });
-		}
-	});
-
-	app.get("/js/*", ({ request }) => {
-		try {
-			const url = new URL(request.url);
-			const filePath = `./public${url.pathname}`;
-			return Bun.file(filePath);
-		} catch {
-			return new Response("Not Found", { status: 404 });
-		}
-	});
-
-	app.get("/images/*", ({ request }) => {
-		try {
-			const url = new URL(request.url);
-			const filePath = `./public${url.pathname}`;
-			return Bun.file(filePath);
-		} catch {
-			return new Response("Not Found", { status: 404 });
-		}
-	});
+	// 정적 파일 서비스 (public/) — Path Traversal 방지 적용
+	const staticPrefixes = ["/css", "/js", "/images", "/uploads"];
+	for (const prefix of staticPrefixes) {
+		app.get(`${prefix}/*`, ({ request }) => {
+			try {
+				const url = new URL(request.url);
+				const safePath = safeStaticPath(url.pathname);
+				if (!safePath) {
+					return new Response("Not Found", { status: 404 });
+				}
+				const file = Bun.file(safePath);
+				if (file.size === 0) {
+					return new Response("Not Found", { status: 404 });
+				}
+				return file;
+			} catch {
+				return new Response("Not Found", { status: 404 });
+			}
+		});
+	}
 
 	// 에러 핸들링 - Elysia 2.0 error() API
 	app.error(NotFound, ({ set }) => {

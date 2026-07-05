@@ -69,20 +69,23 @@ export class Auth {
 		const user = users[0] as AuthUser | undefined;
 
 		if (!user) {
-			return { success: false, error: "사용자를 찾을 수 없습니다" };
+			// 타이밍 공격 방지: 존재하지 않는 사용자에도 더미 해시 검증 수행
+			await Bun.password.verify(password, "$2a$10$AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+			return { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다" };
 		}
 
 		// 비밀번호 필드가 없거나 빈 값이면 로그인 거부
 		if (!user.password) {
-			return { success: false, error: "비밀번호가 설정되지 않은 계정입니다" };
+			return { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다" };
 		}
 
 		const valid = await Auth.verifyPassword(password, user.password);
 		if (!valid) {
-			return { success: false, error: "비밀번호가 일치하지 않습니다" };
+			return { success: false, error: "이메일 또는 비밀번호가 일치하지 않습니다" };
 		}
 
 		const session = await Auth.getSession(request);
+		session.regenerateId(); // 세션 고정 공격 방어
 		session.set(Auth.USER_SESSION_KEY, user.id);
 		session.set("auth_user", {
 			id: user.id,
@@ -113,6 +116,7 @@ export class Auth {
 		}
 
 		const session = await Auth.getSession(request);
+		session.regenerateId(); // 세션 고정 공격 방어
 		session.set(Auth.USER_SESSION_KEY, user.id);
 		session.set("auth_user", {
 			id: user.id,

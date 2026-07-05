@@ -15,7 +15,9 @@ function generateSessionId(): string {
 
 /** 세션 ID 유효성 검증 (UUID v4 형식, 경로 순회 방지) */
 function isValidSessionId(sid: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid);
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+		sid,
+	);
 }
 
 /**
@@ -99,6 +101,18 @@ export class MemorySession implements SessionDriver {
 		this.save();
 		const maxAge = expiration ?? 7200;
 		return `${SESSION_COOKIE_NAME}=${this.sessionId}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}`;
+	}
+
+	/**
+	 * 세션 ID 재생성 (세션 고정 공격 방어)
+	 * 로그인 성공 후 호출하여 공격자가 알고 있는 세션 ID를 무효화합니다.
+	 * 기존 세션 데이터는 새 ID로 이전됩니다.
+	 */
+	regenerateId(): void {
+		const oldId = this.sessionId;
+		this.sessionId = generateSessionId();
+		sessions.delete(oldId);
+		this.save();
 	}
 
 	/**

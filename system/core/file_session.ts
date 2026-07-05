@@ -24,7 +24,9 @@ const DEFAULT_EXPIRATION = 7200; // 2시간 (초)
 
 /** 세션 ID 유효성 검증 (UUID v4 형식, 경로 순회 방지) */
 function isValidSessionId(sid: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid);
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+		sid,
+	);
 }
 
 /** 파일 기반 세션 드라이버 */
@@ -131,6 +133,21 @@ export class FileSession implements SessionDriver {
 		this.isDirty = false;
 	}
 
+	/**
+	 * 세션 ID 재생성 (세션 고정 공격 방어)
+	 * 로그인 성공 후 호출하여 공격자가 알고 있는 세션 ID를 무효화합니다.
+	 * 기존 세션 데이터는 새 ID로 이전됩니다.
+	 */
+	regenerateId(): void {
+		const oldId = this.sessionId;
+		const oldFile = this.getFilePath(oldId);
+		this.sessionId = crypto.randomUUID();
+		// 이전 세션 파일 삭제
+		try { unlinkSync(oldFile); } catch { /* 이미 삭제됨 */ }
+		// 데이터는 유지한 채 새 ID로 저장
+		this.save();
+	}
+
 	getCookieHeader(expiration?: number): string {
 		this.save();
 		const maxAge = expiration ?? DEFAULT_EXPIRATION;
@@ -142,10 +159,7 @@ export class FileSession implements SessionDriver {
 	/**
 	 * 만료된 세션 파일 정리 (Garbage Collection)
 	 */
-	static gc(
-		maxAge: number = DEFAULT_EXPIRATION,
-		sessionDir?: string,
-	): number {
+	static gc(maxAge: number = DEFAULT_EXPIRATION, sessionDir?: string): number {
 		const dir = sessionDir ?? DEFAULT_SESSION_DIR;
 		if (!existsSync(dir)) return 0;
 
@@ -179,8 +193,7 @@ export class FileSession implements SessionDriver {
 	static count(sessionDir?: string): number {
 		const dir = sessionDir ?? DEFAULT_SESSION_DIR;
 		if (!existsSync(dir)) return 0;
-		return readdirSync(dir).filter((f) => f.startsWith(SESSION_PREFIX))
-			.length;
+		return readdirSync(dir).filter((f) => f.startsWith(SESSION_PREFIX)).length;
 	}
 
 	// ─── 내부 메서드 ──────────────────────────────────
