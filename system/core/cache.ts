@@ -4,7 +4,14 @@
 // CodeIgniter3 의 $this->cache 와 유사
 // ============================================================
 
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
+import {
+	existsSync,
+	readFileSync,
+	writeFileSync,
+	mkdirSync,
+	readdirSync,
+	unlinkSync,
+} from "node:fs";
 import { join } from "node:path";
 
 /** 캐시 드라이버 인터페이스 (비동기) */
@@ -63,11 +70,12 @@ export class MemoryCacheDriver implements CacheDriver {
 
 	set(key: string, value: any, ttl?: number): void {
 		const k = this.prefixKey(key);
-		const expiration = ttl !== undefined
-			? Date.now() + ttl * 1000
-			: this.defaultTtl > 0
-				? Date.now() + this.defaultTtl * 1000
-				: null;
+		const expiration =
+			ttl !== undefined
+				? Date.now() + ttl * 1000
+				: this.defaultTtl > 0
+					? Date.now() + this.defaultTtl * 1000
+					: null;
 		this.store.set(k, { value, expiration });
 	}
 
@@ -146,11 +154,12 @@ export class FileCacheDriver implements CacheDriver {
 
 	set(key: string, value: any, ttl?: number): void {
 		const filePath = this.getFilePath(key);
-		const expiration = ttl !== undefined
-			? Date.now() + ttl * 1000
-			: this.defaultTtl > 0
-				? Date.now() + this.defaultTtl * 1000
-				: null;
+		const expiration =
+			ttl !== undefined
+				? Date.now() + ttl * 1000
+				: this.defaultTtl > 0
+					? Date.now() + this.defaultTtl * 1000
+					: null;
 
 		const payload = { value, expiration };
 		writeFileSync(filePath, JSON.stringify(payload), "utf-8");
@@ -237,7 +246,9 @@ export class FileCacheDriver implements CacheDriver {
 		return join(this.cacheDir, `cache_${hash}`);
 	}
 
-	private readEntry(key: string): { value: any; expiration: number | null } | null {
+	private readEntry(
+		key: string,
+	): { value: any; expiration: number | null } | null {
 		const filePath = this.getFilePath(key);
 		try {
 			const content = readFileSync(filePath, "utf-8");
@@ -252,7 +263,7 @@ export class FileCacheDriver implements CacheDriver {
 		let hash = 0;
 		for (let i = 0; i < prefixedKey.length; i++) {
 			const char = prefixedKey.charCodeAt(i);
-			hash = ((hash << 5) - hash) + char;
+			hash = (hash << 5) - hash + char;
 			hash |= 0;
 		}
 		return Math.abs(hash).toString(36);

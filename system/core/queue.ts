@@ -61,14 +61,17 @@ export interface QueueDriver {
 
 export class MemoryQueueDriver implements QueueDriver {
 	private queues: Map<string, JobPayload[]> = new Map();
-	private failedQueues: Map<string, Array<JobPayload & { error: string }>> = new Map();
+	private failedQueues: Map<string, Array<JobPayload & { error: string }>> =
+		new Map();
 
 	push(payload: JobPayload): void {
 		const queue = this.getQueue(payload.queue);
 		// 지연 실행: availableAt 기준으로 정렬 삽입
 		if (payload.availableAt > Date.now()) {
 			// 지연 잡은 availableAt 순으로 정렬
-			const insertIndex = queue.findIndex(j => j.availableAt > payload.availableAt);
+			const insertIndex = queue.findIndex(
+				(j) => j.availableAt > payload.availableAt,
+			);
 			if (insertIndex === -1) {
 				queue.push(payload);
 			} else {
@@ -83,8 +86,8 @@ export class MemoryQueueDriver implements QueueDriver {
 		const queue = this.getQueue(queueName);
 		const now = Date.now();
 
-		const index = queue.findIndex(j =>
-			j.availableAt <= now && j.reservedAt === null,
+		const index = queue.findIndex(
+			(j) => j.availableAt <= now && j.reservedAt === null,
 		);
 
 		if (index === -1) return null;
@@ -96,7 +99,7 @@ export class MemoryQueueDriver implements QueueDriver {
 
 	complete(payload: JobPayload): void {
 		const queue = this.getQueue(payload.queue);
-		const index = queue.findIndex(j => j.id === payload.id);
+		const index = queue.findIndex((j) => j.id === payload.id);
 		if (index !== -1) {
 			queue.splice(index, 1);
 		}
@@ -104,7 +107,7 @@ export class MemoryQueueDriver implements QueueDriver {
 
 	fail(payload: JobPayload, error: string): void {
 		const queue = this.getQueue(payload.queue);
-		const index = queue.findIndex(j => j.id === payload.id);
+		const index = queue.findIndex((j) => j.id === payload.id);
 		if (index !== -1) {
 			queue.splice(index, 1);
 		}
@@ -132,8 +135,8 @@ export class MemoryQueueDriver implements QueueDriver {
 
 	size(queueName: string): number {
 		const now = Date.now();
-		return this.getQueue(queueName).filter(j =>
-			j.reservedAt === null && j.availableAt <= now,
+		return this.getQueue(queueName).filter(
+			(j) => j.reservedAt === null && j.availableAt <= now,
 		).length;
 	}
 
@@ -190,7 +193,8 @@ export class RedisQueueDriver implements QueueDriver {
 	private keyPrefix: string;
 
 	constructor(options?: { redisUrl?: string; keyPrefix?: string }) {
-		const url = options?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379";
+		const url =
+			options?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379";
 		this.keyPrefix = options?.keyPrefix ?? "bunigniter:queue:";
 		this.client = new RedisClient(url, {
 			autoReconnect: true,
@@ -213,7 +217,14 @@ export class RedisQueueDriver implements QueueDriver {
 		const now = Date.now();
 
 		// availableAt <= now 인 첫 번째 잡 조회
-		const results = await this.client.send("ZRANGEBYSCORE", [key, "0", now.toString(), "LIMIT", "0", "1"]);
+		const results = await this.client.send("ZRANGEBYSCORE", [
+			key,
+			"0",
+			now.toString(),
+			"LIMIT",
+			"0",
+			"1",
+		]);
 
 		if (!results || !Array.isArray(results) || results.length === 0) {
 			return null;
@@ -256,29 +267,46 @@ export class RedisQueueDriver implements QueueDriver {
 		} else {
 			// 실패 큐
 			const failedKey = `${this.keyPrefix}${payload.queue}:failed`;
-			await this.client.send("LPUSH", [failedKey, JSON.stringify({ ...payload, error })]);
+			await this.client.send("LPUSH", [
+				failedKey,
+				JSON.stringify({ ...payload, error }),
+			]);
 		}
 	}
 
 	async failed(queueName: string, limit: number = 50): Promise<JobPayload[]> {
 		const failedKey = `${this.keyPrefix}${queueName}:failed`;
-		const results = await this.client.send("LRANGE", [failedKey, "0", (limit - 1).toString()]);
+		const results = await this.client.send("LRANGE", [
+			failedKey,
+			"0",
+			(limit - 1).toString(),
+		]);
 		if (!Array.isArray(results)) return [];
-		return results.map((r: string) => {
-			try { return JSON.parse(r); } catch { return null; }
-		}).filter(Boolean) as JobPayload[];
+		return results
+			.map((r: string) => {
+				try {
+					return JSON.parse(r);
+				} catch {
+					return null;
+				}
+			})
+			.filter(Boolean) as JobPayload[];
 	}
 
 	async size(queueName: string): Promise<number> {
 		const key = `${this.keyPrefix}${queueName}`;
 		const now = Date.now();
 		// availableAt <= now 인 항목 수
-		return await this.client.send("ZCOUNT", [key, "0", now.toString()]) as unknown as number;
+		return (await this.client.send("ZCOUNT", [
+			key,
+			"0",
+			now.toString(),
+		])) as unknown as number;
 	}
 
 	async failedSize(queueName: string): Promise<number> {
 		const failedKey = `${this.keyPrefix}${queueName}:failed`;
-		return await this.client.send("LLEN", [failedKey]) as unknown as number;
+		return (await this.client.send("LLEN", [failedKey])) as unknown as number;
 	}
 
 	async flushFailed(queueName: string): Promise<void> {
@@ -434,7 +462,12 @@ export class Queue {
 	}
 
 	/** 지연 잡 푸시 */
-	static async later(delay: number, type: string, data: any, queue?: string): Promise<string> {
+	static async later(
+		delay: number,
+		type: string,
+		data: any,
+		queue?: string,
+	): Promise<string> {
 		const id = crypto.randomUUID();
 		const payload: JobPayload = {
 			id,
@@ -453,7 +486,12 @@ export class Queue {
 	}
 
 	/** 특정 시각에 실행 */
-	static async scheduleAt(date: Date, type: string, data: any, queue?: string): Promise<string> {
+	static async scheduleAt(
+		date: Date,
+		type: string,
+		data: any,
+		queue?: string,
+	): Promise<string> {
 		const delay = Math.max(0, date.getTime() - Date.now()) / 1000;
 		return Queue.later(delay, type, data, queue);
 	}
@@ -465,12 +503,17 @@ export class Queue {
 
 	/** 실패 잡 조회 */
 	static async failed(queue?: string, limit?: number): Promise<JobPayload[]> {
-		return await Queue.getDriver().failed(queue ?? Queue.config.defaultQueue, limit);
+		return await Queue.getDriver().failed(
+			queue ?? Queue.config.defaultQueue,
+			limit,
+		);
 	}
 
 	/** 실패 큐 크기 */
 	static async failedSize(queue?: string): Promise<number> {
-		return await Queue.getDriver().failedSize(queue ?? Queue.config.defaultQueue);
+		return await Queue.getDriver().failedSize(
+			queue ?? Queue.config.defaultQueue,
+		);
 	}
 
 	/** 실패 잡 전체 삭제 */
@@ -542,7 +585,9 @@ export class Queue {
 		const handler = Queue.handlers.get(job.type);
 
 		if (!handler) {
-			console.error(`[BunIgniter] No handler registered for job type: ${job.type}`);
+			console.error(
+				`[BunIgniter] No handler registered for job type: ${job.type}`,
+			);
 			await Queue.getDriver().fail(job, `No handler for type: ${job.type}`);
 			return false;
 		}
@@ -552,7 +597,10 @@ export class Queue {
 			await Queue.getDriver().complete(job);
 			return true;
 		} catch (err: any) {
-			console.error(`[BunIgniter] Job ${job.id} (${job.type}) failed:`, err.message);
+			console.error(
+				`[BunIgniter] Job ${job.id} (${job.type}) failed:`,
+				err.message,
+			);
 			await Queue.getDriver().fail(job, err.message);
 			return false;
 		}

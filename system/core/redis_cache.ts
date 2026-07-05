@@ -39,9 +39,12 @@ export class RedisCacheDriver implements CacheDriver {
 	private defaultTtl: number;
 	private keyPrefix: string;
 
-	constructor(config?: Partial<CacheConfig> & { redisUrl?: string; keyPrefix?: string }) {
+	constructor(
+		config?: Partial<CacheConfig> & { redisUrl?: string; keyPrefix?: string },
+	) {
 		this.defaultTtl = config?.defaultTtl ?? DEFAULT_CONFIG.defaultTtl ?? 3600;
-		this.keyPrefix = config?.keyPrefix ?? config?.redisPrefix ?? "bunigniter:cache:";
+		this.keyPrefix =
+			config?.keyPrefix ?? config?.redisPrefix ?? "bunigniter:cache:";
 		this.client = RedisCacheDriver.getClient(config?.redisUrl);
 	}
 
@@ -78,11 +81,8 @@ export class RedisCacheDriver implements CacheDriver {
 
 	private async setAsync(key: string, value: any, ttl?: number): Promise<void> {
 		const k = this.prefixKey(key);
-		const expiration = ttl !== undefined
-			? ttl
-			: this.defaultTtl > 0
-				? this.defaultTtl
-				: 0;
+		const expiration =
+			ttl !== undefined ? ttl : this.defaultTtl > 0 ? this.defaultTtl : 0;
 
 		const payload = JSON.stringify({
 			value,

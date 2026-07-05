@@ -29,7 +29,10 @@ const config: QueueConfig = {
 
 	jobTimeout: Number(process.env.QUEUE_TIMEOUT ?? "60000"),
 
-	redisUrl: process.env.QUEUE_REDIS_URL ?? process.env.REDIS_URL ?? "redis://localhost:6379",
+	redisUrl:
+		process.env.QUEUE_REDIS_URL ??
+		process.env.REDIS_URL ??
+		"redis://localhost:6379",
 
 	batchSize: Number(process.env.QUEUE_BATCH_SIZE ?? "10"),
 
