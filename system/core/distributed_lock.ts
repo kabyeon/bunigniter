@@ -54,7 +54,8 @@ export class RedisLockDriver implements DistributedLockDriver {
 	`;
 
 	constructor(options?: { redisUrl?: string; keyPrefix?: string }) {
-		const url = options?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379";
+		const url =
+			options?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379";
 		this.keyPrefix = options?.keyPrefix ?? "bunigniter:lock:";
 		this.client = new RedisClient(url, {
 			autoReconnect: true,
@@ -336,10 +337,7 @@ export class DistributedLock {
 	/**
 	 * 잠금 해제
 	 */
-	static async release(lock: {
-		key: string;
-		owner: string;
-	}): Promise<boolean> {
+	static async release(lock: { key: string; owner: string }): Promise<boolean> {
 		return DistributedLock.getDriver().release(lock.key, lock.owner);
 	}
 
@@ -385,13 +383,18 @@ export class DistributedLock {
 		ttl: number;
 		attempts: number;
 	}> {
-		const retryInterval = options?.retryInterval ?? DistributedLock.config.retryInterval;
+		const retryInterval =
+			options?.retryInterval ?? DistributedLock.config.retryInterval;
 		const maxRetries = options?.maxRetries ?? DistributedLock.config.maxRetries;
 		const owner = crypto.randomUUID();
 		const ttl = ttlMs ?? DistributedLock.config.defaultTtl;
 
 		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			const acquired = await DistributedLock.getDriver().acquire(key, ttl, owner);
+			const acquired = await DistributedLock.getDriver().acquire(
+				key,
+				ttl,
+				owner,
+			);
 			if (acquired) {
 				return { acquired: true, key, owner, ttl, attempts: attempt + 1 };
 			}

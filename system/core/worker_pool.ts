@@ -19,7 +19,13 @@ export type WorkerInMessage =
 export type WorkerOutMessage =
 	| { type: "ready"; workerId: number }
 	| { type: "job_completed"; jobId: string; workerId: number; duration: number }
-	| { type: "job_failed"; jobId: string; workerId: number; error: string; retryable: boolean }
+	| {
+			type: "job_failed";
+			jobId: string;
+			workerId: number;
+			error: string;
+			retryable: boolean;
+	  }
 	| { type: "pong"; workerId: number }
 	| { type: "error"; workerId: number; error: string };
 
@@ -107,9 +113,10 @@ export class WorkerPool {
 	private restartCounts: Map<number, number> = new Map();
 
 	constructor(config?: WorkerPoolConfig) {
-		const cpuCount = typeof navigator !== "undefined" && navigator.hardwareConcurrency
-			? navigator.hardwareConcurrency
-			: 4;
+		const cpuCount =
+			typeof navigator !== "undefined" && navigator.hardwareConcurrency
+				? navigator.hardwareConcurrency
+				: 4;
 
 		this.config = {
 			concurrency: config?.concurrency ?? Math.max(1, cpuCount - 1),
@@ -124,7 +131,8 @@ export class WorkerPool {
 	// ─── 이벤트 리스너 ──────────────────────────────────
 
 	on(event: keyof WorkerPoolEvents, handler: Function): void {
-		const key = `on${event.charAt(0).toUpperCase()}${event.slice(1)}` as keyof WorkerPoolEvents;
+		const key =
+			`on${event.charAt(0).toUpperCase()}${event.slice(1)}` as keyof WorkerPoolEvents;
 		(this.events as any)[key] = handler;
 	}
 
@@ -141,7 +149,9 @@ export class WorkerPool {
 			return;
 		}
 
-		console.log(`[BunIgniter] Starting worker pool with ${this.config.concurrency} workers`);
+		console.log(
+			`[BunIgniter] Starting worker pool with ${this.config.concurrency} workers`,
+		);
 
 		// 핸들러 스크립트가 있는 경우: 독립 워커 스크립트 모드
 		if (this.config.handlerScript) {
@@ -158,7 +168,9 @@ export class WorkerPool {
 		// 워커 준비 대기
 		await new Promise<void>((resolve) => {
 			const timeout = setTimeout(() => {
-				console.warn("[BunIgniter] Worker pool ready timeout, continuing anyway");
+				console.warn(
+					"[BunIgniter] Worker pool ready timeout, continuing anyway",
+				);
 				resolve();
 			}, this.config.readyTimeout);
 
@@ -182,7 +194,9 @@ export class WorkerPool {
 			}, 100);
 		});
 
-		console.log(`[BunIgniter] Worker pool ready: ${this.readyCount}/${this.config.concurrency} workers`);
+		console.log(
+			`[BunIgniter] Worker pool ready: ${this.readyCount}/${this.config.concurrency} workers`,
+		);
 		this.events.onAllWorkersReady?.();
 	}
 
@@ -376,7 +390,9 @@ export class WorkerPool {
 		// 타임아웃 감시
 		setTimeout(() => {
 			if (slot.currentJob?.id === job.id) {
-				console.warn(`[BunIgniter] Job ${job.id} timed out in worker ${slot.id}`);
+				console.warn(
+					`[BunIgniter] Job ${job.id} timed out in worker ${slot.id}`,
+				);
 				slot.currentJob = null;
 				slot.jobStartedAt = null;
 				this.events.onJobFailed?.(job.id, slot.id, "Job timed out");
@@ -406,14 +422,18 @@ export class WorkerPool {
 
 		const restartCount = (this.restartCounts.get(id) ?? 0) + 1;
 		if (restartCount > this.config.maxWorkerRestarts) {
-			console.error(`[BunIgniter] Worker ${id} exceeded max restarts (${this.config.maxWorkerRestarts}), removing`);
+			console.error(
+				`[BunIgniter] Worker ${id} exceeded max restarts (${this.config.maxWorkerRestarts}), removing`,
+			);
 			slot.worker.terminate();
 			this.workers.delete(id);
 			return;
 		}
 
 		this.restartCounts.set(id, restartCount);
-		console.log(`[BunIgniter] Restarting worker ${id} (attempt ${restartCount})`);
+		console.log(
+			`[BunIgniter] Restarting worker ${id} (attempt ${restartCount})`,
+		);
 
 		slot.worker.terminate();
 
@@ -452,7 +472,11 @@ export class WorkerPool {
 			const timeout = setTimeout(() => {
 				// 강제 종료
 				for (const [, slot] of this.workers) {
-					try { slot.worker.terminate(); } catch (e) { console.error(`[BunIgniter] Worker terminate error:`, e); }
+					try {
+						slot.worker.terminate();
+					} catch (e) {
+						console.error(`[BunIgniter] Worker terminate error:`, e);
+					}
 				}
 				resolve();
 			}, 5000);
@@ -470,7 +494,11 @@ export class WorkerPool {
 					clearTimeout(timeout);
 					// 모든 워커 종료
 					for (const [, slot] of this.workers) {
-						try { slot.worker.terminate(); } catch (e) { console.error(`[BunIgniter] Worker terminate error:`, e); }
+						try {
+							slot.worker.terminate();
+						} catch (e) {
+							console.error(`[BunIgniter] Worker terminate error:`, e);
+						}
 					}
 					resolve();
 				}

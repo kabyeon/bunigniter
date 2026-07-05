@@ -178,6 +178,4 @@ export {
 	auditLogHtml,
 	createAuditLogRoutes,
 } from "./audit_log_ui.ts";
-export type {
-	AuditLogUIConfig,
-} from "./audit_log_ui.ts";
+export type { AuditLogUIConfig } from "./audit_log_ui.ts";

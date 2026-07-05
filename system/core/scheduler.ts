@@ -99,7 +99,9 @@ export class Scheduler {
 						await Scheduler.executeJob(job, handler, this);
 					});
 					if (!result.executed) {
-						console.log(`[BunIgniter] Scheduled job "${name}" skipped (locked by another server)`);
+						console.log(
+							`[BunIgniter] Scheduled job "${name}" skipped (locked by another server)`,
+						);
 						return;
 					}
 					if (result.error) {
@@ -176,7 +178,9 @@ export class Scheduler {
 						await Scheduler.executeJob(job, job.handler, this);
 					});
 					if (!result.executed) {
-						console.log(`[BunIgniter] Scheduled job "${name}" skipped (locked)`);
+						console.log(
+							`[BunIgniter] Scheduled job "${name}" skipped (locked)`,
+						);
 						return;
 					}
 					if (result.error) {
@@ -217,7 +221,9 @@ export class Scheduler {
 			}
 		}
 		Scheduler.started = true;
-		console.log(`[BunIgniter] Scheduler started: ${Scheduler.jobs.size} jobs${Scheduler.lockEnabled ? " (distributed lock enabled)" : ""}`);
+		console.log(
+			`[BunIgniter] Scheduler started: ${Scheduler.jobs.size} jobs${Scheduler.lockEnabled ? " (distributed lock enabled)" : ""}`,
+		);
 	}
 
 	/**
@@ -295,7 +301,6 @@ export class Scheduler {
 	static isDistributedLockEnabled(): boolean {
 		return Scheduler.lockEnabled;
 	}
-
 
 	/**
 	 * 크론 표현식의 다음 실행 시각 조회

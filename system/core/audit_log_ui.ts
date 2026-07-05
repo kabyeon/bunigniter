@@ -107,15 +107,15 @@ export function auditLogHtml(
     <div class="label">Total Entries</div>
   </div>
   <div class="card stat-card">
-    <div class="value" style="color:#0f9d58">${entries.filter(e => e.event === "create").length}</div>
+    <div class="value" style="color:#0f9d58">${entries.filter((e) => e.event === "create").length}</div>
     <div class="label">Creates</div>
   </div>
   <div class="card stat-card">
-    <div class="value" style="color:#f4b400">${entries.filter(e => e.event === "update").length}</div>
+    <div class="value" style="color:#f4b400">${entries.filter((e) => e.event === "update").length}</div>
     <div class="label">Updates</div>
   </div>
   <div class="card stat-card">
-    <div class="value" style="color:#db4437">${entries.filter(e => e.event === "delete").length}</div>
+    <div class="value" style="color:#db4437">${entries.filter((e) => e.event === "delete").length}</div>
     <div class="label">Deletes</div>
   </div>
 </div>
@@ -148,13 +148,17 @@ export function auditLogHtml(
 
 <h2>📊 Entries</h2>
 <div class="card">
-${entries.length > 0 ? `
+${
+	entries.length > 0
+		? `
 <table>
   <thead>
     <tr><th>ID</th><th>Event</th><th>Entity</th><th>User</th><th>IP</th><th>Description</th><th>Time</th><th>Details</th></tr>
   </thead>
   <tbody>
-    ${entries.map(entry => `
+    ${entries
+			.map(
+				(entry) => `
     <tr>
       <td>${entry.id ?? "-"}</td>
       <td><span class="badge badge-${entry.event}">${entry.event}</span></td>
@@ -164,10 +168,14 @@ ${entries.length > 0 ? `
       <td>${entry.description ?? "-"}</td>
       <td>${entry.created_at ?? "-"}</td>
       <td><button onclick="showDetail(${entry.id ?? 0})" style="background:#0f3460;color:#eee;border:none;padding:4px 8px;border-radius:3px;cursor:pointer;font-size:0.8rem">View</button></td>
-    </tr>`).join("")}
+    </tr>`,
+			)
+			.join("")}
   </tbody>
 </table>
-` : `<div class="empty-state">No audit log entries found</div>`}
+`
+		: `<div class="empty-state">No audit log entries found</div>`
+}
 </div>
 
 <div class="pagination">
@@ -184,7 +192,9 @@ ${entries.length > 0 ? `
   </div>
 </div>
 
-${config.enableSSE ? `
+${
+	config.enableSSE
+		? `
 <script>
 const evtSource = new EventSource("${basePath}/stream");
 evtSource.onmessage = (event) => {
@@ -196,7 +206,9 @@ evtSource.onmessage = (event) => {
   document.body.appendChild(badge);
   setTimeout(() => badge.remove(), 5000);
 };
-</script>` : ""}
+</script>`
+		: ""
+}
 
 <script>
 async function showDetail(id) {
@@ -277,7 +289,9 @@ export function createAuditLogRoutes(
 			async handler(ctx: any) {
 				let url: URL;
 				try {
-					url = new URL(ctx.request?.url ?? `http://localhost${uiConfig.basePath}`);
+					url = new URL(
+						ctx.request?.url ?? `http://localhost${uiConfig.basePath}`,
+					);
 				} catch {
 					url = new URL(`http://localhost${uiConfig.basePath}`);
 				}
@@ -292,11 +306,21 @@ export function createAuditLogRoutes(
 
 				try {
 					if (event) {
-						entries = await AuditLog.getLogsByEvent(event, uiConfig.perPage * page);
+						entries = await AuditLog.getLogsByEvent(
+							event,
+							uiConfig.perPage * page,
+						);
 					} else if (entityType) {
-						entries = await AuditLog.getLogs(entityType, undefined, uiConfig.perPage * page);
+						entries = await AuditLog.getLogs(
+							entityType,
+							undefined,
+							uiConfig.perPage * page,
+						);
 					} else if (userId) {
-						entries = await AuditLog.getLogsByUser(Number(userId), uiConfig.perPage * page);
+						entries = await AuditLog.getLogsByUser(
+							Number(userId),
+							uiConfig.perPage * page,
+						);
 					} else {
 						// 전체 로그 (가장 최근 항목)
 						const model = new (await import("./audit_log.ts")).AuditLogModel();
@@ -304,12 +328,22 @@ export function createAuditLogRoutes(
 					}
 
 					totalCount = entries.length;
-					entries = entries.slice((page - 1) * uiConfig.perPage, page * uiConfig.perPage);
+					entries = entries.slice(
+						(page - 1) * uiConfig.perPage,
+						page * uiConfig.perPage,
+					);
 				} catch {
 					// 테이블이 없거나 조회 실패
 				}
 
-				const html = auditLogHtml(entries, totalCount, page, uiConfig.perPage, { event, entityType, userId }, uiConfig);
+				const html = auditLogHtml(
+					entries,
+					totalCount,
+					page,
+					uiConfig.perPage,
+					{ event, entityType, userId },
+					uiConfig,
+				);
 				return new Response(html, {
 					headers: { "Content-Type": "text/html; charset=utf-8" },
 				});
@@ -385,7 +419,10 @@ export function createAuditLogRoutes(
 			async handler(ctx: any) {
 				const type = ctx.params?.type;
 				if (!type) {
-					return Response.json({ error: "Missing entity type" }, { status: 400 });
+					return Response.json(
+						{ error: "Missing entity type" },
+						{ status: 400 },
+					);
 				}
 
 				const entries = await AuditLog.getLogs(type);
@@ -399,7 +436,10 @@ export function createAuditLogRoutes(
 			async handler(ctx: any) {
 				const event = ctx.params?.event;
 				if (!event) {
-					return Response.json({ error: "Missing event type" }, { status: 400 });
+					return Response.json(
+						{ error: "Missing event type" },
+						{ status: 400 },
+					);
 				}
 
 				const entries = await AuditLog.getLogsByEvent(event);
@@ -425,25 +465,25 @@ export function createAuditLogRoutes(
 			method: "GET",
 			path: `${uiConfig.basePath}/api/stats`,
 			async handler(_ctx: any) {
-					try {
-						const model = new (await import("./audit_log.ts")).AuditLogModel();
-						const all = await model.findAll();
+				try {
+					const model = new (await import("./audit_log.ts")).AuditLogModel();
+					const all = await model.findAll();
 
-						const stats: Record<string, number> = {};
-						for (const entry of all) {
-									stats[entry.event] = (stats[entry.event] ?? 0) + 1;
-						}
-
-						return Response.json({
-									total: all.length,
-									byEvent: stats,
-									trackedModels: AuditLog.getTrackedModels(),
-									enabled: AuditLog.isEnabled(),
-						});
-					} catch (err: any) {
-						return Response.json({ error: err.message }, { status: 500 });
+					const stats: Record<string, number> = {};
+					for (const entry of all) {
+						stats[entry.event] = (stats[entry.event] ?? 0) + 1;
 					}
-				},
+
+					return Response.json({
+						total: all.length,
+						byEvent: stats,
+						trackedModels: AuditLog.getTrackedModels(),
+						enabled: AuditLog.isEnabled(),
+					});
+				} catch (err: any) {
+					return Response.json({ error: err.message }, { status: 500 });
+				}
+			},
 		},
 	];
 }

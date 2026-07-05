@@ -4,8 +4,15 @@
 
 import { describe, test, expect, beforeEach } from "bun:test";
 import { WorkerPool, resetWorkerPool } from "../system/core/worker_pool.ts";
-import { DistributedLock, MemoryLockDriver, RedisLockDriver } from "../system/core/distributed_lock.ts";
-import { auditLogHtml, createAuditLogRoutes } from "../system/core/audit_log_ui.ts";
+import {
+	DistributedLock,
+	MemoryLockDriver,
+	RedisLockDriver,
+} from "../system/core/distributed_lock.ts";
+import {
+	auditLogHtml,
+	createAuditLogRoutes,
+} from "../system/core/audit_log_ui.ts";
 import type { AuditLogEntry } from "../system/core/audit_log.ts";
 
 // ─── WorkerPool 테스트 ──────────────────────────────────
@@ -31,7 +38,9 @@ describe("WorkerPool", () => {
 	test("WorkerPool 이벤트 리스너 설정", () => {
 		const pool = new WorkerPool({ concurrency: 2 });
 		let called = false;
-		pool.on("onWorkerReady", () => { called = true; });
+		pool.on("onWorkerReady", () => {
+			called = true;
+		});
 		// 이벤트 핸들러 등록 확인
 		expect(called).toBe(false); // 아직 호출되지 않음
 	});
@@ -220,9 +229,13 @@ describe("DistributedLock", () => {
 	test("run 래퍼 - 잠금 획득 실패", async () => {
 		await DistributedLock.acquire("test-key");
 
-		const result = await DistributedLock.run("test-key", async () => {
-			return 42;
-		}, { maxRetries: 1 });
+		const result = await DistributedLock.run(
+			"test-key",
+			async () => {
+				return 42;
+			},
+			{ maxRetries: 1 },
+		);
 		expect(result.executed).toBe(false);
 		expect(result.error).toBeDefined();
 	});
@@ -302,11 +315,18 @@ describe("RedisLockDriver (구조)", () => {
 
 describe("Audit Log UI", () => {
 	test("auditLogHtml - 빈 엔트리", () => {
-		const html = auditLogHtml([], 0, 1, 25, {}, {
-			basePath: "/_audit",
-			perPage: 25,
-			enableSSE: false,
-		});
+		const html = auditLogHtml(
+			[],
+			0,
+			1,
+			25,
+			{},
+			{
+				basePath: "/_audit",
+				perPage: 25,
+				enableSSE: false,
+			},
+		);
 		expect(html).toContain("Audit Log");
 		expect(html).toContain("No audit log entries found");
 	});
@@ -327,45 +347,73 @@ describe("Audit Log UI", () => {
 			},
 		];
 
-		const html = auditLogHtml(entries, 1, 1, 25, {}, {
-			basePath: "/_audit",
-			perPage: 25,
-			enableSSE: false,
-		});
+		const html = auditLogHtml(
+			entries,
+			1,
+			1,
+			25,
+			{},
+			{
+				basePath: "/_audit",
+				perPage: 25,
+				enableSSE: false,
+			},
+		);
 		expect(html).toContain("posts:42");
 		expect(html).toContain("badge-create");
 		expect(html).toContain("127.0.0.1");
 	});
 
 	test("auditLogHtml - 필터 포함", () => {
-		const html = auditLogHtml([], 0, 1, 25, {
-			event: "create",
-			entityType: "posts",
-		}, {
-			basePath: "/_audit",
-			perPage: 25,
-			enableSSE: false,
-		});
+		const html = auditLogHtml(
+			[],
+			0,
+			1,
+			25,
+			{
+				event: "create",
+				entityType: "posts",
+			},
+			{
+				basePath: "/_audit",
+				perPage: 25,
+				enableSSE: false,
+			},
+		);
 		expect(html).toContain("selected");
 	});
 
 	test("auditLogHtml - SSE 활성화", () => {
-		const html = auditLogHtml([], 0, 1, 25, {}, {
-			basePath: "/_audit",
-			perPage: 25,
-			enableSSE: true,
-		});
+		const html = auditLogHtml(
+			[],
+			0,
+			1,
+			25,
+			{},
+			{
+				basePath: "/_audit",
+				perPage: 25,
+				enableSSE: true,
+			},
+		);
 		expect(html).toContain("Live");
 		expect(html).toContain("EventSource");
 	});
 
 	test("auditLogHtml - 대시보드 링크", () => {
-		const html = auditLogHtml([], 0, 1, 25, {}, {
-			basePath: "/_audit",
-			perPage: 25,
-			enableSSE: false,
-			dashboardPath: "/_dashboard",
-		});
+		const html = auditLogHtml(
+			[],
+			0,
+			1,
+			25,
+			{},
+			{
+				basePath: "/_audit",
+				perPage: 25,
+				enableSSE: false,
+				dashboardPath: "/_dashboard",
+			},
+		);
 		expect(html).toContain("/_dashboard");
 	});
 
