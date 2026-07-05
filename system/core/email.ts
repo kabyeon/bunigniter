@@ -2,6 +2,7 @@
 // BunIgniter - Email Library
 // 이메일 발송 라이브러리
 // SMTP / sendmail / log 드라이버 지원
+// sendmail: Bun.spawn stdin pipe + Bun.$ 지원
 // CodeIgniter3 의 $this->email 과 유사
 // ============================================================
 
@@ -16,6 +17,12 @@ export interface EmailConfig {
 		username: string;
 		password: string;
 	};
+	/** sendmail 실행 파일 경로 */
+	sendmailPath?: string;
+	/** sendmail 추가 인수 */
+	sendmailArgs?: string[];
+	/** Bun.$ 셸 사용 여부 (기본: false, Bun.spawn 사용) */
+	useBunShell?: boolean;
 	/** 기본 발신자 */
 	from: {
 		email: string;
@@ -52,6 +59,9 @@ const DEFAULT_CONFIG: EmailConfig = {
 		username: "",
 		password: "",
 	},
+	sendmailPath: "sendmail",
+	sendmailArgs: ["-t", "-i"],
+	useBunShell: false,
 	from: {
 		email: "noreply@bunigniter.dev",
 		name: "BunIgniter",
@@ -253,6 +263,7 @@ export class Email {
 	}
 
 	// ─── Sendmail 드라이버 ──────────────────────────────
+	// Bun.spawn stdin pipe + Bun.$ 지원
 
 	private async sendViaSendmail(
 		message: EmailMessage,
@@ -261,20 +272,102 @@ export class Email {
 	): Promise<EmailResult> {
 		const content = this.buildEmailContent(message, from, to);
 
+		// Bun.$ 셸 모드
+		if (this.config.useBunShell) {
+			return this.sendViaSendmailShell(content, to);
+		}
+
+		// Bun.spawn stdin pipe 모드 (기본)
+		return this.sendViaSendmailSpawn(content, to);
+	}
+
+	/**
+	 * Bun.spawn으로 sendmail 실행
+	 * stdin: "pipe" → FileSink로 빠른 증분 쓰기
+	 */
+	private async sendViaSendmailSpawn(
+		content: string,
+		to: string[],
+	): Promise<EmailResult> {
+		const sendmailPath = this.config.sendmailPath ?? "sendmail";
+		const sendmailArgs = this.config.sendmailArgs ?? ["-t", "-i"];
+
 		try {
-			const proc = Bun.spawn(["sendmail", ...to], { stdin: "pipe" });
+			const proc = Bun.spawn([sendmailPath, ...sendmailArgs, ...to], {
+				stdin: "pipe",
+				stdout: "pipe",
+				stderr: "pipe",
+			});
+
+			// FileSink로 이메일 본문 쓰기
 			proc.stdin.write(content);
+			proc.stdin.flush();
 			proc.stdin.end();
+
 			const exitCode = await proc.exited;
 
+			if (exitCode !== 0) {
+				const stderrBytes = await new Response(proc.stderr).bytes();
+				const stderr = new TextDecoder().decode(stderrBytes);
+				return {
+					success: false,
+					error: `sendmail exited with code ${exitCode}: ${stderr.trim()}`,
+				};
+			}
+
 			return {
-				success: exitCode === 0,
-				messageId: exitCode === 0 ? `sendmail-${Date.now()}` : undefined,
-				error:
-					exitCode !== 0 ? `sendmail exited with code ${exitCode}` : undefined,
+				success: true,
+				messageId: `sendmail-${Date.now()}`,
 			};
 		} catch (err: any) {
 			return { success: false, error: `sendmail failed: ${err.message}` };
+		}
+	}
+
+	/**
+	 * Bun.$ 셸로 sendmail 실행
+	 * 템플릿 리터럴로 안전한 명령어 구성 (자동 이스케이프)
+	 */
+	private async sendViaSendmailShell(
+		content: string,
+		to: string[],
+	): Promise<EmailResult> {
+		const sendmailPath = this.config.sendmailPath ?? "sendmail";
+		const sendmailArgs = this.config.sendmailArgs ?? ["-t", "-i"];
+
+		try {
+			const { $ } = await import("bun");
+
+			// Bun.file()을 stdin으로 사용하여 이메일 본문 전달
+			const tmpPath = `${Bun.env.TMPDIR ?? "/tmp"}/bunigniter-mail-${Date.now()}.eml`;
+			await Bun.write(tmpPath, content);
+
+			const result =
+				await $`${sendmailPath} ${sendmailArgs.join(" ")} ${to.join(" ")} < ${Bun.file(tmpPath)}`
+					.nothrow()
+					.quiet();
+
+			// 임시 파일 정리
+			try {
+				await Bun.file(tmpPath).unlink();
+			} catch (_cleanupErr) {
+				/* 임시 파일 정리 실패는 무시 */
+			}
+
+			if (result.exitCode !== 0) {
+				const stderr = result.stderr.toString();
+				return {
+					success: false,
+					error: `sendmail (shell) exited with code ${result.exitCode}: ${stderr.trim()}`,
+				};
+			}
+
+			return {
+				success: true,
+				messageId: `sendmail-shell-${Date.now()}`,
+			};
+		} catch (err: any) {
+			return { success: false, error: `sendmail shell failed: ${err.message}` };
 		}
 	}
 

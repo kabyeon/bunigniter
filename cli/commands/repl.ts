@@ -8,6 +8,7 @@ import type { Command } from "../registry.ts";
 import * as repl from "node:repl";
 import { inspect } from "node:util";
 import path from "node:path";
+import { readdirSync } from "node:fs";
 
 // ─── REPL 커스텀 메서드 타입 ────────────────────────────
 
@@ -156,11 +157,15 @@ export const replCommand: Command = {
 				Upload: core.Upload,
 				AuditLog: core.AuditLog,
 				DistributedLock: core.DistributedLock,
-				Archive: core.Archive,
-				Shell: core.Shell,
+				Crypto: core.Crypto,
+				SSEManager: core.SSEManager,
+				WebSocketManager: core.WebSocketManager,
+				CryptoHasher: Bun.CryptoHasher,
 				getCookie: core.getCookie,
 				setCookie: core.setCookie,
 				paginationHtml: core.paginationHtml,
+				generateCsrfToken: core.generateCsrfToken,
+				verifyCsrfToken: core.verifyCsrfToken,
 			};
 		} catch (err: any) {
 			console.log(
@@ -229,9 +234,8 @@ export const replCommand: Command = {
 			action() {
 				console.log("\n\x1b[32mAVAILABLE MODELS:\x1b[0m");
 				try {
-					const fs = require("fs");
 					const modelDir = path.resolve(process.cwd(), "app/models");
-					const files = fs.readdirSync(modelDir);
+					const files = readdirSync(modelDir);
 					for (const file of files) {
 						if (file.endsWith(".ts")) {
 							console.log(`  \x1b[33m${file.replace(".ts", "")}\x1b[0m`);

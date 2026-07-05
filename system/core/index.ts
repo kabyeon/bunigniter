@@ -46,8 +46,10 @@ export {
 	csrfMeta,
 	getCsrfToken,
 	generateCsrfToken,
+	verifyCsrfToken,
+	verifyCsrfTokenSafe,
 } from "./csrf.ts";
-export type { CsrfConfig } from "./csrf.ts";
+export type { CsrfConfig, CsrfAlgorithm, CsrfEncoding } from "./csrf.ts";
 export { Email, email } from "./email.ts";
 export type { EmailConfig, EmailMessage, EmailResult } from "./email.ts";
 export { Cache, cache } from "./cache.ts";

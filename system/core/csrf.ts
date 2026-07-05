@@ -1,13 +1,36 @@
 // ============================================================
 // BunIgniter - CSRF Protection Middleware
-// Double Submit Cookie 방식
-// 쿠키에 서명된 토큰을 저장하고, 요청 시 쿠키 토큰과
-// 전송된 토큰이 일치하는지 검증합니다.
+// Bun.CSRF.generate() / Bun.CSRF.verify() 내장 사용
+// HMAC 서명 + 만료 타임스탬프 포함
 // ============================================================
+
+/** CSRF 알고리즘 (Bun.CSRF 지원) */
+export type CsrfAlgorithm =
+	| "sha256"
+	| "sha384"
+	| "sha512"
+	| "sha512-256"
+	| "blake2b256"
+	| "blake2b512";
+
+/** CSRF 인코딩 (Bun.CSRF 지원) */
+export type CsrfEncoding = "base64" | "base64url" | "hex";
 
 /** CSRF 설정 */
 export interface CsrfConfig {
-	/** CSRF 토큰 쿠키명 (HttpOnly=false, JavaScript에서 읽기 가능) */
+	/** HMAC 서명용 시크릿 키 (미지정 시 스레드별 랜덤 키, 재시작 시 무효) */
+	secret?: string;
+	/** 토큰 만료 시간 (ms), 기본 86400000 (24시간) */
+	expiresIn?: number;
+	/** 토큰 검증 최대 수명 (ms), 기본 86400000 */
+	maxAge?: number;
+	/** HMAC 알고리즘 */
+	algorithm?: CsrfAlgorithm;
+	/** 토큰 인코딩 */
+	encoding?: CsrfEncoding;
+	/** 세션 바인딩: 토큰을 특정 사용자/세션에 바인딩 */
+	sessionId?: string;
+	/** CSRF 토큰 쿠키명 (JavaScript에서 읽을 수 있어야 하므로 HttpOnly=false) */
 	cookieName: string;
 	/** 폼 필드명 / 헤더명 */
 	tokenName: string;
@@ -22,13 +45,67 @@ const DEFAULT_CONFIG: CsrfConfig = {
 	tokenName: "csrf_token",
 	sameSite: "Lax",
 	secure: false,
+	expiresIn: 86400000, // 24시간
+	maxAge: 86400000, // 24시간
+	algorithm: "sha256",
+	encoding: "base64url",
 };
 
-/** CSRF 토큰 생성 (32바이트 난수) */
-export function generateCsrfToken(): string {
-	const bytes = new Uint8Array(32);
-	crypto.getRandomValues(bytes);
-	return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+/**
+ * CSRF 토큰 생성 (Bun.CSRF.generate)
+ *
+ * Bun 내장 HMAC 서명 + nonce + 타임스탬프 포함 토큰 생성.
+ * Double Submit Cookie 방식에서는 이 토큰을 쿠키와 폼/헤더 양쪽에 전송합니다.
+ *
+ * @param config.secret HMAC 서명용 시크릿 (필수, 미지정 시 스레드별 랜덤 키 사용 — 프로덕션 권장)
+ */
+export function generateCsrfToken(config?: Partial<CsrfConfig>): string {
+	const cfg = { ...DEFAULT_CONFIG, ...config };
+
+	return (Bun.CSRF as any).generate(cfg.secret, {
+		expiresIn: cfg.expiresIn,
+		encoding: cfg.encoding,
+		algorithm: cfg.algorithm,
+		sessionId: cfg.sessionId,
+	});
+}
+
+/**
+ * CSRF 토큰 검증 (Bun.CSRF.verify)
+ *
+ * @returns true if valid and not expired, false otherwise
+ * @throws 빈 문자열 토큰 전달 시 throw (호출부에서 사전 검증 필요)
+ */
+export function verifyCsrfToken(
+	token: string,
+	config?: Partial<CsrfConfig>,
+): boolean {
+	const cfg = { ...DEFAULT_CONFIG, ...config };
+
+	return (Bun.CSRF as any).verify(token, {
+		secret: cfg.secret,
+		maxAge: cfg.maxAge,
+		encoding: cfg.encoding,
+		algorithm: cfg.algorithm,
+		sessionId: cfg.sessionId,
+	});
+}
+
+/**
+ * 안전한 CSRF 토큰 검증 (빈 토큰/에러 시 false 반환)
+ */
+export function verifyCsrfTokenSafe(
+	token: string | null | undefined,
+	config?: Partial<CsrfConfig>,
+): boolean {
+	if (!token || typeof token !== "string" || token.length === 0) {
+		return false;
+	}
+	try {
+		return verifyCsrfToken(token, config);
+	} catch (_err) {
+		return false;
+	}
 }
 
 /**
@@ -39,6 +116,7 @@ export function generateCsrfToken(): string {
  *    - JavaScript에서 쿠키 값을 읽어 헤더나 폼 필드로 전송
  *
  * 2. POST/PUT/PATCH/DELETE: 쿠키의 토큰과 요청의 토큰이 일치하는지 검증
+ *    - Bun.CSRF.verify()로 서명 + 만료 검증
  */
 export function getCsrfToken(
 	request: Request,
@@ -48,8 +126,16 @@ export function getCsrfToken(
 	const cookies = parseCookies(request);
 	let token = cookies[cfg.cookieName];
 
+	// 쿠키에 토큰이 있으면 서명 검증 (만료되었으면 새로 발급)
+	if (token) {
+		const valid = verifyCsrfTokenSafe(token, cfg);
+		if (!valid) {
+			token = null as any; // 만료 → 재발급
+		}
+	}
+
 	if (!token) {
-		token = generateCsrfToken();
+		token = generateCsrfToken(cfg);
 	}
 
 	const secureFlag = cfg.secure ? "; Secure" : "";
@@ -58,11 +144,11 @@ export function getCsrfToken(
 }
 
 /**
- * CSRF 검증 미들웨어 (Double Submit Cookie)
+ * CSRF 검증 미들웨어 (Double Submit Cookie + Bun.CSRF.verify)
  *
  * 동작 방식:
  *   GET 요청 → 쿠키에 CSRF 토큰 설정 (JavaScript에서 읽을 수 있음)
- *   POST/PUT/PATCH/DELETE → 쿠키 토큰 == 요청 토큰 검증
+ *   POST/PUT/PATCH/DELETE → Bun.CSRF.verify()로 서명 + 만료 검증
  *
  * 사용법:
  *   1. 폼: <?= csrfField(csrfToken) ?>
@@ -72,10 +158,12 @@ export function getCsrfToken(
 export async function csrfMiddleware({
 	request,
 	next,
+	config,
 }: {
 	request: Request;
 	response: any;
 	next: () => Promise<Response | void>;
+	config?: Partial<CsrfConfig>;
 }): Promise<Response | void> {
 	const method = request.method.toUpperCase();
 
@@ -84,14 +172,26 @@ export async function csrfMiddleware({
 		return next();
 	}
 
+	const cfg = { ...DEFAULT_CONFIG, ...config };
+
 	// 쿠키에서 토큰 읽기
-	const cfg = DEFAULT_CONFIG;
 	const cookies = parseCookies(request);
 	const cookieToken = cookies[cfg.cookieName];
 
 	if (!cookieToken) {
 		return new Response(
 			JSON.stringify({ error: "CSRF token missing from cookies" }),
+			{
+				status: 403,
+				headers: { "Content-Type": "application/json" },
+			},
+		);
+	}
+
+	// Bun.CSRF.verify()로 쿠키 토큰의 서명 + 만료 검증
+	if (!verifyCsrfTokenSafe(cookieToken, cfg)) {
+		return new Response(
+			JSON.stringify({ error: "CSRF token expired or invalid" }),
 			{
 				status: 403,
 				headers: { "Content-Type": "application/json" },
