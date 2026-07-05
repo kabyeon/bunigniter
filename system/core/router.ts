@@ -4,7 +4,11 @@
 // Bun.serve 네이티브 라우터 기반
 // ============================================================
 
-import type { Controller, Context, ResponseStatusBuilder } from "./controller.ts";
+import type {
+	Controller,
+	Context,
+	ResponseStatusBuilder,
+} from "./controller.ts";
 import type { MiddlewareFn } from "./middleware.ts";
 import { runMiddlewarePipeline } from "./middleware.ts";
 import { RouteModelBinding } from "./route_model_binding.ts";
