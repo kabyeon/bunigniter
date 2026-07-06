@@ -34,6 +34,48 @@ const sql = await getDB();            // 기본
 const analyticsDB = await getDB("analytics");  // 특정 그룹
 ```
 
+### 테스트용 DB 주입
+
+테스트 환경에서 메모리 DB를 직접 주입할 수 있습니다:
+
+```typescript
+import { SQL } from "bun";
+import { setDB, resetDB } from "system/core/database.ts";
+
+const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+setDB(sql, "default");
+
+// 테스트 종료 후
+resetDB();
+await sql.close();
+```
+
+## Query Builder (Active Record)
+
+CodeIgniter3의 Active Record 패턴을 구현한 쿼리 빌더입니다.
+
+```typescript
+import { createQueryBuilder } from "system/core/query_builder.ts";
+
+// 독립 사용
+const posts = await createQueryBuilder()
+  .select("id, title")
+  .from("posts")
+  .where("published", 1)
+  .orderBy("created_at", "DESC")
+  .limit(10)
+  .get();
+
+// Model과 함께 사용
+const posts = await postModel.qb()
+  .where("published", 1)
+  .like("title", "Bun")
+  .orderBy("created_at", "DESC")
+  .paginate(1, 10);
+```
+
+> 💡 Query Builder의 전체 API는 [Query Builder 문서](./query-builder.md)를 참조하세요.
+
 ## 마이그레이션
 
 ### 파일 구조
