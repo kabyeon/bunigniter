@@ -64,9 +64,43 @@ const posts = await createQueryBuilder()
 
 ---
 
-## SELECT
+## 멀티 어댑터 SQL 방언
 
-### 기본 조회
+QueryBuilder는 DB 어댑터에 따라 자동으로 SQL 문법을 분기합니다:
+
+### 식별자 이스케이프
+
+| 어댑터 | 이스케이프 | 예시 |
+|--------|-----------|------|
+| SQLite | 쌍따옴표 | `"column"` |
+| PostgreSQL | 쌍따옴표 | `"column"` |
+| MySQL | 백틱 | `` `column` `` |
+
+### LIMIT / OFFSET
+
+| 어댑터 | 문법 | 예시 |
+|--------|------|------|
+| SQLite | 표준 | `LIMIT ? OFFSET ?` |
+| PostgreSQL | 표준 | `LIMIT ? OFFSET ?` |
+| MySQL | 레거시 | `LIMIT offset, count` |
+
+### RETURNING * (INSERT/UPDATE 후 행 반환)
+
+| 어댑터 | 지원 | 대체 방식 |
+|--------|------|----------|
+| SQLite | ✅ | `RETURNING *` 직접 사용 |
+| PostgreSQL | ✅ | `RETURNING *` 직접 사용 |
+| MySQL | ❌ | INSERT 후 `lastInsertId` → SELECT 재조회 |
+
+```typescript
+// insertReturning / updateReturning은 어댑터에 관계없이 동일하게 사용
+const post = await qb.insertReturning("posts", { title: "Hello" });
+const updated = await qb.where("id", 1).updateReturning("posts", { title: "Updated" });
+```
+
+---
+
+## SELECT
 
 ```typescript
 // 전체 컬럼

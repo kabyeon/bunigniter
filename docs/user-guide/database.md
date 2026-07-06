@@ -34,6 +34,17 @@ const sql = await getDB();            // 기본
 const analyticsDB = await getDB("analytics");  // 특정 그룹
 ```
 
+### 어댑터 타입 조회
+
+QueryBuilder에서 SQL 방언 분기에 사용:
+
+```typescript
+import { getDBAdapter } from "system/core/database.ts";
+
+const adapter = getDBAdapter();           // "sqlite" | "postgres" | "mysql"
+const adapter = getDBAdapter("analytics"); // 특정 그룹
+```
+
 ### 테스트용 DB 주입
 
 테스트 환경에서 메모리 DB를 직접 주입할 수 있습니다:
@@ -43,11 +54,45 @@ import { SQL } from "bun";
 import { setDB, resetDB } from "system/core/database.ts";
 
 const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
-setDB(sql, "default");
+setDB(sql, "default", "sqlite");
 
 // 테스트 종료 후
 resetDB();
 await sql.close();
+```
+
+## 멀티 어댑터 SQL 방언
+
+QueryBuilder는 DB 어댑터에 따라 자동으로 SQL 문법을 분기합니다:
+
+### 식별자 이스케이프
+
+| 어댑터 | 이스케이프 | 예시 |
+|--------|-----------|------|
+| SQLite | 쌍따옴표 | `"column"` |
+| PostgreSQL | 쌍따옴표 | `"column"` |
+| MySQL | 백틱 | `` `column` `` |
+
+### LIMIT / OFFSET
+
+| 어댑터 | 문법 | 예시 |
+|--------|------|------|
+| SQLite | 표준 | `LIMIT ? OFFSET ?` |
+| PostgreSQL | 표준 | `LIMIT ? OFFSET ?` |
+| MySQL | 레거시 | `LIMIT offset, count` |
+
+### RETURNING * (INSERT/UPDATE 후 행 반환)
+
+| 어댑터 | 지원 | 대체 방식 |
+|--------|------|----------|
+| SQLite | ✅ | `RETURNING *` 직접 사용 |
+| PostgreSQL | ✅ | `RETURNING *` 직접 사용 |
+| MySQL | ❌ | INSERT 후 `lastInsertId` → SELECT 재조회 |
+
+```typescript
+// insertReturning / updateReturning은 어댑터에 관계없이 동일하게 사용
+const post = await qb.insertReturning("posts", { title: "Hello" });
+const updated = await qb.where("id", 1).updateReturning("posts", { title: "Updated" });
 ```
 
 ## Query Builder (Active Record)

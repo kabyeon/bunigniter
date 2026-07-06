@@ -46,11 +46,11 @@ async function seed() {
 			published: 1,
 		},
 		{
-			title: "Rendu 템플릿 엔진 가이드",
-			slug: "rendu-template-guide",
+			title: "BunIgniter 템플릿 엔진 가이드",
+			slug: "bunigniter-template-guide",
 			content:
-				"Rendu는 PHP 스타일 템플릿 문법을 제공합니다.\n\n## 변수 출력\n\n중괄호 두 개로 변수를 출력합니다.\n\n## 반복문\n\nPHP 스타일의 for 문을 사용할 수 있습니다.",
-			excerpt: "Rendu 템플릿 엔진의 기본 문법을 알아봅니다.",
+				"BunIgniter 자체 템플릿 엔진은 PHP/CI3 친화적 문법을 제공합니다.\n\n## 변수 출력\n\n중괄호 두 개로 변수를 출력합니다.\n\n## 반복문\n\nPHP 스타일의 for 문을 사용할 수 있습니다.",
+			excerpt: "BunIgniter 템플릿 엔진의 기본 문법을 알아봅니다.",
 			author_id: 2,
 			published: 1,
 		},

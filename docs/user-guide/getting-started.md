@@ -39,7 +39,8 @@ bun run start
 | 런타임 | [Bun](https://bun.sh) | 최신 |
 | HTTP 서버 | [Bun.serve](https://bun.sh/docs/runtime/http) | 내장 (SIMD 가속 라우팅) |
 | 데이터베이스 | [Bun SQL](https://bun.sh/docs/runtime/sql) | 내장 (SQLite/PostgreSQL/MySQL) |
-| 템플릿 엔진 | [Rendu](https://github.com/h3js/rendu) | ^0.1.0 |
+| 템플릿 엔진 | 자체 내장 | 외부 의존성 없음 |
+| 린트/포맷 | [Biome](https://biomejs.dev/) | ^2.5.2 |
 | 테스트 | [bun:test](https://bun.sh/docs/cli/test) | 내장 |
 
 ## 프로젝트 구조
@@ -51,8 +52,9 @@ bunigniter/
 ├── app/config/           # 설정 (app.ts, database.ts, routes.ts)
 ├── app/controllers/      # 컨트롤러
 ├── app/models/           # 모델
-├── app/views/            # Rendu 템플릿 (.html)
+├── app/views/            # 템플릿 (.html)
 ├── app/views/layout/     # 레이아웃 템플릿
+├── app/views/partials/   # 파셜 템플릿 (include용)
 ├── app/middleware/        # 미들웨어
 ├── app/helpers/          # 커스텀 헬퍼
 ├── app/libraries/        # 커스텀 라이브러리

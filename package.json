@@ -1,7 +1,7 @@
 {
 	"name": "bunigniter",
 	"version": "1.0.0",
-	"description": "CodeIgniter 3-style Full Stack MVC Framework for Bun + Rendu",
+	"description": "CodeIgniter 3-style Full Stack MVC Framework for Bun",
 	"type": "module",
 	"scripts": {
 		"dev": "bun run --hot system/core/bootstrap.ts",

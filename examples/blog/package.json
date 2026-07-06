@@ -10,7 +10,7 @@
 		"seed": "bun run database/seed.ts"
 	},
 	"dependencies": {
-		"rendu": "^0.1.0"
+		"dependencies": {}
 	},
 	"devDependencies": {
 		"@types/bun": "latest"

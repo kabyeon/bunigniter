@@ -144,7 +144,7 @@ async function bootstrap() {
 	console.log(`  🚀 서버 실행 중: http://localhost:${port}`);
 	console.log(`  📦 환경: ${appConfig.env}`);
 	console.log(`  🗄️  데이터베이스: SQLite`);
-	console.log(`  🎨 템플릿 엔진: Rendu`);
+	console.log(`  🎨 템플릿 엔진: 자체 내장`);
 	console.log(`  ⚡ 서버: Bun.serve (네이티브)`);
 	console.log("");
 
