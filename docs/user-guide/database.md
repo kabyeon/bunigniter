@@ -121,6 +121,148 @@ const posts = await postModel.qb()
 
 > 💡 Query Builder의 전체 API는 [Query Builder 문서](./query-builder.md)를 참조하세요.
 
+## Raw Query (원시 쿼리)
+
+QueryBuilder로 표현하기 어려운 복잡한 쿼리는 Bun SQL의 원시 쿼리 API를 직접 사용할 수 있습니다.
+CodeIgniter3의 `$this->db->query()` 와 동일합니다.
+
+### `sql\`...\` — 태그드 템플릿 리터럴 (권장)
+
+Bun SQL의 태그드 템플릿 리터럴은 **자동 파라미터 바인딩**을 수행합니다.
+`${}` 로 전달한 값은 항상 파라미터로 처리되어 **SQL 인젝션이 불가능**합니다.
+
+```typescript
+import { getDB } from "system/core/database.ts";
+
+const sql = await getDB();
+
+// ✅ 안전 — 값은 자동 파라미터 바인딩
+const posts = await sql`SELECT * FROM posts WHERE published = ${1} ORDER BY created_at DESC`;
+
+// ✅ 안전 — 여러 값 바인딩
+const post = await sql`SELECT * FROM posts WHERE id = ${postId} AND author_id = ${userId}`;
+
+// ✅ 안전 — INSERT/UPDATE/DELETE
+await sql`INSERT INTO posts (title, content) VALUES (${title}, ${content})`;
+await sql`UPDATE posts SET title = ${title} WHERE id = ${id}`;
+await sql`DELETE FROM posts WHERE id = ${id}`;
+
+// ✅ 안전 — JOIN + 서브쿼리 (구조는 문자열, 값은 바인딩)
+const results = await sql`
+  SELECT p.*, u.name as author_name,
+    (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
+  FROM posts p
+  JOIN users u ON u.id = p.author_id
+  WHERE p.published = ${1}
+  ORDER BY p.created_at DESC
+  LIMIT ${perPage} OFFSET ${offset}
+`;
+```
+
+> 💡 **핵심 규칙**: 테이블명, 컬럼명 등 **구조(식별자)**는 템플릿 리터럴 안에 하드코딩하고,
+> **값(데이터)**만 `${}` 로 전달하세요.
+
+### `sql.unsafe()` — 수동 바인딩
+
+`sql.unsafe(query, bindings)` 는 `?` 플레이스홀더와 바인딩 배열을 수동으로 관리합니다.
+QueryBuilder 내부에서 사용하는 방식입니다.
+
+```typescript
+// ✅ 안전 — ? 플레이스홀더 + 바인딩 배열
+const rows = await sql.unsafe(
+  "SELECT * FROM posts WHERE published = ? AND author_id = ? ORDER BY created_at DESC",
+  [1, userId]
+);
+
+// ✅ 안전 — INSERT
+await sql.unsafe(
+  "INSERT INTO posts (title, content, author_id) VALUES (?, ?, ?)",
+  [title, content, authorId]
+);
+
+// ❌ 위험 — 문자열 결합으로 값 직접 삽입 (SQL 인젝션 가능!)
+await sql.unsafe(
+  `SELECT * FROM posts WHERE title = '${userInput}'`  // 절대 금지!
+);
+```
+
+### 동적 쿼리 작성 패턴
+
+#### WHERE 조건 동적 추가
+
+```typescript
+const conditions: string[] = [];
+const bindings: any[] = [];
+
+if (search) {
+  conditions.push("title LIKE ?");
+  bindings.push(`%${search}%`);
+}
+if (authorId) {
+  conditions.push("author_id = ?");
+  bindings.push(authorId);
+}
+
+const where = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+const rows = await sql.unsafe(
+  `SELECT * FROM posts ${where} ORDER BY created_at DESC`,
+  bindings
+);
+```
+
+#### ORDER BY 컬럼 동적 선택
+
+```typescript
+// ✅ 화이트리스트로 허용된 컬럼만
+const allowedSort = { date: "created_at", title: "title", author: "name" } as const;
+const sortCol = allowedSort[userSort as keyof typeof allowedSort] ?? "created_at";
+
+const rows = await sql.unsafe(
+  `SELECT * FROM posts ORDER BY ${sortCol} DESC LIMIT ?`,
+  [limit]
+);
+```
+
+#### 테이블명 동적 선택
+
+```typescript
+// ✅ 화이트리스트로 허용된 테이블만
+const allowedTables = ["posts", "users", "comments"] as const;
+const table = allowedTables.includes(userTable as any) ? userTable : "posts";
+
+const rows = await sql.unsafe(`SELECT * FROM ${table} LIMIT ?`, [limit]);
+```
+
+### 태그드 템플릿 vs `sql.unsafe()` 비교
+
+| | `sql\`...\`` | `sql.unsafe()` |
+|---|---|---|
+| **파라미터 바인딩** | 자동 (`${}`) | 수동 (`?` + 배열) |
+| **SQL 인젝션 방어** | ✅ 구조와 값 분리 | ⚠️ 올바른 사용 시에만 |
+| **동적 쿼리** | ❌ 구조가 고정 | ✅ 조건부 WHERE 등 |
+| **사용 사례** | 정적 쿼리, 간단한 CRUD | QueryBuilder, 동적 조건 |
+| **CI3 동등** | `$this->db->query($sql, $binds)` | 동일 |
+
+### ⚠️ 주의사항
+
+1. **태그드 템플릿에 식별자(테이블명/컬럼명)를 `${}` 로 전달하지 마세요**
+   - Bun SQL은 `${}` 값을 **문자열 리터럴**로 쿼리에 포함합니다
+   - 즉, `` sql`SELECT * FROM ${tableName}` `` 는 `SELECT * FROM 'posts'` 가 되어 에러 발생
+   - 테이블명/컬럼명은 화이트리스트 검증 후 문자열에 직접 포함
+
+2. **`sql.unsafe()` 에서 절대 문자열 결합으로 값을 넣지 마세요**
+   - 항상 `?` 플레이스홀더 + 바인딩 배열 사용
+
+3. **동적 식별자는 항상 화이트리스트로 검증하세요**
+   - 사용자 입력을 테이블명/컬럼명/ORDER BY에 직접 사용 금지
+   - 허용 목록 매핑 또는 정규식 검증 사용
+
+4. **복잡한 쿼리는 QueryBuilder를 우선 고려하세요**
+   - QueryBuilder는 모든 식별자에 `validateColumnName()` 을 자동 적용
+   - Raw Query는 QueryBuilder로 불가능한 경우에만 사용
+
+---
+
 ## 마이그레이션
 
 ### 파일 구조
