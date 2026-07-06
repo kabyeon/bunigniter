@@ -48,13 +48,14 @@ bun run start
 ```
 bunigniter/
 ├── system/core/          # 프레임워크 코어 (수정 금지)
-├── system/helpers/       # 전역 헬퍼 함수
-├── app/config/           # 설정 (app.ts, database.ts, routes.ts)
+├── system/helpers/       # 전역 헬퍼 함수 (9개 카테고리)
+├── app/config/           # 설정 (app, database, routes, autoload, cache, email, queue, scheduler)
 ├── app/controllers/      # 컨트롤러
 ├── app/models/           # 모델
 ├── app/views/            # 템플릿 (.html)
 ├── app/views/layout/     # 레이아웃 템플릿
-├── app/views/partials/   # 파셜 템플릿 (include용)
+├── app/views/partials/   # 파셜 템플릿 (nav, footer, head, alerts)
+├── app/views/errors/     # 에러 페이지 (404, 500)
 ├── app/middleware/        # 미들웨어
 ├── app/helpers/          # 커스텀 헬퍼
 ├── app/libraries/        # 커스텀 라이브러리

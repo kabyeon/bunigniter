@@ -44,3 +44,19 @@ router.group("/api", [authMiddleware], (router) => {
 - `guestGuard` — 게스트 전용 ([Auth 가이드](auth.md))
 - `corsMiddleware` — CORS 처리 ([CORS 가이드](cors.md))
 - `rateLimitMiddleware` — 요청 제한 ([Rate Limit 가이드](rate-limit.md))
+- `securityHeadersMiddleware` — 보안 헤더 일괄 적용 ([Security Headers 가이드](security-headers.md))
+
+## 커스텀 보안 헤더 미들웨어
+
+```typescript
+import { createSecurityHeadersMiddleware } from "system/core/security_headers.ts";
+
+// HSTS + CSP + DENY
+router.use(createSecurityHeadersMiddleware({
+  frameOptions: "DENY",
+  hsts: "max-age=31536000; includeSubDomains",
+  csp: "default-src 'self'; script-src 'self'",
+}));
+```
+
+[→ Security Headers 가이드](security-headers.md)

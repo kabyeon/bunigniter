@@ -179,7 +179,7 @@ return this.view("emails/welcome", { user });
 
 ## 파셜 (Partial) 뷰
 
-재사용 가능한 파셜 컴포넌트:
+재사용 가능한 파셜 컴포넌트를 `app/views/partials/` 디렉토리에 배치합니다:
 
 **파셜** (`app/views/partials/post-card.html`):
 
@@ -196,6 +196,47 @@ return this.view("emails/welcome", { user });
 <? for (const post of posts) { ?>
   <? include('partials/post-card', { post }) ?>
 <? } ?>
+```
+
+### 내장 파셜
+
+BunIgniter는 기본 파셜을 `app/views/partials/` 에 제공합니다:
+
+| 파셜 | 설명 | 사용 |
+|------|------|------|
+| `nav.html` | 네비게이션 바 (로그인/로그아웃) | `<? include('partials/nav') ?>` |
+| `footer.html` | 푸터 (저작권) | `<? include('partials/footer') ?>` |
+| `head.html` | HEAD 공통 메타 태그 + CSS | `<? include('partials/head') ?>` |
+| `alerts.html` | Flash 알림 (success/error) | `<? include('partials/alerts') ?>` |
+
+### 파셜 컨벤션
+
+1. `app/views/partials/` 디렉토리에 배치
+2. `<? include('partials/name') ?>` 로 포함
+3. 데이터 전달: `<? include('partials/name', { data }) ?>`
+4. 포함된 파셜은 부모의 모든 데이터에 접근 가능
+5. 레이아웃에서 파셜 사용 가능: `<? include('partials/nav') ?>`
+
+### 레이아웃 + 파셜 조합
+
+```html
+<!-- app/views/layout/default.html -->
+<!doctype html>
+<html lang="ko">
+  <head>
+    <? include('partials/head') ?>
+    <title>{{{ slot:title || "BunIgniter" }}}}</title>
+  </head>
+  <body>
+    <? include('partials/nav') ?>
+    <main class="container">
+      <? include('partials/alerts') ?>
+      {{{ content }}}
+    </main>
+    <? include('partials/footer') ?>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
 ```
 
 ---

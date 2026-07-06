@@ -74,3 +74,26 @@ async show({ params }: Context) {
 ```
 
 export default router;
+
+## 404 커스텀 핸들러
+
+CI3의 `$route['404_override']` 와 동일합니다:
+
+```typescript
+import { Router } from "system/core/router.ts";
+
+const router = new Router();
+
+// 커스텀 404 핸들러
+router.notFound(async ({ request, params }) => {
+  // Accept 헤더에 따라 자동 분기
+  // application/json → { error: "Not Found" }
+  // text/html → 커스텀 HTML
+  return new Response(
+    "<!DOCTYPE html><html><body><h1>404 - 페이지를 찾을 수 없습니다</h1></body></html>",
+    { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } }
+  );
+});
+```
+
+`router.notFound()` 가 설정되지 않으면 기본 404 응답이 사용됩니다. `Accept: application/json` 요청에는 자동으로 JSON 에러 응답이 반환됩니다.

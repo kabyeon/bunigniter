@@ -37,6 +37,7 @@ bun run igniter <command> [args] [options]
 |--------|------|
 | `migrate` | 마이그레이션 실행 (미실행 마이그레이션만) |
 | `migrate:rollback` | 마이그레이션 롤백 (`--steps=N`, `--all`) |
+| `migrate:status` | 마이그레이션 상태 확인 (적용/미적용 목록) |
 | `db:seed` | 시더 실행 (`--files=name1,name2`) |
 
 ### 정보
@@ -93,3 +94,16 @@ bun run igniter make:scaffold post --api --fields=title:string
 - Model + Controller + Views + Migration 전체 생성
 - `--api`: JSON API 컨트롤러 (뷰 없음)
 - 라우트 자동 등록 (`app/config/routes.ts`)
+
+## migrate:status 상세
+
+```bash
+bun run igniter migrate:status
+```
+
+마이그레이션 파일 목록과 적용 상태를 표시합니다:
+
+- ✅ 적용됨 — 배치 번호, 실행 시간 표시
+- ⏳ 미적용 — 실행 대기
+
+배치(batch) 단위로 관리되어 롤백 시 배치별로 처리됩니다.
