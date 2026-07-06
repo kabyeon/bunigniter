@@ -115,30 +115,32 @@ close(); // 반드시 종료
 ## 현재 테스트 현황
 
 ```
-598 pass, 0 fail, 1071 expect() calls across 27 files
+620 pass, 0 fail, 1121 expect() calls across 28 files
 
-tests/validator_test.ts          - 14 tests
-tests/helpers_test.ts            - 18 tests
-tests/pagination_test.ts         -  8 tests
-tests/upload_test.ts             -  6 tests
-tests/cache_test.ts              - 12 tests
-tests/middleware_test.ts          -  7 tests
-tests/route_binding_test.ts      -  6 tests
-tests/openapi_test.ts            -  7 tests
-tests/queue_test.ts              - 15 tests
-tests/redis_test.ts              - 15 tests
-tests/scheduler_test.ts          - 16 tests
-tests/feature_test.ts            - 30 tests
-tests/feature2_test.ts           - 43 tests
-tests/feature3_test.ts           - 61 tests
-tests/query_builder_test.ts      - 26 tests
-tests/query_builder_dialect_test.ts - 20 tests
-tests/security_test.ts           - 14 tests
-tests/form_helper_test.ts        - 22 tests
-tests/html_helper_test.ts        - 12 tests
-tests/text_helper_test.ts        - 10 tests
-tests/inflector_helper_test.ts   -  5 tests
-tests/e2e_test.ts                - 14 tests
-tests/autoload_test.ts           -  7 tests
-tests/security_profiler_test.ts  - 25 tests
+tests/validator_test.ts            - 14 tests
+tests/helpers_test.ts              - 53 tests
+tests/pagination_test.ts           -  8 tests
+tests/upload_test.ts               -  6 tests
+tests/cache_test.ts                - 14 tests
+tests/middleware_test.ts            -  7 tests
+tests/route_binding_test.ts        -  6 tests
+tests/openapi_test.ts              -  8 tests
+tests/queue_test.ts                - 15 tests
+tests/redis_test.ts                - 15 tests
+tests/scheduler_test.ts            - 16 tests
+tests/feature_test.ts              - 30 tests
+tests/feature2_test.ts             - 43 tests
+tests/feature3_test.ts             - 61 tests
+tests/feature4_test.ts             - 56 tests
+tests/query_builder_test.ts        - 56 tests
+tests/query_builder_dialect_test.ts- 16 tests
+tests/security_test.ts             - 30 tests
+tests/form_helper_test.ts          - 28 tests
+tests/html_helper_test.ts          - 16 tests
+tests/text_helper_test.ts          - 18 tests
+tests/inflector_helper_test.ts     - 19 tests
+tests/e2e_test.ts                  - 14 tests
+tests/autoload_test.ts             -  7 tests
+tests/auto_router_test.ts          - 19 tests
+tests/security_profiler_test.ts    - 24 tests
 ```

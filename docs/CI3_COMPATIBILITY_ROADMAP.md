@@ -1,8 +1,8 @@
 # CodeIgniter 3 대비 BunIgniter 완성도 분석 및 로드맵
 
-> 작성일: 2026-07-05
-> 기준 커밋: `e2da8d0` (QueryBuilder SQL 인젝션 방어)
-> 현재 상태: 435 tests pass, 0 fail, 0 외부 의존성, Biome 0 errors
+> 작성일: 2026-07-06
+> 기준 커밋: `61f6837` (v0.6.4 — npm publish, init merge, auto routing)
+> 현재 상태: 620 tests pass, 0 fail, 0 외부 의존성, Biome 0 errors
 
 ---
 
@@ -10,28 +10,28 @@
 
 | 카테고리 | 완성도 | 코드 라인 | 비고 |
 |----------|--------|-----------|------|
-| **코어 MVC** | 95% | 79 (controller) + 216 (model) | Controller/Model/View 모두 구현 |
-| **라우팅** | 90% | 328 | RESTful, resource, group. 404 커스텀 불가 |
-| **Query Builder** | 90% | 1163 | CI3 Active Record 대부분. 서브쿼리 미지원 |
-| **데이터베이스** | 85% | 131 | 3어댑터, 마이그레이션, 시드. 스키마 빌더 없음 |
-| **세션** | 95% | 138 + 3드라이버 | File/Memory/Redis, Flash, regenerate |
-| **보안** | 90% | CSRF 284 + 기타 | CSRF, CORS, Rate Limit. Security 헤더 미흡 |
-| **템플릿** | 80% | 361 | 슬롯/인클루드. 헬퍼 함수 한정 |
-| **CLI** | 75% | 15개 명령 | 환경설정/마이그레이션 상태 미흡 |
-| **헬퍼** | 60% | 226 | URL/문자열/날짜만. CI3 21개 헬퍼 대비 부족 |
-| **라이브러리** | 70% | 다수 파일 | Auth/Email/Cache/Upload. CI3 대비 미구현 다수 |
+| **코어 MVC** | 95% | controller + model | Controller/Model/View 모두 구현 |
+| **라우팅** | 95% | router + auto_router | RESTful, resource, group, auto route, 404 커스텀 |
+| **Query Builder** | 90% | query_builder | CI3 Active Record 대부분. 서브쿼리 미지원 |
+| **데이터베이스** | 90% | database + migrate | 3어댑터, 마이그레이션, 시드, 상태 추적. 스키마 빌더 없음 |
+| **세션** | 95% | session + 3드라이버 | File/Memory/Redis, Flash, regenerate |
+| **보안** | 95% | CSRF/CORS/RateLimit/SecHeaders | CSRF, CORS, Rate Limit, Security 헤더, CSP |
+| **템플릿** | 85% | template + view | 슬롯/인클루드/파셜/레이아웃 |
+| **CLI** | 85% | 17개 명령 | migrate:status, REPL 포함 |
+| **헬퍼** | 90% | 10 files (9카테고리) | URL/String/Date/Array/Form/HTML/Text/Inflector/Number/Cookie |
+| **라이브러리** | 80% | 다수 파일 | Auth/Email/Cache/Upload/UserAgent/Profiler/Autoload |
 | **확장기능** | 80% | 다수 | Queue/SSE/WebSocket/Scheduler (CI3 없음) |
-| **문서** | 90% | 4244 (37개) | API 레퍼런스 부족 |
-| **테스트** | 75% | 4465 (435개) | E2E/통합테스트 부족 |
+| **문서** | 95% | 5196 (43개) | API 레퍼런스 부족 |
+| **테스트** | 85% | 6118 (28개, 620 tests) | E2E + 보안 + 단위 + 통합 |
 
-**전체 평균: ~83%**
+**전체 평균: ~89%**
 
 ### 코드 규모
 
 ```
-총 코드:    13,443 lines (48 files in system/)
-총 테스트:   4,465 lines (19 files, 435 tests, 773 expect() calls)
-총 문서:     4,244 lines (37 markdown files)
+총 코드:    15,126 lines (55 files in system/)
+총 테스트:   6,118 lines (28 files, 620 tests, 1,121 expect() calls)
+총 문서:     5,196 lines (43 markdown files)
 외부 의존성: 0 (오직 dev: @biomejs/biome)
 ```
 
@@ -41,20 +41,20 @@
 
 ```
 코어 MVC        ████████████████████░ 95%
-라우팅          ██████████████████░░░ 90%
+라우팅          ████████████████████░ 95%
 Query Builder   ██████████████████░░░ 90%
-데이터베이스    █████████████████░░░░ 85%
+데이터베이스    ██████████████████░░░ 90%
 세션            ████████████████████░ 95%
-보안            ██████████████████░░░ 90%
-템플릿          ████████████████░░░░░ 80%
-CLI             ███████████████░░░░░░ 75%
-헬퍼            ████████████░░░░░░░░░ 60%
-라이브러리      ██████████████░░░░░░░ 70%
+보안            ████████████████████░ 95%
+템플릿          █████████████████░░░░ 85%
+CLI             █████████████████░░░░ 85%
+헬퍼            ██████████████████░░░ 90%
+라이브러리      ████████████████░░░░░ 80%
 확장기능        ████████████████░░░░░ 80%
-문서            ██████████████████░░░ 90%
-테스트          ███████████████░░░░░░ 75%
+문서            ████████████████████░ 95%
+테스트          █████████████████░░░░ 85%
 ────────────────────────────────────────
-전체 평균       ████████████████░░░░░ 83%
+전체 평균       ██████████████████░░░ 89%
 ```
 
 ---
@@ -69,7 +69,7 @@ CLI             ███████████████░░░░░░ 
 | `CI_Model` | ✅ | `Model<T>` — qb()/findAll/create/update/delete |
 | `$this->db` | ✅ | `getDB()` — SQLite/PostgreSQL/MySQL |
 | **Context (req/res)** | ✅ | `body()/params/query/request/response` |
-| **Auto-loading** | ❌ | CI3 `$autoload['libraries']` 없음 |
+| **Auto-loading** | ✅ | `autoload(config)` + `autoloadRegistry` — 헬퍼/라이브러리/모델 전역 로드 |
 | **Multiple controller** | ❌ | 하위 컨트롤러 상속 체인 미지원 |
 | **HMVC** | ❌ | 모듈 분리 미지원 |
 
@@ -84,7 +84,7 @@ CLI             ███████████████░░░░░░ 
 | 라우트 그룹 | ✅ | `router.group("/api", mw, cb)` |
 | 미들웨어 | ✅ | 글로벌 + 라우트별 |
 | 라우트 모델 바인딩 | ✅ | `RouteModelBinding` |
-| 404 커스텀 핸들러 | ❌ | 기본 HTML 하드코딩 |
+| 404 커스텀 핸들러 | ✅ | `router.notFound(handler)` + JSON 자동 감지 |
 | 정규식 라우트 | ❌ | CI3 `$route['product/(:num)']` |
 | HTTP 메서드 오버라이드 | ❌ | `_method` 폼 필드 미지원 |
 | 라우트 네이밍 | ❌ | `router.get("/users", ...).name("users")` 없음 |
@@ -143,7 +143,7 @@ CLI             ███████████████░░░░░░ 
 | Raw Query | ✅ | `sql\`...\`` + `sql.unsafe()` |
 | 테스트 DB 주입 | ✅ | `setDB()/resetDB()` |
 | **스키마 빌더** | ❌ | `createTable/addColumn` 등 Fluent API 없음 |
-| **마이그레이션 상태** | ❌ | `migrations` 테이블 관리 없음 (롤백이 파일 역순) |
+| **마이그레이션 상태** | ✅ | `migrations` 테이블 batch 추적 + `migrate:status` 명령 |
 | **DB 포징** | ❌ | 환경별 자동 시드 |
 | **리드/라이트 분할** | ❌ | |
 
@@ -181,8 +181,8 @@ CLI             ███████████████░░░░░░ 
 | 세션 고정 방어 | ✅ | `regenerateId()` |
 | 타이밍 공격 방어 | ✅ | Auth 더미 해시 검증 |
 | **Encryption** | ⚠️ | `crypto.ts` 있으나 CI3 `$this->encryption` 수준 아님 |
-| **Content Security Policy** | ❌ | CSP 헤더 미들웨어 없음 |
-| **Security headers** | ❌ | X-Frame-Options, X-Content-Type-Options 등 일괄 적용 없음 |
+| **Content Security Policy** | ✅ | `createSecurityHeadersMiddleware({ csp: "default-src 'self'" })` |
+| **Security headers** | ✅ | `securityHeadersMiddleware` — OWASP 7종 + HSTS/CSP + X-Powered-By 제거 |
 
 ---
 
@@ -200,7 +200,7 @@ CLI             ███████████████░░░░░░ 
 | include() | ✅ | 재귀 + 추가 데이터 |
 | 템플릿 캐시 | ✅ | `clearTemplateCache()` |
 | **헬퍼 함수** | ⚠️ | 내장 함수 한정 (date, upper 등) |
-| **파셜 (partials/)** | ❌ | 디렉토리 미생성 |
+| **파셜 (partials/)** | ✅ | `app/views/partials/` — nav, footer, head, alerts |
 | **컴포넌트** | ❌ | 재사용 UI 컴포넌트 없음 |
 | **조건부 렌더링** | ⚠️ | `<? if ?>` 가능하나 편의 헬퍼 없음 |
 | **블레이드식 @문법** | ❌ | 의도적 배제 (PHP 친화적 설계) |
@@ -225,7 +225,7 @@ CLI             ███████████████░░░░░░ 
 | `repl` | ✅ | |
 | `routegen` | ✅ | |
 | **`make:command`** | ❌ | 커스텀 CLI 명령 생성기 |
-| **`migrate:status`** | ❌ | 적용/미적용 상태 표시 |
+| **`migrate:status`** | ✅ | 적용/미적용 상태 표시 + batch 번호 |
 | **`migrate:fresh`** | ❌ | DB 초기화 + 재마이그레이션 |
 | **`db:create/drop`** | ❌ | |
 | **환경 설정** | ❌ | `ignite env production` |
@@ -256,7 +256,7 @@ CLI             ███████████████░░░░░░ 
 | **Smiley Helper** | ❌ | (구식, 불필요) |
 | **XML Helper** | ❌ | (구식, 불필요) |
 | **CAPTCHA Helper** | ❌ | |
-| **Profiling Helper** | ❌ | Benchmark/Profiler 없음 |
+| **Profiling Helper** | ✅ | `Profiler` — 벤치마크/쿼리/메모리 + HTML 오버레이 |
 
 ---
 
@@ -279,7 +279,7 @@ CLI             ███████████████░░░░░░ 
 | **Shell** | ✅ | Bun.$ 기반 |
 | **Form Validation** | ✅ | Validator 클래스로 통합 |
 | **Encryption** | ⚠️ | crypto.ts 있으나 CI3 `$this->encryption` 수준 아님 |
-| **User Agent** | ❌ | 브라우저/봇/모바일 감지 없음 |
+| **User Agent** | ✅ | 브라우저/OS/모바일/봇/태블릿 감지 + 정적 메서드 |
 | **Table** | ❌ | HTML 테이블 자동 생성 없음 |
 | **Calendar** | ❌ | |
 | **Cart** | ❌ | |
@@ -289,7 +289,7 @@ CLI             ███████████████░░░░░░ 
 | **Zip** | ⚠️ | Archive로 부분 대체 |
 | **Javascript** | ❌ | (구식) |
 | **Unit Test** | ⚠️ | Bun:test 사용, CI3 스타일 래퍼 없음 |
-| **Profiler** | ❌ | 벤치마크/쿼리 프로파일링 없음 |
+| **Profiler** | ✅ | `Profiler` — 벤치마크/쿼리/메모리 측정 + HTML 오버레이 |
 
 ---
 
@@ -314,11 +314,11 @@ CLI             ███████████████░░░░░░ 
 
 | 항목 | 상태 | 비고 |
 |------|------|------|
-| 가이드 문서 | ✅ 37개 | 거의 모든 기능에 문서 존재 |
+| 가이드 문서 | ✅ 43개 | 거의 모든 기능에 문서 존재 |
 | API 레퍼런스 | ❌ | TSDoc은 있으나 별도 API 문서 없음 |
 | 예제 앱 (Blog) | ✅ | CRUD + Auth + API |
-| 단위 테스트 | ✅ 435개 | 보안/QueryBuilder/헬퍼 등 |
-| E2E 테스트 | ❌ | HTTP 요청/응답 통합 테스트 없음 |
+| 단위 테스트 | ✅ 620개 | 보안/QueryBuilder/헬퍼/E2E/AutoRouter 등 |
+| E2E 테스트 | ✅ | `httpTest(router)` — GET/POST/PUT/DELETE + 어설션 |
 | 퍼포먼스 벤치마크 | ❌ | |
 | 마이그레이션 가이드 | ❌ | CI3 → BunIgniter 변환 가이드 없음 |
 
@@ -354,7 +354,7 @@ CLI             ███████████████░░░░░░ 
 - [x] `set_checkbox(field, value, default)`
 - [x] 파일: `system/helpers/form_helper.ts`
 - [x] 테스트: `tests/form_helper_test.ts`
-- [ ] 문서: `docs/user-guide/helpers.md` 업데이트
+- [x] 문서: `docs/user-guide/helpers.md` 업데이트
 - **이유**: CI3에서 가장 많이 사용하는 헬퍼. 폼 작성 필수
 - **참고**: CI3 `form_helper.php` 참조
 
@@ -392,9 +392,6 @@ CLI             ███████████████░░░░░░ 
 - [x] HTML 요청 시 기본 404 페이지
 - [x] 파일: `system/core/router.ts` 수정
 - [x] 테스트: E2E 테스트에서 검증
-- [ ] HTML 요청 시 커스텀 뷰 렌더링
-- [ ] 파일: `system/core/router.ts` 수정
-- [ ] 테스트: 404 응답 검증
 - **이유**: 현재 하드코딩 HTML. 커스터마이징 불가
 
 #### H-5. Security 헤더 미들웨어 ✅
@@ -714,14 +711,15 @@ CLI             ███████████████░░░░░░ 
 | 2026-07-05 | H-1, M-1, M-2, M-3, M-12 | - | 헬퍼 파일 분리 + Form/HTML/Text/Inflector/Array 헬퍼 구현 |
 | 2026-07-05 | H-2, H-3, H-4 | - | E2E 테스트 인프라, 마이그레이션 batch 추적, 404 핸들러 |
 | 2026-07-06 | H-5, M-6, L-1, L-3, L-4 | - | Security 헤더, 파셜, User Agent, Autoload, Profiler |
+| 2026-07-06 | L-5 (오토 라우트) | 61f6837 | CI3 호환 Auto Routing + 서브디렉토리 지원 |
 
 ---
 
 ## 🔗 관련 파일
 
-- 코어: `system/core/*.ts` (48개 파일)
-- 헬퍼: `system/helpers/index.ts` (현재 1개 파일)
-- CLI: `cli/commands/*.ts` (15개 명령)
-- 테스트: `tests/*.ts` (19개 파일, 435 tests)
-- 문서: `docs/user-guide/*.md` (37개 파일)
+- 코어: `system/core/*.ts` (55개 파일)
+- 헬퍼: `system/helpers/index.ts` + 9개 카테고리 파일 (10 files)
+- CLI: `cli/commands/*.ts` (17개 명령)
+- 테스트: `tests/*.ts` (28개 파일, 620 tests)
+- 문서: `docs/user-guide/*.md` (43개 파일)
 - 예제: `examples/blog/` (Blog 앱)
