@@ -26,9 +26,15 @@ export const migrate: Command = {
       CREATE TABLE IF NOT EXISTS migrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
+        batch INTEGER NOT NULL DEFAULT 1,
         ran_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
+
+		// 현재 배치 번호 조회
+		const maxBatch = await db`SELECT MAX(batch) as max_batch FROM migrations`;
+		const currentBatch = (maxBatch[0] as any)?.max_batch ?? 0;
+		const nextBatch = currentBatch + 1;
 
 		// 이미 실행된 마이그레이션
 		const ran = await db`SELECT name FROM migrations ORDER BY ran_at`;
@@ -78,7 +84,7 @@ export const migrate: Command = {
 				const mod = await import(join(migrationsDir, file));
 				if (mod.up) {
 					await mod.up(db);
-					await db`INSERT INTO migrations (name) VALUES (${file})`;
+					await db`INSERT INTO migrations (name, batch) VALUES (${file}, ${nextBatch})`;
 					console.log(`  ✅ 완료: ${file}`);
 					count++;
 				} else {
@@ -92,6 +98,6 @@ export const migrate: Command = {
 
 		await db.close();
 
-		console.log(`\n✨ ${count}개의 마이그레이션이 실행되었습니다.\n`);
+		console.log(`\n✨ ${count}개의 마이그레이션이 실행되었습니다. (batch: ${nextBatch})\n`);
 	},
 };

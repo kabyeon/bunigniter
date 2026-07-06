@@ -45,6 +45,7 @@ export interface BunServeOptions {
 export class Router {
 	private routes: RouteDefinition[] = [];
 	private globalMiddleware: MiddlewareFn[] = [];
+	private notFoundHandler: ((ctx: Context) => Promise<Response>) | null = null;
 
 	/** GET 라우트 */
 	get(path: string, controller: Controller, method: string, middleware?: MiddlewareFn[]): Router {
@@ -127,6 +128,27 @@ export class Router {
 		this.get(`/${path}/:id/edit`, controller, "edit", middleware);
 		this.put(`/${path}/:id`, controller, "update", middleware);
 		this.delete(`/${path}/:id`, controller, "delete", middleware);
+		return this;
+	}
+
+	/**
+	 * 404 Not Found 핸들러 설정
+	 * CI3: $route['404_override'] = 'errors/page_not_found'
+	 *
+	 * JSON 요청 시 JSON 에러, HTML 요청 시 커스텀 뷰 반환 가능
+	 *
+	 * @param handler 404 요청을 처리할 핸들러 함수
+	 *
+	 * 예시:
+	 *   router.notFound(async (ctx) => {
+	 *     if (ctx.request.headers.get('accept')?.includes('json')) {
+	 *       return ctx.response.json({ error: 'Not Found' }, 404);
+	 *     }
+	 *     return renderView('errors/404', { title: '404' });
+	 *   });
+	 */
+	notFound(handler: (ctx: Context) => Promise<Response>): Router {
+		this.notFoundHandler = handler;
 		return this;
 	}
 
@@ -298,7 +320,62 @@ export class Router {
 		}
 
 		// fetch 핸들러 (매칭되지 않는 요청)
-		const fetch = (_req: Request) => {
+		const notFoundHandler = this.notFoundHandler;
+
+		const fetch = async (req: Request) => {
+			// 커스텀 404 핸들러가 있으면 사용
+			if (notFoundHandler) {
+				const query: Record<string, string> = {};
+				let url: URL;
+				try {
+					url = new URL(req.url);
+				} catch {
+					url = new URL("http://localhost");
+				}
+				url.searchParams.forEach((v, k) => {
+					query[k] = v;
+				});
+
+				const statusBuilder = (code: number): ResponseStatusBuilder => ({
+					send: (body: string) => new Response(body, { status: code }),
+					json: (data: any) =>
+						new Response(JSON.stringify(data), {
+							status: code,
+							headers: { "Content-Type": "application/json" },
+						}),
+				});
+
+				const ctx: Context = {
+					request: req as any,
+					response: {
+						status: statusBuilder,
+						redirect: (u: string) => new Response(null, { status: 302, headers: { Location: u } }),
+						json: (data: any) =>
+							new Response(JSON.stringify(data), {
+								headers: { "Content-Type": "application/json" },
+							}),
+						send: (body: string | Response) =>
+							body instanceof Response ? body : new Response(body),
+						headers: (h: Record<string, string>) => ({ headers: h }),
+						cookie: () => {},
+					},
+					params: {},
+					query,
+					body: () => ({}),
+				};
+
+				return notFoundHandler(ctx);
+			}
+
+			// 기본 404 응답 (JSON 요청 감지)
+			const accept = req.headers.get("accept") ?? "";
+			if (accept.includes("application/json")) {
+				return new Response(JSON.stringify({ error: "Not Found", status: 404 }), {
+					status: 404,
+					headers: { "Content-Type": "application/json" },
+				});
+			}
+
 			return new Response(
 				`<!DOCTYPE html><html><head><meta charset="utf-8"><title>404 - 페이지를 찾을 수 없습니다</title></head><body style="font-family:sans-serif;text-align:center;padding:50px"><h1>404</h1><p>요청하신 페이지를 찾을 수 없습니다.</p><a href="/">홈으로 돌아가기</a></body></html>`,
 				{

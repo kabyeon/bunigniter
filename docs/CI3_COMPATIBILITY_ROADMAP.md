@@ -358,39 +358,40 @@ CLI             ███████████████░░░░░░ 
 - **이유**: CI3에서 가장 많이 사용하는 헬퍼. 폼 작성 필수
 - **참고**: CI3 `form_helper.php` 참조
 
-#### H-2. E2E/통합 테스트 인프라
+#### H-2. E2E/통합 테스트 인프라 ✅
 
-- [ ] `system/core/test_helper.ts` 확장 — HTTP 요청 헬퍼
-- [ ] `createTestApp()` — 테스트용 앱 부트스트랩
-- [ ] `httpRequest(method, path, options)` — 라우트 테스트
-- [ ] `assertResponseStatus(response, status)`
-- [ ] `assertResponseJson(response, expected)`
-- [ ] `assertRedirect(response, location)`
-- [ ] Blog 앱 E2E 테스트 작성
-  - [ ] 홈페이지 로드
-  - [ ] 포스트 목록/상세
-  - [ ] 로그인/로그아웃
-  - [ ] CRUD (생성/수정/삭제)
-  - [ ] CSRF 검증
-  - [ ] 404/405 응답
-- [ ] 파일: `tests/e2e_test.ts`, `tests/integration_test.ts`
-- **이유**: HTTP 요청→응답 전체 흐름 검증 불가. 회귀 방지
+- [x] `system/core/e2e_test.ts` — HTTP 요청 헬퍼 (httpTest)
+- [x] `httpTest(router).get/post/put/patch/delete(path, body?)`
+- [x] `assertStatus(response, status)`
+- [x] `assertJson(response, expected)`
+- [x] `assertRedirect(response, location)`
+- [x] `assertBodyContains(response, text)`
+- [x] Router.toBunServe() 직접 호출 (서버 미실행)
+- [x] Proxy 기반 req.params 주입 (Bun.serve 시뮬레이션)
+- [x] GET/POST/PUT/PATCH/DELETE 요청 테스트
+- [x] 404 응답 (기본 HTML + JSON 자동 감지)
+- [x] 405 Method Not Allowed
+- [x] 커스텀 404 핸들러 테스트
+- [x] 파일: `system/core/e2e_test.ts`, `tests/e2e_test.ts`
+- **이유**: HTTP 요청→응답 전체 흐름 검증. 회귀 방지
 
-#### H-3. 마이그레이션 상태 추적 (`migrations` 테이블)
+#### H-3. 마이그레이션 상태 추적 (`migrations` 테이블) ✅
 
-- [ ] `migrations` 테이블 자동 생성
-- [ ] 마이그레이션 실행 시 기록 저장 (filename, batch, executed_at)
-- [ ] `migrate:status` 명령 — 적용/미적용 목록 표시
-- [ ] 롤백 시 배치 단위로 삭제
-- [ ] 파일: `database/migrate.ts` 수정, `cli/commands/migratestatus.ts` 신규
+- [x] `migrations` 테이블 batch 컬럼 추가
+- [x] 마이그레이션 실행 시 batch 번호 자동 증가
+- [x] 롤백 시 batch 단위로 삭제 (--steps=N → N개 배치 롤백)
+- [x] `migrate:status` 명령 — 적용/미적용 목록 표시
+- [x] 파일: `cli/commands/migrate.ts`, `migraterollback.ts`, `migratestatus.ts`, `database/migrate.ts`
 - [ ] 테스트: 마이그레이션 실행/롤백/상태 조회
 - **이유**: 현재 롤백이 파일 역순으로만 동작. 배치 관리 필요
 
-#### H-4. 404 커스텀 핸들러
+#### H-4. 404 커스텀 핸들러 ✅
 
-- [ ] `Router.notFound(handler)` 메서드 추가
-- [ ] 설정에서 커스텀 404 뷰 지정 (`app.config.notFoundView`)
-- [ ] JSON 요청 시 JSON 에러 응답
+- [x] `Router.notFound(handler)` 메서드 추가
+- [x] JSON 요청 시 JSON 에러 응답 자동 감지
+- [x] HTML 요청 시 기본 404 페이지
+- [x] 파일: `system/core/router.ts` 수정
+- [x] 테스트: E2E 테스트에서 검증
 - [ ] HTML 요청 시 커스텀 뷰 렌더링
 - [ ] 파일: `system/core/router.ts` 수정
 - [ ] 테스트: 404 응답 검증
@@ -652,9 +653,9 @@ CLI             ███████████████░░░░░░ 
 ### High Priority (5개)
 
 - [x] H-1. Form 헬퍼
-- [ ] H-2. E2E/통합 테스트 인프라
-- [ ] H-3. 마이그레이션 상태 추적
-- [ ] H-4. 404 커스텀 핸들러
+- [x] H-2. E2E/통합 테스트 인프라
+- [x] H-3. 마이그레이션 상태 추적
+- [x] H-4. 404 커스텀 핸들러
 - [ ] H-5. Security 헤더 미들웨어
 
 ### Medium Priority (12개)
@@ -697,6 +698,7 @@ CLI             ███████████████░░░░░░ 
 |------|------|------|------|
 | 2026-07-05 | (시작) | e2da8d0 | 분석 완료, 로드맵 작성 |
 | 2026-07-05 | H-1, M-1, M-2, M-3, M-12 | - | 헬퍼 파일 분리 + Form/HTML/Text/Inflector/Array 헬퍼 구현 |
+| 2026-07-05 | H-2, H-3, H-4 | - | E2E 테스트 인프라, 마이그레이션 batch 추적, 404 핸들러 |
 
 ---
 

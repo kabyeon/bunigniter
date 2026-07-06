@@ -43,18 +43,36 @@ export const migrateRollback: Command = {
       CREATE TABLE IF NOT EXISTS migrations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
+        batch INTEGER NOT NULL DEFAULT 1,
         ran_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )
     `;
 
-		// 실행된 마이그레이션 목록 (최근 실행 순)
-		const ran = await db`SELECT name FROM migrations ORDER BY ran_at DESC`;
-		const ranNames = ran.map((r: any) => r.name);
+		// 최근 배치의 마이그레이션 조회 (batch 단위 롤백)
+		let ranNames: string[] = [];
 
-		if (ranNames.length === 0) {
-			console.log("  📋 롤백할 마이그레이션이 없습니다.\n");
-			await db.close();
-			return;
+		if (rollbackAll) {
+			// 전체 롤백: 모든 마이그레이션
+			ranNames = (await db`SELECT name FROM migrations ORDER BY batch DESC, ran_at DESC`).map(
+				(r: any) => r.name,
+			);
+		} else {
+			// 배치 단위 롤백: 최근 N개 배치
+			const maxBatch = await db`SELECT MAX(batch) as max_batch FROM migrations`;
+			const currentBatch = (maxBatch[0] as any)?.max_batch ?? 0;
+
+			if (currentBatch === 0) {
+				console.log("  📋 롤백할 마이그레이션이 없습니다.\n");
+				await db.close();
+				return;
+			}
+
+			// 롤백할 배치 범위 계산
+			const rollbackToBatch = Math.max(0, currentBatch - steps);
+
+			const ran =
+				await db`SELECT name FROM migrations WHERE batch > ${rollbackToBatch} ORDER BY batch DESC, ran_at DESC`;
+			ranNames = ran.map((r: any) => r.name);
 		}
 
 		// 마이그레이션 파일 목록
@@ -70,7 +88,7 @@ export const migrateRollback: Command = {
 			return;
 		}
 
-		const toRollback = rollbackAll ? ranNames : ranNames.slice(0, steps);
+		const toRollback = ranNames;
 
 		let count = 0;
 

@@ -15,6 +15,7 @@ import { makeScaffold } from "./commands/makescaffold.ts";
 import { makeView } from "./commands/makeview.ts";
 import { migrate } from "./commands/migrate.ts";
 import { migrateRollback } from "./commands/migraterollback.ts";
+import { migrateStatus } from "./commands/migratestatus.ts";
 import { replCommand } from "./commands/repl.ts";
 import { serve } from "./commands/serve.ts";
 import { CommandRegistry } from "./registry.ts";
@@ -35,6 +36,7 @@ registry.register("list:routes", listRoutes);
 registry.register("serve", serve);
 registry.register("migrate", migrate);
 registry.register("migrate:rollback", migrateRollback);
+registry.register("migrate:status", migrateStatus);
 registry.register("db:seed", dbSeed);
 registry.register("repl", replCommand);
 
