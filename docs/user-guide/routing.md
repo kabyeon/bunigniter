@@ -69,6 +69,25 @@ router.autoRoute({ enabled: false });
 | `/posts/edit/5/draft` | `PostController::edit(5, "draft")` | 다중 파라미터 |
 | `/admin/users` | `admin/user_controller.ts` → `UserController::index()` | 서브디렉토리 |
 
+### 파라미터 접근
+
+오토 라우트로 전달된 URL 파라미터는 컨트롤러 메서드에서 두 가지 방식으로 접근할 수 있습니다:
+
+1. **`params.arg0`, `params.arg1` ...** — `Context.params` 객체를 통한 접근
+2. **추가 인자** — 컨트롤러 메서드의 두 번째 인자부터 순서대로 전달
+
+```typescript
+// /posts/show/5/draft
+async show(ctx: Context, id: string, status: string) {
+  // ctx.params.arg0 === "5"
+  // ctx.params.arg1 === "draft"
+  // id === "5"
+  // status === "draft"
+}
+```
+
+> ⚠️ 명시적 라우트(`router.get("/posts/:id", ...)`)에서는 `params.id`로 접근하지만, 오토 라우트에서는 `params.arg0` 방식만 사용합니다.
+
 ### 파일명 매핑 규칙
 
 URL의 컨트롤러 이름은 snake_case 파일명으로 자동 변환됩니다:

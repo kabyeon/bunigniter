@@ -29,6 +29,8 @@ export default new UserController();
 | `this.json(data, status?)` | JSON 응답 | `Response` |
 | `this.redirect(url)` | 리다이렉트 (302) | `Response` |
 
+> ⚠️ **오토 라우트 사용 시**: URL 파라미터는 `params.arg0`, `params.arg1` ... 으로 접근합니다. 명시적 라우트처럼 `params.id` 형식이 아닙니다. 자세한 내용은 [라우팅 문서 - 오토 라우트 파라미터](./routing.md#파라미터-접근)를 참조하세요.
+
 ## Context 인터페이스
 
 ```typescript
