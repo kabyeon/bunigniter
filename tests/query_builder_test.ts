@@ -83,30 +83,21 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("whereIn: IN 조건", async () => {
 		const qb = new QueryBuilder();
-		const users = await qb
-			.from("users")
-			.whereIn("id", [1, 2])
-			.get();
+		const users = await qb.from("users").whereIn("id", [1, 2]).get();
 
 		expect(users.length).toBe(2);
 	});
 
 	test("whereNotIn: NOT IN 조건", async () => {
 		const qb = new QueryBuilder();
-		const users = await qb
-			.from("users")
-			.whereNotIn("role", ["guest"])
-			.get();
+		const users = await qb.from("users").whereNotIn("role", ["guest"]).get();
 
 		expect(users.length).toBe(2);
 	});
 
 	test("whereBetween: BETWEEN 조건", async () => {
 		const qb = new QueryBuilder();
-		const users = await qb
-			.from("users")
-			.whereBetween("age", 25, 30)
-			.get();
+		const users = await qb.from("users").whereBetween("age", 25, 30).get();
 
 		expect(users.length).toBe(1);
 		expect((users[0] as any).name).toBe("Author");
@@ -115,20 +106,14 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 	test("whereNull / whereNotNull", async () => {
 		// posts에 content가 있는 행
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.whereNotNull("content")
-			.get();
+		const posts = await qb.from("posts").whereNotNull("content").get();
 
 		expect(posts.length).toBe(3);
 	});
 
 	test("like: 키워드 검색", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.like("title", "Hel")
-			.get();
+		const posts = await qb.from("posts").like("title", "Hel").get();
 
 		expect(posts.length).toBe(1);
 		expect((posts[0] as any).title).toBe("Hello");
@@ -136,10 +121,7 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("like side=after: 접두어 검색", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.like("slug", "hel", "after")
-			.get();
+		const posts = await qb.from("posts").like("slug", "hel", "after").get();
 
 		expect(posts.length).toBe(1);
 	});
@@ -157,10 +139,7 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("where raw: SQL 조건 직접 입력", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.where("published = 1")
-			.get();
+		const posts = await qb.from("posts").where("published = 1").get();
 
 		expect(posts.length).toBe(2);
 	});
@@ -200,11 +179,7 @@ describe("QueryBuilder - JOIN", () => {
 describe("QueryBuilder - ORDER/LIMIT/OFFSET", () => {
 	test("orderBy + limit", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.orderBy("id", "DESC")
-			.limit(2)
-			.get();
+		const posts = await qb.from("posts").orderBy("id", "DESC").limit(2).get();
 
 		expect(posts.length).toBe(2);
 		expect((posts[0] as any).id).toBe(3);
@@ -212,11 +187,7 @@ describe("QueryBuilder - ORDER/LIMIT/OFFSET", () => {
 
 	test("limit + offset (페이지네이션)", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.orderBy("id", "ASC")
-			.limit(2, 1)
-			.get();
+		const posts = await qb.from("posts").orderBy("id", "ASC").limit(2, 1).get();
 
 		expect(posts.length).toBe(2);
 		expect((posts[0] as any).id).toBe(2);
@@ -224,20 +195,14 @@ describe("QueryBuilder - ORDER/LIMIT/OFFSET", () => {
 
 	test("latest: created_at DESC", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.latest()
-			.get();
+		const posts = await qb.from("posts").latest().get();
 
 		expect(posts.length).toBe(3);
 	});
 
 	test("oldest: created_at ASC", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.oldest()
-			.get();
+		const posts = await qb.from("posts").oldest().get();
 
 		expect(posts.length).toBe(3);
 	});
@@ -261,11 +226,7 @@ describe("QueryBuilder - GROUP/HAVING/DISTINCT", () => {
 
 	test("distinct", async () => {
 		const qb = new QueryBuilder();
-		const results = await qb
-			.select("author_id")
-			.distinct()
-			.from("posts")
-			.get();
+		const results = await qb.select("author_id").distinct().from("posts").get();
 
 		expect(results.length).toBe(2);
 	});
@@ -279,7 +240,10 @@ describe("QueryBuilder - GROUP/HAVING/DISTINCT", () => {
 
 	test("selectSum", async () => {
 		const qb = new QueryBuilder();
-		const result = await qb.selectSum("age").from("users").get<{ age: number }>();
+		const result = await qb
+			.selectSum("age")
+			.from("users")
+			.get<{ age: number }>();
 
 		expect((result[0] as any).age).toBe(85); // 35 + 28 + 22
 	});
@@ -333,25 +297,23 @@ describe("QueryBuilder - CRUD", () => {
 
 	test("update without where → 에러", async () => {
 		const qb = new QueryBuilder();
-		await expect(
-			qb.update("users", { name: "Hacked" }),
-		).rejects.toThrow("WHERE clause is required");
+		await expect(qb.update("users", { name: "Hacked" })).rejects.toThrow(
+			"WHERE clause is required",
+		);
 	});
 
 	test("delete: where 조건 삭제", async () => {
 		const qb = new QueryBuilder();
-		const result = await qb
-			.where("name", "NewUser")
-			.delete("users");
+		const result = await qb.where("name", "NewUser").delete("users");
 
 		expect(result.affectedRows).toBeGreaterThan(0);
 	});
 
 	test("delete without where → 에러", async () => {
 		const qb = new QueryBuilder();
-		await expect(
-			qb.delete("users"),
-		).rejects.toThrow("WHERE clause is required");
+		await expect(qb.delete("users")).rejects.toThrow(
+			"WHERE clause is required",
+		);
 	});
 });
 
@@ -359,10 +321,7 @@ describe("QueryBuilder - CRUD", () => {
 describe("QueryBuilder - 유틸리티", () => {
 	test("first: 첫 번째 행만 반환", async () => {
 		const qb = new QueryBuilder();
-		const user = await qb
-			.from("users")
-			.where("role", "admin")
-			.first();
+		const user = await qb.from("users").where("role", "admin").first();
 
 		expect(user).not.toBeNull();
 		expect((user as any).name).toBe("Admin");
@@ -370,10 +329,7 @@ describe("QueryBuilder - 유틸리티", () => {
 
 	test("first: 결과 없으면 null", async () => {
 		const qb = new QueryBuilder();
-		const user = await qb
-			.from("users")
-			.where("role", "superadmin")
-			.first();
+		const user = await qb.from("users").where("role", "superadmin").first();
 
 		expect(user).toBeNull();
 	});
@@ -387,20 +343,14 @@ describe("QueryBuilder - 유틸리티", () => {
 
 	test("count: 조건부 행 수", async () => {
 		const qb = new QueryBuilder();
-		const adminCount = await qb
-			.from("users")
-			.where("role", "admin")
-			.count();
+		const adminCount = await qb.from("users").where("role", "admin").count();
 
 		expect(adminCount).toBe(1);
 	});
 
 	test("exists: 조건에 맞는 행이 존재", async () => {
 		const qb = new QueryBuilder();
-		const hasAdmin = await qb
-			.from("users")
-			.where("role", "admin")
-			.exists();
+		const hasAdmin = await qb.from("users").where("role", "admin").exists();
 
 		expect(hasAdmin).toBe(true);
 	});
@@ -417,10 +367,7 @@ describe("QueryBuilder - 유틸리티", () => {
 
 	test("paginate: 페이지네이션", async () => {
 		const qb = new QueryBuilder();
-		const result = await qb
-			.from("users")
-			.orderBy("id", "ASC")
-			.paginate(1, 2);
+		const result = await qb.from("users").orderBy("id", "ASC").paginate(1, 2);
 
 		expect(result.data.length).toBe(2);
 		expect(result.total).toBeGreaterThan(2);
@@ -432,18 +379,13 @@ describe("QueryBuilder - 유틸리티", () => {
 
 	test("paginate: 2페이지", async () => {
 		const qb = new QueryBuilder();
-		const result = await qb
-			.from("users")
-			.orderBy("id", "ASC")
-			.paginate(2, 2);
+		const result = await qb.from("users").orderBy("id", "ASC").paginate(2, 2);
 
 		expect(result.hasPrev).toBe(true);
 	});
 
 	test("clone: 복제 후 원본 유지", async () => {
-		const original = createQueryBuilder()
-			.from("users")
-			.where("role", "admin");
+		const original = createQueryBuilder().from("users").where("role", "admin");
 
 		const cloned = original.clone();
 		cloned.where("age >", 30);
@@ -493,15 +435,14 @@ describe("Model - QueryBuilder 통합", () => {
 	});
 
 	test("Model.qb(): where + get", async () => {
-		const admins = await userModel.qb()
-			.where("role", "admin")
-			.get();
+		const admins = await userModel.qb().where("role", "admin").get();
 
 		expect(admins.length).toBe(1);
 	});
 
 	test("Model.qb(): join + select", async () => {
-		const results = await postModel.qb()
+		const results = await postModel
+			.qb()
 			.select("p.title, u.name as author_name")
 			.from("posts p")
 			.join("users u", "u.id = p.author_id")
@@ -513,9 +454,7 @@ describe("Model - QueryBuilder 통합", () => {
 	});
 
 	test("Model.qb(): like 검색", async () => {
-		const posts = await postModel.qb()
-			.like("title", "Hel")
-			.get();
+		const posts = await postModel.qb().like("title", "Hel").get();
 
 		expect(posts.length).toBe(1);
 	});
@@ -538,16 +477,18 @@ describe("Model - QueryBuilder 통합", () => {
 	});
 
 	test("Model.updateWhere: 조건부 수정", async () => {
-		const result = await userModel.updateWhere(
-			{ role: "guest" },
-			{ age: 23 },
-		);
+		const result = await userModel.updateWhere({ role: "guest" }, { age: 23 });
 		expect(result.affectedRows).toBeGreaterThan(0);
 	});
 
 	test("Model.deleteWhere: 조건부 삭제", async () => {
 		// 임시 사용자 생성 후 삭제
-		await userModel.create({ name: "Temp", email: "temp@test.com", role: "temp", age: 1 });
+		await userModel.create({
+			name: "Temp",
+			email: "temp@test.com",
+			role: "temp",
+			age: 1,
+		});
 		const deleted = await userModel.deleteWhere({ role: "temp" });
 		expect(deleted).toBeGreaterThan(0);
 	});
@@ -557,7 +498,9 @@ describe("Model - QueryBuilder 통합", () => {
 describe("QueryBuilder - SQL 인젝션 방어", () => {
 	test("where: 악의적 컬럼명 차단", () => {
 		const qb = new QueryBuilder();
-		expect(() => qb.where("id; DROP TABLE users--", 1)).toThrow("Invalid column name");
+		expect(() => qb.where("id; DROP TABLE users--", 1)).toThrow(
+			"Invalid column name",
+		);
 	});
 
 	test("where: OR 조건 인젝션 차단", () => {
@@ -567,7 +510,9 @@ describe("QueryBuilder - SQL 인젝션 방어", () => {
 
 	test("whereIn: 악의적 컬럼명 차단", () => {
 		const qb = new QueryBuilder();
-		expect(() => qb.whereIn("1=1; DROP TABLE", [1])).toThrow("Invalid column name");
+		expect(() => qb.whereIn("1=1; DROP TABLE", [1])).toThrow(
+			"Invalid column name",
+		);
 	});
 
 	test("insert: 악의적 컬럼명 차단", async () => {

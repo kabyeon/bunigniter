@@ -20,8 +20,18 @@ type WhereClause =
 	| { type: "and_between"; column: string; low: any; high: any }
 	| { type: "and_null"; column: string }
 	| { type: "and_not_null"; column: string }
-	| { type: "and_like"; column: string; value: string; side: "both" | "before" | "after" }
-	| { type: "or_like"; column: string; value: string; side: "both" | "before" | "after" };
+	| {
+			type: "and_like";
+			column: string;
+			value: string;
+			side: "both" | "before" | "after";
+	  }
+	| {
+			type: "or_like";
+			column: string;
+			value: string;
+			side: "both" | "before" | "after";
+	  };
 
 /**
  * JOIN 절
@@ -187,7 +197,11 @@ export class QueryBuilder {
 	 * INNER JOIN
 	 * CI3: $this->db->join('users u', 'u.id = p.author_id', 'inner')
 	 */
-	join(table: string, condition: string, type: "INNER" | "LEFT" | "RIGHT" | "CROSS" = "INNER"): this {
+	join(
+		table: string,
+		condition: string,
+		type: "INNER" | "LEFT" | "RIGHT" | "CROSS" = "INNER",
+	): this {
 		this._joins.push({ type, table, condition });
 		return this;
 	}
@@ -305,7 +319,11 @@ export class QueryBuilder {
 	 * CI3: $this->db->like('title', '검색어', 'before')  — %검색어
 	 * CI3: $this->db->like('title', '검색어', 'after')   — 검색어%
 	 */
-	like(column: string, value: string, side: "both" | "before" | "after" = "both"): this {
+	like(
+		column: string,
+		value: string,
+		side: "both" | "before" | "after" = "both",
+	): this {
 		this.validateColumnName(column);
 		this._wheres.push({ type: "and_like", column, value, side });
 		return this;
@@ -315,7 +333,11 @@ export class QueryBuilder {
 	 * OR LIKE 검색
 	 * CI3: $this->db->or_like('content', '검색어')
 	 */
-	orLike(column: string, value: string, side: "both" | "before" | "after" = "both"): this {
+	orLike(
+		column: string,
+		value: string,
+		side: "both" | "before" | "after" = "both",
+	): this {
 		this.validateColumnName(column);
 		this._wheres.push({ type: "or_like", column, value, side });
 		return this;
@@ -439,7 +461,10 @@ export class QueryBuilder {
 	 * @param table 테이블명 (생략 시 from()에서 설정한 테이블 사용)
 	 * @param data 삽입할 데이터
 	 */
-	async insert<T = any>(table?: string, data?: Record<string, any>): Promise<{ insertId: number; affectedRows: number; row?: T }> {
+	async insert<T = any>(
+		table?: string,
+		data?: Record<string, any>,
+	): Promise<{ insertId: number; affectedRows: number; row?: T }> {
 		const tableName = table ?? this._from;
 		if (!tableName) throw new Error("Table name is required for insert");
 		const insertData = data ?? this._insertData;
@@ -452,8 +477,10 @@ export class QueryBuilder {
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
 
-		const insertId = (result as any).lastInsertRowid ?? (result as any).insertId ?? 0;
-		const affectedRows = (result as any).affectedRows ?? (result as any).count ?? 0;
+		const insertId =
+			(result as any).lastInsertRowid ?? (result as any).insertId ?? 0;
+		const affectedRows =
+			(result as any).affectedRows ?? (result as any).count ?? 0;
 
 		return { insertId, affectedRows };
 	}
@@ -462,7 +489,10 @@ export class QueryBuilder {
 	 * INSERT 후 생성된 행 반환
 	 * CI3: $this->db->insert($data) + $this->db->insert_id()
 	 */
-	async insertReturning<T = any>(table?: string, data?: Record<string, any>): Promise<T> {
+	async insertReturning<T = any>(
+		table?: string,
+		data?: Record<string, any>,
+	): Promise<T> {
 		const tableName = table ?? this._from;
 		if (!tableName) throw new Error("Table name is required for insert");
 		const insertData = data ?? this._insertData;
@@ -470,7 +500,10 @@ export class QueryBuilder {
 			throw new Error("Data is required for insert");
 		}
 
-		const { query, bindings } = this.buildInsertReturning(tableName, insertData);
+		const { query, bindings } = this.buildInsertReturning(
+			tableName,
+			insertData,
+		);
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
@@ -481,7 +514,10 @@ export class QueryBuilder {
 	 * UPDATE 실행
 	 * CI3: $this->db->where('id', $id)->update($data)
 	 */
-	async update<T = any>(table?: string, data?: Record<string, any>): Promise<{ affectedRows: number; row?: T }> {
+	async update<T = any>(
+		table?: string,
+		data?: Record<string, any>,
+	): Promise<{ affectedRows: number; row?: T }> {
 		const tableName = table ?? this._from;
 		if (!tableName) throw new Error("Table name is required for update");
 		const updateData = data ?? this._updateData;
@@ -496,7 +532,8 @@ export class QueryBuilder {
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
-		const affectedRows = (result as any).affectedRows ?? (result as any).count ?? 0;
+		const affectedRows =
+			(result as any).affectedRows ?? (result as any).count ?? 0;
 
 		return { affectedRows };
 	}
@@ -504,7 +541,10 @@ export class QueryBuilder {
 	/**
 	 * UPDATE 후 수정된 행 반환
 	 */
-	async updateReturning<T = any>(table?: string, data?: Record<string, any>): Promise<T> {
+	async updateReturning<T = any>(
+		table?: string,
+		data?: Record<string, any>,
+	): Promise<T> {
 		const tableName = table ?? this._from;
 		if (!tableName) throw new Error("Table name is required for update");
 		const updateData = data ?? this._updateData;
@@ -515,7 +555,10 @@ export class QueryBuilder {
 			throw new Error("WHERE clause is required for update (safety)");
 		}
 
-		const { query, bindings } = this.buildUpdateReturning(tableName, updateData);
+		const { query, bindings } = this.buildUpdateReturning(
+			tableName,
+			updateData,
+		);
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
@@ -537,7 +580,8 @@ export class QueryBuilder {
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
-		const affectedRows = (result as any).affectedRows ?? (result as any).count ?? 0;
+		const affectedRows =
+			(result as any).affectedRows ?? (result as any).count ?? 0;
 
 		return { affectedRows };
 	}
@@ -567,7 +611,10 @@ export class QueryBuilder {
 	 * 페이지네이션
 	 * CI3: $this->db->limit($perPage, $offset)->get()
 	 */
-	async paginate<T = any>(page: number = 1, perPage: number = 15): Promise<{
+	async paginate<T = any>(
+		page: number = 1,
+		perPage: number = 15,
+	): Promise<{
 		data: T[];
 		total: number;
 		page: number;
@@ -646,10 +693,15 @@ export class QueryBuilder {
 
 		// SELECT
 		const selectCols = this._select.length > 0 ? this._select.join(", ") : "*";
-		parts.push(this._distinctVal ? `SELECT DISTINCT ${selectCols}` : `SELECT ${selectCols}`);
+		parts.push(
+			this._distinctVal
+				? `SELECT DISTINCT ${selectCols}`
+				: `SELECT ${selectCols}`,
+		);
 
 		// FROM
-		if (!this._from) throw new Error("FROM table is required. Call .from() first.");
+		if (!this._from)
+			throw new Error("FROM table is required. Call .from() first.");
 		parts.push(`FROM ${this._from}`);
 
 		// JOIN
@@ -693,7 +745,10 @@ export class QueryBuilder {
 		return { query: parts.join(" "), bindings };
 	}
 
-	private buildInsert(table: string, data: Record<string, any>): { query: string; bindings: any[] } {
+	private buildInsert(
+		table: string,
+		data: Record<string, any>,
+	): { query: string; bindings: any[] } {
 		const bindings: any[] = [];
 		const columns: string[] = [];
 		const placeholders: string[] = [];
@@ -711,12 +766,18 @@ export class QueryBuilder {
 		return { query, bindings };
 	}
 
-	private buildInsertReturning(table: string, data: Record<string, any>): { query: string; bindings: any[] } {
+	private buildInsertReturning(
+		table: string,
+		data: Record<string, any>,
+	): { query: string; bindings: any[] } {
 		const { query, bindings } = this.buildInsert(table, data);
 		return { query: `${query} RETURNING *`, bindings };
 	}
 
-	private buildUpdate(table: string, data: Record<string, any>): { query: string; bindings: any[] } {
+	private buildUpdate(
+		table: string,
+		data: Record<string, any>,
+	): { query: string; bindings: any[] } {
 		const bindings: any[] = [];
 		const setParts: string[] = [];
 
@@ -732,13 +793,17 @@ export class QueryBuilder {
 		const whereSql = this.buildWhereClauses(this._wheres, whereBindings);
 		bindings.push(...whereBindings);
 
-		if (!whereSql) throw new Error("WHERE clause is required for update (safety)");
+		if (!whereSql)
+			throw new Error("WHERE clause is required for update (safety)");
 
 		const query = `UPDATE ${this.escapeIdentifier(table)} SET ${setParts.join(", ")} WHERE ${whereSql}`;
 		return { query, bindings };
 	}
 
-	private buildUpdateReturning(table: string, data: Record<string, any>): { query: string; bindings: any[] } {
+	private buildUpdateReturning(
+		table: string,
+		data: Record<string, any>,
+	): { query: string; bindings: any[] } {
 		const { query, bindings } = this.buildUpdate(table, data);
 		return { query: `${query} RETURNING *`, bindings };
 	}
@@ -749,7 +814,8 @@ export class QueryBuilder {
 		const whereSql = this.buildWhereClauses(this._wheres, whereBindings);
 		bindings.push(...whereBindings);
 
-		if (!whereSql) throw new Error("WHERE clause is required for delete (safety)");
+		if (!whereSql)
+			throw new Error("WHERE clause is required for delete (safety)");
 
 		const query = `DELETE FROM ${this.escapeIdentifier(table)} WHERE ${whereSql}`;
 		return { query, bindings };
@@ -759,14 +825,19 @@ export class QueryBuilder {
 		const parts: string[] = [];
 
 		for (const clause of clauses) {
-			const prefix = parts.length > 0
-				? (clause.type.startsWith("or") ? " OR " : " AND ")
-				: "";
+			const prefix =
+				parts.length > 0
+					? clause.type.startsWith("or")
+						? " OR "
+						: " AND "
+					: "";
 
 			switch (clause.type) {
 				case "and":
 				case "or":
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} ${clause.operator} ?`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} ${clause.operator} ?`,
+					);
 					bindings.push(clause.value);
 					break;
 
@@ -778,35 +849,46 @@ export class QueryBuilder {
 
 				case "and_in":
 				case "or_in":
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} IN (${clause.values.map(() => "?").join(", ")})`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} IN (${clause.values.map(() => "?").join(", ")})`,
+					);
 					bindings.push(...clause.values);
 					break;
 
 				case "and_not_in":
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} NOT IN (${clause.values.map(() => "?").join(", ")})`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} NOT IN (${clause.values.map(() => "?").join(", ")})`,
+					);
 					bindings.push(...clause.values);
 					break;
 
 				case "and_between":
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} BETWEEN ? AND ?`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} BETWEEN ? AND ?`,
+					);
 					bindings.push(clause.low, clause.high);
 					break;
 
 				case "and_null":
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} IS NULL`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} IS NULL`,
+					);
 					break;
 
 				case "and_not_null":
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} IS NOT NULL`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} IS NOT NULL`,
+					);
 					break;
 
 				case "and_like":
 				case "or_like": {
-					const likeValue = clause.side === "both"
-						? `%${clause.value}%`
-						: clause.side === "before"
-							? `%${clause.value}`
-							: `${clause.value}%`;
+					const likeValue =
+						clause.side === "both"
+							? `%${clause.value}%`
+							: clause.side === "before"
+								? `%${clause.value}`
+								: `${clause.value}%`;
 					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} LIKE ?`);
 					bindings.push(likeValue);
 					break;
@@ -841,7 +923,13 @@ export class QueryBuilder {
 
 	/** 식별자 이스케이프 (SQLite 기준) */
 	private escapeIdentifier(name: string): string {
-		if (name.includes("(") || name.includes(".") || name.includes("*") || name.includes(" as ") || name.includes(" AS ")) {
+		if (
+			name.includes("(") ||
+			name.includes(".") ||
+			name.includes("*") ||
+			name.includes(" as ") ||
+			name.includes(" AS ")
+		) {
 			return name; // 함수 호출, 테이블.컬럼, 별칭은 그대로
 		}
 		return `"${name.replace(/"/g, '""')}"`;

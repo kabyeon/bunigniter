@@ -94,14 +94,18 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * CI3: $this->db->where($conditions)->get()->result()
 	 */
 	async findWhere(conditions: Partial<T>): Promise<T[]> {
-		return this.qb().whereObject(conditions as Record<string, any>).get<T>();
+		return this.qb()
+			.whereObject(conditions as Record<string, any>)
+			.get<T>();
 	}
 
 	/**
 	 * 조건으로 첫 번째 레코드 조회
 	 */
 	async findFirst(conditions: Partial<T>): Promise<T | null> {
-		return this.qb().whereObject(conditions as Record<string, any>).first<T>();
+		return this.qb()
+			.whereObject(conditions as Record<string, any>)
+			.first<T>();
 	}
 
 	/**
@@ -109,7 +113,10 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * CI3: $this->db->insert($data)
 	 */
 	async create(data: Partial<T>): Promise<T> {
-		return this.qb().insertReturning<T>(this.tableName, data as Record<string, any>);
+		return this.qb().insertReturning<T>(
+			this.tableName,
+			data as Record<string, any>,
+		);
 	}
 
 	/**
@@ -126,7 +133,10 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * 조건부 수정
 	 * CI3: $this->db->where($conditions)->update($data)
 	 */
-	async updateWhere(conditions: Partial<T>, data: Partial<T>): Promise<{ affectedRows: number }> {
+	async updateWhere(
+		conditions: Partial<T>,
+		data: Partial<T>,
+	): Promise<{ affectedRows: number }> {
 		return this.qb()
 			.whereObject(conditions as Record<string, any>)
 			.update(this.tableName, data as Record<string, any>);
@@ -170,7 +180,9 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * 존재 여부 확인
 	 */
 	async exists(conditions: Partial<T>): Promise<boolean> {
-		return this.qb().whereObject(conditions as Record<string, any>).exists();
+		return this.qb()
+			.whereObject(conditions as Record<string, any>)
+			.exists();
 	}
 
 	/**

@@ -32,7 +32,8 @@ export class ApiAuthController extends Controller {
 			});
 		}
 
-		const user = await userModel.qb()
+		const user = await userModel
+			.qb()
 			.select("id, email, password, name, role")
 			.where("email", data.email)
 			.first<UserRow>();
@@ -53,10 +54,10 @@ export class ApiAuthController extends Controller {
 		}
 
 		// 간단한 토큰 생성
-		const token = await Bun.password.hash(
-			`${user.id}:${Date.now()}`,
-			{ algorithm: "bcrypt", cost: 4 },
-		);
+		const token = await Bun.password.hash(`${user.id}:${Date.now()}`, {
+			algorithm: "bcrypt",
+			cost: 4,
+		});
 
 		return this.json({
 			data: {
@@ -82,7 +83,8 @@ export class ApiAuthController extends Controller {
 		}
 
 		// 데모: admin 사용자 반환
-		const user = await userModel.qb()
+		const user = await userModel
+			.qb()
 			.select("id, email, name, role")
 			.where("id", 1)
 			.first();

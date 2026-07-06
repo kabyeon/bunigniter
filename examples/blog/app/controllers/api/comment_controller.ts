@@ -26,7 +26,8 @@ export class ApiCommentController extends Controller {
 		const postId = Number(params.postId);
 
 		// 포스트 존재 확인
-		const exists = await commentModel.qb()
+		const exists = await commentModel
+			.qb()
 			.from("posts")
 			.where("id", postId)
 			.exists();
@@ -38,7 +39,8 @@ export class ApiCommentController extends Controller {
 			});
 		}
 
-		const comments = await commentModel.qb()
+		const comments = await commentModel
+			.qb()
 			.select("id, post_id, author_name, content, created_at")
 			.where("post_id", postId)
 			.orderBy("created_at", "DESC")
@@ -60,7 +62,8 @@ export class ApiCommentController extends Controller {
 		}
 
 		// 포스트 존재 확인
-		const exists = await commentModel.qb()
+		const exists = await commentModel
+			.qb()
 			.from("posts")
 			.where("id", postId)
 			.exists();

@@ -35,8 +35,11 @@ export class ApiPostController extends Controller {
 		const page = Number(query.page ?? "1");
 		const perPage = Number(query.per_page ?? "10");
 
-		const result = await postModel.qb()
-			.select("p.id, p.title, p.slug, p.excerpt, p.published, p.created_at, p.updated_at, u.name as author_name")
+		const result = await postModel
+			.qb()
+			.select(
+				"p.id, p.title, p.slug, p.excerpt, p.published, p.created_at, p.updated_at, u.name as author_name",
+			)
 			.from("posts p")
 			.join("users u", "u.id = p.author_id")
 			.where("p.published", 1)
@@ -48,8 +51,11 @@ export class ApiPostController extends Controller {
 
 	// GET /api/posts/:id — 포스트 상세
 	async show({ params, response }: Context) {
-		const post = await postModel.qb()
-			.select("p.id, p.title, p.slug, p.content, p.excerpt, p.published, p.created_at, p.updated_at, u.name as author_name")
+		const post = await postModel
+			.qb()
+			.select(
+				"p.id, p.title, p.slug, p.content, p.excerpt, p.published, p.created_at, p.updated_at, u.name as author_name",
+			)
 			.from("posts p")
 			.join("users u", "u.id = p.author_id")
 			.where("p.id", Number(params.id))
@@ -63,7 +69,8 @@ export class ApiPostController extends Controller {
 		}
 
 		// 댓글도 함께 조회
-		const comments = await postModel.qb()
+		const comments = await postModel
+			.qb()
 			.select("id, author_name, content, created_at")
 			.from("comments")
 			.where("post_id", post.id)
@@ -110,7 +117,10 @@ export class ApiPostController extends Controller {
 			published: Number(data.published) ?? 0,
 		} as any);
 
-		return this.json({ data: { id: created.id, title: created.title, slug: created.slug } }, 201);
+		return this.json(
+			{ data: { id: created.id, title: created.title, slug: created.slug } },
+			201,
+		);
 	}
 
 	// PUT /api/posts/:id — 포스트 수정
