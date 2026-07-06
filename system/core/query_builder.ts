@@ -112,11 +112,31 @@ export class QueryBuilder {
 	/**
 	 * SELECT 컬럼 지정
 	 * CI3: $this->db->select('id, title, content')
+	 *
+	 * 컬럼명에 validateColumnName() 적용으로 SQL 인젝션 방지.
+	 * 함수/서브쿼리가 필요하면 selectRaw() 사용.
 	 */
 	select(...columns: string[]): this {
 		for (const col of columns) {
-			this._select.push(...col.split(",").map((c) => c.trim()));
+			const parts = col.split(",").map((c) => c.trim());
+			for (const part of parts) {
+				this.validateSelectColumn(part);
+			}
+			this._select.push(...parts);
 		}
+		return this;
+	}
+
+	/**
+	 * SELECT (raw SQL)
+	 * 함수, 서브쿼리 등 복합 표현식이 필요한 경우 사용.
+	 * ⚠️ 사용자 입력을 직접 전달하지 마세요.
+	 *
+	 * 예: qb.selectRaw("COUNT(*) as count")
+	 *     qb.selectRaw("(SELECT name FROM users WHERE id = p.author_id) as author_name")
+	 */
+	selectRaw(sql: string): this {
+		this._select.push(sql);
 		return this;
 	}
 
@@ -127,7 +147,6 @@ export class QueryBuilder {
 		this._select = [];
 		return this.select(...columns);
 	}
-
 	/**
 	 * DISTINCT 조회
 	 * CI3: $this->db->distinct()
@@ -149,6 +168,7 @@ export class QueryBuilder {
 	 * 집계 함수: SELECT SUM(column) as alias
 	 */
 	selectSum(column: string, alias?: string): this {
+		this.validateColumnName(column);
 		this._select.push(
 			`SUM(${this.escapeIdentifier(column)}) as ${this.escapeIdentifier(alias ?? column)}`,
 		);
@@ -159,6 +179,7 @@ export class QueryBuilder {
 	 * 집계 함수: SELECT AVG(column) as alias
 	 */
 	selectAvg(column: string, alias?: string): this {
+		this.validateColumnName(column);
 		this._select.push(
 			`AVG(${this.escapeIdentifier(column)}) as ${this.escapeIdentifier(alias ?? column)}`,
 		);
@@ -169,6 +190,7 @@ export class QueryBuilder {
 	 * 집계 함수: SELECT MAX(column) as alias
 	 */
 	selectMax(column: string, alias?: string): this {
+		this.validateColumnName(column);
 		this._select.push(
 			`MAX(${this.escapeIdentifier(column)}) as ${this.escapeIdentifier(alias ?? column)}`,
 		);
@@ -179,6 +201,7 @@ export class QueryBuilder {
 	 * 집계 함수: SELECT MIN(column) as alias
 	 */
 	selectMin(column: string, alias?: string): this {
+		this.validateColumnName(column);
 		this._select.push(
 			`MIN(${this.escapeIdentifier(column)}) as ${this.escapeIdentifier(alias ?? column)}`,
 		);
@@ -215,12 +238,16 @@ export class QueryBuilder {
 	/**
 	 * INNER JOIN
 	 * CI3: $this->db->join('users u', 'u.id = p.author_id', 'inner')
+	 *
+	 * 테이블명에 validateJoinTable() 적용으로 SQL 인젝션 방지.
+	 * ⚠️ condition은 raw SQL이므로 사용자 입력을 직접 전달하지 마세요.
 	 */
 	join(
 		table: string,
 		condition: string,
 		type: "INNER" | "LEFT" | "RIGHT" | "CROSS" = "INNER",
 	): this {
+		this.validateJoinTable(table);
 		this._joins.push({ type, table, condition });
 		return this;
 	}
@@ -371,9 +398,25 @@ export class QueryBuilder {
 	/**
 	 * GROUP BY
 	 * CI3: $this->db->group_by('author_id')
+	 *
+	 * 컬럼명에 validateColumnName() 적용으로 SQL 인젝션 방지.
+	 * 복합 표현식이 필요하면 groupByRaw() 사용.
 	 */
 	groupBy(...columns: string[]): this {
+		for (const col of columns) {
+			this.validateColumnName(col);
+		}
 		this._groupBy.push(...columns);
+		return this;
+	}
+
+	/**
+	 * GROUP BY (raw SQL)
+	 * 복합 그룹핑이 필요한 경우 사용.
+	 * ⚠️ 사용자 입력을 직접 전달하지 마세요.
+	 */
+	groupByRaw(sql: string): this {
+		this._groupBy.push(sql);
 		return this;
 	}
 
@@ -386,6 +429,7 @@ export class QueryBuilder {
 			this._havings.push({ type: "and_raw", sql: column, bindings: [] });
 		} else {
 			const { col, op } = this.parseColumnOperator(column);
+			this.validateColumnName(col);
 			this._havings.push({ type: "and", column: col, operator: op, value });
 		}
 		return this;
@@ -396,9 +440,25 @@ export class QueryBuilder {
 	/**
 	 * ORDER BY
 	 * CI3: $this->db->order_by('created_at', 'DESC')
+	 *
+	 * 컬럼명에 validateColumnName() 적용으로 SQL 인젝션 방지.
+	 * 복합 표현식이 필요하면 orderByRaw() 사용.
 	 */
 	orderBy(column: string, direction: "ASC" | "DESC" = "ASC"): this {
+		this.validateColumnName(column);
 		this._orders.push({ column, direction });
+		return this;
+	}
+
+	/**
+	 * ORDER BY (raw SQL)
+	 * 복합 정렬이 필요한 경우 사용.
+	 * ⚠️ 사용자 입력을 직접 전달하지 마세요.
+	 *
+	 * 예: qb.orderByRaw("FIELD(status, 'active', 'pending', 'closed')")
+	 */
+	orderByRaw(sql: string): this {
+		this._orders.push({ column: sql, direction: "ASC" as const });
 		return this;
 	}
 
@@ -973,6 +1033,61 @@ export class QueryBuilder {
 		for (const part of parts) {
 			if (!/^[a-zA-Z_*][a-zA-Z0-9_*]*$/.test(part)) {
 				throw new Error(`Invalid column name: ${name}`);
+			}
+		}
+	}
+
+	/**
+	 * SELECT 컬럼명 검증
+	 *
+	 * 허용 패턴:
+	 *   - 단순 컬럼: id, title, created_at
+	 *   - 테이블.컬럼: p.id, u.name
+	 *   - 별칭: id AS user_id, p.name AS author_name
+	 *   - 카디널리티: *
+	 *
+	 * 차단: 서브쿼리 (SELECT ...), 함수 호출 중 의심 패턴
+	 */
+	private validateSelectColumn(col: string): void {
+		// 별칭 분리: "p.name AS author_name" → ["p.name", "author_name"]
+		const aliasParts = col.split(/\s+[aA][sS]\s+/);
+		const mainPart = aliasParts[0].trim();
+
+		// 서브쿼리 차단
+		if (/\(\s*SELECT\s/i.test(mainPart)) {
+			throw new Error(`Subquery not allowed in select(). Use selectRaw() instead: ${col}`);
+		}
+
+		// 의심 함수 차단 (LOAD_FILE, BENCHMARK 등 위험 함수)
+		if (/\b(LOAD_FILE|BENCHMARK|SLEEP|WAITFOR|DELAY)\s*\(/i.test(mainPart)) {
+			throw new Error(`Dangerous function in select(). Use selectRaw() if needed: ${col}`);
+		}
+
+		// 단순 컬럼명 또는 table.column 형식인지 확인
+		// 허용: id, p.id, *, p.*
+		const simpleCol = /^[a-zA-Z_*][a-zA-Z0-9_*]*(\.[a-zA-Z_*][a-zA-Z0-9_*]*)?$/;
+		if (simpleCol.test(mainPart)) return; // ✅ 안전
+
+		// 허용된 집계/내장 함수: COUNT, SUM, AVG, MAX, MIN
+		const aggregatePattern = /^(COUNT|SUM|AVG|MAX|MIN)\s*\(\s*([a-zA-Z_*][a-zA-Z0-9_*.]*)\s*\)$/i;
+		if (aggregatePattern.test(mainPart)) return; // ✅ 안전
+
+		// 그 외 복합 표현식 → selectRaw() 사용 유도
+		throw new Error(`Complex expression not allowed in select(). Use selectRaw() instead: ${col}`);
+	}
+
+	/**
+	 * JOIN 테이블명 검증
+	 * 허용: users, users u, schema.users u
+	 */
+	private validateJoinTable(table: string): void {
+		// "table alias" 또는 "schema.table alias" 형식
+		const parts = table.trim().split(/\s+/);
+		for (const part of parts) {
+			// 각 파트는 식별자만 허용 (키워드/as 제외)
+			if (part.toLowerCase() === "as") continue;
+			if (!/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)?$/.test(part)) {
+				throw new Error(`Invalid join table: ${table}`);
 			}
 		}
 	}

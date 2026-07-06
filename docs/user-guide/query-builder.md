@@ -451,26 +451,66 @@ console.log(bindings); // [1, 10]
 
 ## SQL 인젝션 방어
 
-QueryBuilder는 모든 컬럼명에 화이트리스트 검증을 수행합니다:
+QueryBuilder는 모든 컬럼명/테이블명에 화이트리스트 검증을 수행합니다:
+
+### 컬럼명 검증
 
 ```typescript
 // ✅ 안전 — 정상 컬럼명
 .where("published", 1)
 .where("age >", 25)
 .whereIn("id", [1, 2, 3])
-
-// ✅ 안전 — 테이블.컬럼 형식
-.where("p.published", 1)
+.orderBy("created_at", "DESC")
+.groupBy("author_id")
+.having("count >", 5)
+.select("id, title, created_at")
+.select("p.id, u.name as author_name")
 
 // ❌ 차단 — SQL 메타문자 포함
 .where("id; DROP TABLE users--", 1)    // → Error: Invalid column name
 .where("id = 1 OR 1=1", 1)            // → Error: Invalid column name
+.orderBy("(SELECT password FROM users)") // → Error: Invalid column name
+.groupBy("1=1; DROP TABLE")            // → Error: Invalid column name
+.having("count; DROP TABLE", 5)        // → Error: Invalid column name
+
+// ❌ 차단 — 서브쿼리 인젝션
+.select("(SELECT password FROM users LIMIT 1) as leaked")
+// → Error: Subquery not allowed in select(). Use selectRaw() instead
+
+// ❌ 차단 — 위험 함수
+.select("LOAD_FILE('/etc/passwd') as data")  // → Error: Dangerous function
+.select("SLEEP(5) as delay")                  // → Error: Dangerous function
 
 // ❌ 차단 — INSERT/UPDATE 악의적 컬럼명
 .insert("users", { "role; DROP TABLE": "admin" })  // → Error: Invalid column name
 ```
 
-값은 항상 파라미터 바인딩으로 전달되어 SQL 인젝션을 방지합니다.
+### Raw 메서드 (복합 표현식)
+
+함수, 서브쿼리 등 복합 SQL이 필요하면 `*Raw()` 메서드를 사용하세요.
+⚠️ Raw 메서드에는 **사용자 입력을 직접 전달하지 마세요.**
+
+```typescript
+// selectRaw — 서브쿼리, 함수
+.selectRaw("(SELECT name FROM users WHERE id = p.author_id) as author_name")
+.selectRaw("COALESCE(title, '제목 없음') as title")
+
+// orderByRaw — 복합 정렬
+.orderByRaw("FIELD(status, 'active', 'pending', 'closed')")
+
+// groupByRaw — 복합 그룹핑
+.groupByRaw("DATE(created_at)")
+```
+
+### 값 바인딩
+
+값은 항상 `?` 파라미터 바인딩으로 전달되어 SQL 인젝션을 방지합니다:
+
+```typescript
+.where("title", userInput)   // → WHERE "title" = ?  [userInput 바인딩]
+.like("title", userInput)    // → WHERE "title" LIKE ?  ['%userInput%']
+.insert("posts", data)       // → INSERT INTO "posts" (title) VALUES (?)  [data.title]
+```
 
 ---
 

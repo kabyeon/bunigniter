@@ -493,4 +493,82 @@ describe("QueryBuilder - SQL 인젝션 방어", () => {
 		expect(() => qb.where("age >", 25)).not.toThrow();
 		expect(() => qb.where("id", 1)).not.toThrow();
 	});
+
+	// ─── 새로운 검증: select, orderBy, groupBy, having, join ───
+
+	test("select: 서브쿼리 인젝션 차단", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.select("(SELECT password FROM users LIMIT 1) as leaked")).toThrow(
+			"Subquery not allowed",
+		);
+	});
+
+	test("select: 위험 함수 차단", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.select("LOAD_FILE('/etc/passwd') as data")).toThrow("Dangerous function");
+		expect(() => qb.select("SLEEP(5) as delay")).toThrow("Dangerous function");
+	});
+
+	test("select: 정상 컬럼명 통과", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.select("id, title, created_at")).not.toThrow();
+		expect(() => qb.select("p.id, u.name as author_name")).not.toThrow();
+		expect(() => qb.select("*")).not.toThrow();
+	});
+
+	test("selectRaw: 복합 표현식 허용", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.selectRaw("COUNT(*) as count")).not.toThrow();
+		expect(() => qb.selectRaw("(SELECT name FROM users WHERE id = 1) as name")).not.toThrow();
+	});
+
+	test("orderBy: 악의적 컬럼명 차단", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.orderBy("id; DROP TABLE users")).toThrow("Invalid column name");
+		expect(() => qb.orderBy("(SELECT password FROM users)")).toThrow("Invalid column name");
+	});
+
+	test("orderBy: 정상 컬럼명 통과", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.orderBy("created_at", "DESC")).not.toThrow();
+		expect(() => qb.orderBy("p.id")).not.toThrow();
+	});
+
+	test("orderByRaw: 복합 정렬 허용", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.orderByRaw("FIELD(status, 'active', 'pending')")).not.toThrow();
+	});
+
+	test("groupBy: 악의적 컬럼명 차단", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.groupBy("id; DROP TABLE users")).toThrow("Invalid column name");
+	});
+
+	test("groupBy: 정상 컬럼명 통과", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.groupBy("author_id")).not.toThrow();
+		expect(() => qb.groupBy("p.author_id")).not.toThrow();
+	});
+
+	test("having: 악의적 컬럼명 차단 (값 있을 때)", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.having("count; DROP TABLE users", 5)).toThrow("Invalid column name");
+	});
+
+	test("having: 정상 컬럼명 통과 (값 있을 때)", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.having("count", 5)).not.toThrow();
+		expect(() => qb.having("count >", 5)).not.toThrow();
+	});
+
+	test("join: 악의적 테이블명 차단", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.join("users; DROP TABLE posts", "u.id = p.id")).toThrow("Invalid join table");
+	});
+
+	test("join: 정상 테이블명 통과", () => {
+		const qb = new QueryBuilder();
+		expect(() => qb.join("users u", "u.id = p.author_id")).not.toThrow();
+		expect(() => qb.leftJoin("comments c", "c.post_id = p.id")).not.toThrow();
+	});
 });
