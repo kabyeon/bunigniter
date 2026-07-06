@@ -1,15 +1,13 @@
-# npm pack 에서 제외
-.env
-.env.*
-.git/
-.github/
-.pi-lens/
 node_modules/
+dist/
+.env
+.pi-lens/
+storage/
 tests/
 examples/
 docs/
-database/
-app/
-storage/
-biome.json
-tsconfig.json
+*.tg
+*.db
+*.log
+.DS_Store
+bunigniter-*.tg

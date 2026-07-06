@@ -6,7 +6,7 @@
 // bunx create-bunigniter@latest [프로젝트명]
 // ============================================================
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Command } from "../registry.ts";
 
@@ -25,7 +25,7 @@ const TEMPLATES: Record<string, (name: string) => string> = {
 \t\t"migrate": "bun run database/migrate.ts"
 \t},
 \t"dependencies": {
-\t\t"bunigniter": "^1.0.0"
+\t\t"bunigniter": "^0.6"
 \t},
 \t"devDependencies": {
 \t\t"@types/bun": "latest"
@@ -343,6 +343,128 @@ migrate().catch((err) => {
 `,
 };
 
+// ─── Merge 헬퍼 ──────────────────────────────────────
+
+/** BunIgniter가 요구하는 package.json scripts */
+const REQUIRED_PKG_SCRIPTS: Record<string, string> = {
+	dev: "bun run --hot node_modules/bunigniter/system/core/bootstrap.ts",
+	start: "bun run node_modules/bunigniter/system/core/bootstrap.ts",
+	bi: "bun run node_modules/bunigniter/cli/index.ts",
+	migrate: "bun run database/migrate.ts",
+};
+
+const REQUIRED_PKG_DEPENDENCIES: Record<string, string> = {
+	bunigniter: "^0.6",
+};
+
+const REQUIRED_PKG_DEV_DEPENDENCIES: Record<string, string> = {
+	"@types/bun": "latest",
+};
+
+/** BunIgniter가 요구하는 tsconfig compilerOptions */
+const REQUIRED_TSCONFIG_COMPILER_OPTIONS: Record<string, any> = {
+	moduleResolution: "bundler",
+	types: ["bun-types"],
+	allowImportingTsExtensions: true,
+	noEmit: true,
+	baseUrl: ".",
+	paths: {
+		"system/*": ["node_modules/bunigniter/system/*"],
+		"app/*": ["app/*"],
+	},
+};
+
+const REQUIRED_TSCONFIG_INCLUDE = ["app/**/*.ts", "database/**/*.ts"];
+
+/** package.json merge */
+function mergePackageJson(existing: Record<string, any>, projectName: string): Record<string, any> {
+	const merged = { ...existing };
+
+	// name이 없으면 설정
+	if (!merged.name) merged.name = projectName;
+	// type이 없으면 module
+	if (!merged.type) merged.type = "module";
+	if (!merged.version) merged.version = "1.0.0";
+
+	// scripts merge
+	merged.scripts = { ...merged.scripts, ...REQUIRED_PKG_SCRIPTS };
+
+	// dependencies merge
+	merged.dependencies = { ...merged.dependencies, ...REQUIRED_PKG_DEPENDENCIES };
+
+	// devDependencies merge
+	merged.devDependencies = { ...merged.devDependencies, ...REQUIRED_PKG_DEV_DEPENDENCIES };
+
+	return merged;
+}
+
+/** tsconfig.json merge */
+function mergeTsconfigJson(existing: Record<string, any>): Record<string, any> {
+	const merged = { ...existing };
+
+	merged.compilerOptions = { ...merged.compilerOptions, ...REQUIRED_TSCONFIG_COMPILER_OPTIONS };
+
+	// paths는 덮어쓰지 않고 추가
+	if (existing.compilerOptions?.paths) {
+		merged.compilerOptions.paths = {
+			...existing.compilerOptions.paths,
+			...REQUIRED_TSCONFIG_COMPILER_OPTIONS.paths,
+		};
+	}
+
+	// include merge (기존 + 필요 항목, 중복 제거)
+	const existingInclude: string[] = merged.include ?? [];
+	merged.include = [...new Set([...existingInclude, ...REQUIRED_TSCONFIG_INCLUDE])];
+
+	// exclude에 node_modules가 없으면 추가
+	const existingExclude: string[] = merged.exclude ?? [];
+	if (!existingExclude.includes("node_modules")) {
+		merged.exclude = [...existingExclude, "node_modules"];
+	}
+
+	return merged;
+}
+
+/** JSON5/주석 포함 JSON 문자열에서 주석 제거 후 파싱 */
+function parseJsonWithComments(content: string): Record<string, any> {
+	// 한 줄 주석 제거 (문자열 내부는 제외)
+	const lines = content.split("\n");
+	const cleaned: string[] = [];
+	for (const line of lines) {
+		let inString = false;
+		let stringChar = "";
+		let result = "";
+		for (let i = 0; i < line.length; i++) {
+			const ch = line[i];
+			if (inString) {
+				result += ch;
+				if (ch === stringChar && line[i - 1] !== "\\") {
+					inString = false;
+				}
+				continue;
+			}
+			if (ch === '"' || ch === "'") {
+				inString = true;
+				stringChar = ch;
+				result += ch;
+				continue;
+			}
+			if (ch === "/" && line[i + 1] === "/") {
+				break; // 라인 나머지 스킵
+			}
+			result += ch;
+		}
+		cleaned.push(result);
+	}
+	return JSON.parse(cleaned.join("\n"));
+}
+
+/** Merge 가능한 파일 목록 */
+const MERGEABLE_FILES: Record<string, (existing: Record<string, any>, projectName: string) => Record<string, any>> = {
+	"package.json": mergePackageJson,
+	"tsconfig.json": (existing: Record<string, any>, _name: string) => mergeTsconfigJson(existing),
+};
+
 // ─── 빈 디렉토리용 .gitkeep ──────────────────────────
 
 const EMPTY_DIRS = [
@@ -384,12 +506,30 @@ export const initCommand: Command = {
 		// 템플릿 파일 생성
 		let created = 0;
 		let skipped = 0;
+		let mergedCount = 0;
 
 		for (const [filePath, template] of Object.entries(TEMPLATES)) {
 			const fullPath = join(targetDir, filePath);
 			const dir = join(fullPath, "..");
 
 			if (!force && existsSync(fullPath)) {
+				// merge 가능한 파일이면 merge 수행
+				const mergeFn = MERGEABLE_FILES[filePath];
+				if (mergeFn) {
+					try {
+						const existingContent = readFileSync(fullPath, "utf-8");
+						const existingJson = parseJsonWithComments(existingContent);
+						const mergedJson = mergeFn(existingJson, projectName);
+						writeFileSync(fullPath, JSON.stringify(mergedJson, null, 2) + "\n");
+						console.log(`  \x1b[36m↗\x1b[0m  ${filePath} (merge)`);
+						mergedCount++;
+						continue;
+					} catch (e) {
+						console.log(`  \x1b[31m✗\x1b[0m  ${filePath} (merge 실패: ${(e as Error).message})`);
+						skipped++;
+						continue;
+					}
+				}
 				console.log(`  \x1b[33m⏭\x1b[0m  ${filePath} (이미 존재)`);
 				skipped++;
 				continue;
@@ -420,7 +560,7 @@ export const initCommand: Command = {
 
 		console.log("");
 		console.log(
-			`  \x1b[32m${created}개 파일 생성\x1b[0m${skipped > 0 ? `, \x1b[33m${skipped}개 스킵\x1b[0m` : ""}`,
+			`  \x1b[32m${created}개 파일 생성\x1b[0m${mergedCount > 0 ? `, \x1b[36m${mergedCount}개 merge\x1b[0m` : ""}${skipped > 0 ? `, \x1b[33m${skipped}개 스킵\x1b[0m` : ""}`,
 		);
 		console.log("");
 
