@@ -1,0 +1,15 @@
+<!-- 파셜: 네비게이션 바 -->
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="navbar-brand">🔥 {{ appName ?? "BunIgniter" }}</a>
+    <ul class="navbar-nav">
+      <li><a href="/">홈</a></li>
+      <? if (typeof currentUser !== "undefined" && currentUser) { ?>
+      <li><a href="/profile">{{ currentUser.name }}</a></li>
+      <li><a href="/logout">로그아웃</a></li>
+      <? } else { ?>
+      <li><a href="/login">로그인</a></li>
+      <? } ?>
+    </ul>
+  </div>
+</nav>

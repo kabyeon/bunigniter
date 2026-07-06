@@ -397,20 +397,20 @@ CLI             ███████████████░░░░░░ 
 - [ ] 테스트: 404 응답 검증
 - **이유**: 현재 하드코딩 HTML. 커스터마이징 불가
 
-#### H-5. Security 헤더 미들웨어
+#### H-5. Security 헤더 미들웨어 ✅
 
-- [ ] `securityHeadersMiddleware` — 일괄 보안 헤더 적용
+- [x] `securityHeadersMiddleware` — 일괄 보안 헤더 적용
   - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY` 또는 `SAMEORIGIN`
+  - `X-Frame-Options: SAMEORIGIN`
   - `X-XSS-Protection: 1; mode=block`
   - `Referrer-Policy: strict-origin-when-cross-origin`
-  - `Permissions-Policy`
-  - `Strict-Transport-Security` (HTTPS)
-- [ ] CSP(Content Security Policy) 미들웨어
-- [ ] 파일: `system/core/security_headers.ts` 신규
-- [ ] 테스트: 헤더 존재 검증
-- [ ] 문서: `docs/user-guide/security.md` 신규
-- **이유**: 브라우저 보안 헤더 일괄 적용. XSS/클릭재킹 방어
+  - `Permissions-Policy: camera=(), microphone=(), geolocation=()`
+- [x] `createSecurityHeadersMiddleware(config)` — 커스텀 설정
+  - HSTS, CSP, Cross-Origin-* 헤더
+  - 개별 헤더 비활성화 가능 (`false`)
+- [x] X-Powered-By / Server 헤더 자동 제거
+- [x] 파일: `system/core/security_headers.ts`
+- [x] 테스트: 기본/커스텀/비활성화 검증
 
 ---
 
@@ -487,12 +487,12 @@ CLI             ███████████████░░░░░░ 
 - [ ] 테스트: soft/hard delete, restore
 - **이유**: `deleted_at` 패턴은 거의 표준
 
-#### M-6. 파셜 디렉토리 및 컨벤션
+#### M-6. 파셜 디렉토리 및 컨벤션 ✅
 
-- [ ] `app/views/partials/` 디렉토리 생성
-- [ ] 예제 파셜: `header.html`, `footer.html`, `sidebar.html`, `nav.html`
-- [ ] 문서에 파셜 사용 예제 추가
-- [ ] Blog 앱에 파셜 적용
+- [x] `app/views/partials/` 디렉토리 생성 (nav, footer, head, alerts)
+- [x] Blog 앱 `examples/blog/app/views/partials/` (nav, footer)
+- [x] 레이아웃에서 `<? include('partials/nav') ?>` 사용
+- [x] 파일: `app/views/partials/nav.html`, `footer.html`, `head.html`, `alerts.html`
 - **이유**: 문서에 언급되나 미생성. 재사용성 향상
 
 #### M-7. 스키마 빌더 (Fluent 마이그레이션)
@@ -559,15 +559,16 @@ CLI             ███████████████░░░░░░ 
 
 ### 🟢 Low Priority (있으면 좋은 기능)
 
-#### L-1. User Agent 라이브러리
+#### L-1. User Agent 라이브러리 ✅
 
-- [ ] 브라우저 감지 (Chrome, Firefox, Safari, Edge 등)
-- [ ] 모바일 감지
-- [ ] 봇 감지
-- [ ] OS 감지
-- [ ] 파일: `system/core/user_agent.ts` 신규
-- [ ] 테스트: 다양한 UA 문자열
-- **이유**: 모바일 대응, 봇 필터링
+- [x] 브라우저 감지 (Chrome, Firefox, Safari, Edge, Opera, Vivaldi, Samsung Browser)
+- [x] 모바일 감지 (iPhone, Android, Windows Phone, BlackBerry)
+- [x] 태블릿 감지 (iPad, Android Tablet, Kindle)
+- [x] 봇 감지 (Googlebot, Bingbot, curl, wget, axios 등 30+ 패턴)
+- [x] OS 감지 (Windows, macOS, iOS, Android, Linux, Chrome OS)
+- [x] 정적 메서드: `UserAgent.parse()`, `isBrowser()`, `isMobile()`, `isBot()`, `isTablet()`, `browser()`, `platform()`, `mobile()`
+- [x] 파일: `system/core/user_agent.ts`
+- [x] 테스트: 브라우저/모바일/봇/정적메서드 검증
 
 #### L-2. 다국어 시스템 (i18n)
 
@@ -580,21 +581,27 @@ CLI             ███████████████░░░░░░ 
 - [ ] 테스트: 다국어 로드/전환
 - **이유**: 한국어 기반이라 우선순위 낮으나 확장성
 
-#### L-3. Auto-loading
+#### L-3. Auto-loading ✅
 
-- [ ] `app/config/autoload.ts` — 자동 로드 설정
-- [ ] 라이브러리/헬퍼/모델 자동 로드
-- [ ] 컨트롤러에서 `$this->library` 대신 전역 접근
-- [ ] 파일: `system/core/autoload.ts` 신규
-- **이유**: CI3 호환성. 매번 import 생략
+- [x] `app/config/autoload.ts` — 자동 로드 설정 파일
+- [x] `autoloadRegistry` — 헬퍼/라이브러리/모델 전역 레지스트리
+- [x] `autoload(config)` — 설정에 따라 자동 import 및 등록
+- [x] `autoloadRegistry.getHelper/lib/model()` — 컨트롤러에서 전역 접근
+- [x] `getAllHelperFunctions()` — 템플릿에서 헬퍼 직접 사용
+- [x] 파일: `system/core/autoload.ts`, `app/config/autoload.ts`
+- [x] 테스트: 등록/조회/병합/리셋 검증
 
-#### L-4. 프로파일러
+#### L-4. 프로파일러 ✅
 
-- [ ] 벤치마크 포인트 (시간 측정)
-- [ ] 실행된 쿼리 목록
-- [ ] 메모리 사용량
-- [ ] 요청/세션 데이터
-- [ ] 개발 환경에서 하단에 표시
+- [x] `Profiler.start/end(name)` — 벤치마크 포인트
+- [x] `Profiler.benchmark(name, callback)` — 콜백 측정
+- [x] `Profiler.logQuery()` — 쿼리 로깅
+- [x] `Profiler.getData()` — 벤치마크/쿼리/메모리 데이터
+- [x] `Profiler.render()` — HTML 오버레이 (CI3 Profiler Bar 스타일)
+- [x] `Profiler.enable()/reset()` — 활성화/초기화
+- [x] 메모리: current/peak, 벤치마크 시간/메모리 델타
+- [x] 파일: `system/core/profiler.ts`
+- [x] 테스트: 벤치마크/쿼리/리셋/렌더링 검증
 - [ ] 파일: `system/core/profiler.ts` 신규
 - **이유**: 디버그/성능 분석
 
@@ -656,7 +663,7 @@ CLI             ███████████████░░░░░░ 
 - [x] H-2. E2E/통합 테스트 인프라
 - [x] H-3. 마이그레이션 상태 추적
 - [x] H-4. 404 커스텀 핸들러
-- [ ] H-5. Security 헤더 미들웨어
+- [x] H-5. Security 헤더 미들웨어
 
 ### Medium Priority (12개)
 
@@ -665,7 +672,7 @@ CLI             ███████████████░░░░░░ 
 - [x] M-3. Inflector 헬퍼
 - [ ] M-4. QueryBuilder 서브쿼리
 - [ ] M-5. 소프트 삭제 (Soft Deletes)
-- [ ] M-6. 파셜 디렉토리 및 컨벤션
+- [x] M-6. 파셜 디렉토리 및 컨벤션
 - [ ] M-7. 스키마 빌더 (Fluent 마이그레이션)
 - [ ] M-8. `migrate:fresh` 명령
 - [ ] M-9. HTTP 메서드 오버라이드
@@ -675,10 +682,10 @@ CLI             ███████████████░░░░░░ 
 
 ### Low Priority (10개)
 
-- [ ] L-1. User Agent 라이브러리
+- [x] L-1. User Agent 라이브러리
 - [ ] L-2. 다국어 시스템 (i18n)
-- [ ] L-3. Auto-loading
-- [ ] L-4. 프로파일러
+- [x] L-3. Auto-loading
+- [x] L-4. 프로파일러
 - [ ] L-5. 라우트 네이밍
 - [ ] L-6. CI3 마이그레이션 가이드
 - [ ] L-7. API 레퍼런스 문서
@@ -699,6 +706,7 @@ CLI             ███████████████░░░░░░ 
 | 2026-07-05 | (시작) | e2da8d0 | 분석 완료, 로드맵 작성 |
 | 2026-07-05 | H-1, M-1, M-2, M-3, M-12 | - | 헬퍼 파일 분리 + Form/HTML/Text/Inflector/Array 헬퍼 구현 |
 | 2026-07-05 | H-2, H-3, H-4 | - | E2E 테스트 인프라, 마이그레이션 batch 추적, 404 핸들러 |
+| 2026-07-06 | H-5, M-6, L-1, L-3, L-4 | - | Security 헤더, 파셜, User Agent, Autoload, Profiler |
 
 ---
 

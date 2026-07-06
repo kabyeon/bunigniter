@@ -7,22 +7,10 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <nav class="navbar">
-      <div class="container">
-        <a href="/" class="navbar-brand">🔥 BunIgniter Blog</a>
-        <ul class="navbar-nav">
-          <li><a href="/">홈</a></li>
-          <li><a href="/login">로그인</a></li>
-        </ul>
-      </div>
-    </nav>
+    <? include('partials/nav') ?>
 
     <main class="container">{{{ content }}}</main>
 
-    <footer class="footer">
-      <div class="container">
-        <p>&copy; 2025 BunIgniter Blog Example</p>
-      </div>
-    </footer>
+    <? include('partials/footer') ?>
   </body>
 </html>
