@@ -5,8 +5,8 @@
 // ============================================================
 
 import { relative, resolve } from "node:path";
-import type { AppConfig } from "../../app/config/app.ts";
 import { loadConfig } from "./config.ts";
+import type { AppConfig } from "./config_types.ts";
 import { closeAllConnections } from "./database.ts";
 import { logger } from "./logger.ts";
 
@@ -60,7 +60,9 @@ async function bootstrap() {
   `);
 
 	// ── 라우트 구성 ──────────────────────────────────
-	const router = (await import("../../app/config/routes.ts")).default;
+	const { getAppRoot } = await import("./config.ts");
+	const appRoot = getAppRoot();
+	const router = (await import(`${appRoot}/config/routes.ts`)).default;
 	router.printRoutes();
 	const { routes: appRoutes, fetch: appFetch } = router.toBunServe();
 

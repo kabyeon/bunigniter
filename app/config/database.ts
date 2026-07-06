@@ -4,28 +4,7 @@
 // CodeIgniter3 의 application/config/database.php 와 동일
 // ============================================================
 
-export interface DatabaseConfig {
-	/** 기본 연결 그룹 */
-	defaultGroup: string;
-	/** 연결 그룹 목록 */
-	groups: Record<
-		string,
-		{
-			adapter: "sqlite" | "postgres" | "mysql";
-			filename?: string;
-			url?: string;
-			hostname?: string;
-			port?: number;
-			database?: string;
-			username?: string;
-			password?: string;
-			max?: number;
-			idleTimeout?: number;
-			readonly?: boolean;
-			create?: boolean;
-		}
-	>;
-}
+import type { DatabaseConfig } from "system/core/config_types.ts";
 
 const config: DatabaseConfig = {
 	defaultGroup: "default",

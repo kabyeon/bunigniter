@@ -42,6 +42,10 @@ export type {
 } from "./cache.ts";
 export { Cache, cache } from "./cache.ts";
 export { clearConfigCache, getAppRoot, loadConfig } from "./config.ts";
+export type {
+	AppConfig,
+	DatabaseConfig,
+} from "./config_types.ts";
 export type { Context, ResponseStatusBuilder } from "./controller.ts";
 export { Controller } from "./controller.ts";
 export type { CookieOptions } from "./cookie.ts";

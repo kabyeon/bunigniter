@@ -4,6 +4,7 @@
 // ============================================================
 
 import { dbSeed, makeSeed } from "./commands/dbseed.ts";
+import { initCommand } from "./commands/init.ts";
 import { listRoutes } from "./commands/listroutes.ts";
 import { makeController } from "./commands/makecontroller.ts";
 import { makeHelper } from "./commands/makehelper.ts";
@@ -23,6 +24,7 @@ import { CommandRegistry } from "./registry.ts";
 const registry = new CommandRegistry();
 
 // 명령어 등록
+registry.register("init", initCommand);
 registry.register("make:controller", makeController);
 registry.register("make:model", makeModel);
 registry.register("make:view", makeView);

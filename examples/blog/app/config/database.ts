@@ -1,14 +1,4 @@
-export interface DatabaseConfig {
-	defaultGroup: string;
-	groups: Record<
-		string,
-		{
-			adapter: "sqlite" | "postgres" | "mysql";
-			filename?: string;
-			create?: boolean;
-		}
-	>;
-}
+import type { DatabaseConfig } from "system/core/config_types.ts";
 
 const config: DatabaseConfig = {
 	defaultGroup: "default",

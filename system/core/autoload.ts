@@ -4,6 +4,8 @@
 // 컨트롤러에서 매번 import 하지 않아도 전역 접근 가능
 // ============================================================
 
+import { getAppRoot } from "./config.ts";
+
 /**
  * 자동 로드 설정
  * CI3: application/config/autoload.php
@@ -174,7 +176,7 @@ export async function autoload(config: AutoloadConfig): Promise<void> {
 	// ── 모델 자동 로드 ──────────────────────────────
 	for (const modelName of config.models) {
 		try {
-			const mod = await import(`../../app/models/${modelName}.ts`);
+			const mod = await import(`${getAppRoot()}/models/${modelName}.ts`);
 			const instance = mod.default ?? mod[camelize(modelName)] ?? mod;
 			autoloadRegistry.registerModel(modelName, instance);
 		} catch {
@@ -202,7 +204,7 @@ export async function autoload(config: AutoloadConfig): Promise<void> {
  */
 export async function loadAutoloadConfig(): Promise<AutoloadConfig> {
 	try {
-		const mod = await import("../../app/config/autoload.ts");
+		const mod = await import(`${getAppRoot()}/config/autoload.ts`);
 		return (
 			mod.default ?? {
 				libraries: [],

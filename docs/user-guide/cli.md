@@ -8,7 +8,19 @@ BunIgniter는 AdonisJS Ace 스타일 CLI를 제공합니다.
 bun run bi <command> [args] [options]
 ```
 
+npm 패키지 모드에서는:
+
+```bash
+bun run node_modules/bunigniter/cli/index.ts <command> [args]
+```
+
 ## 명령어 목록
+
+### 프로젝트 초기화
+
+| 명령어 | 설명 |
+|--------|------|
+| `init <name>` | 새 BunIgniter 프로젝트 생성 |
 
 ### 서버
 
@@ -73,6 +85,26 @@ bun run bi migrate:rollback           # 최근 1개 롤백
 bun run bi migrate:rollback --steps=3  # 3개 롤백
 bun run bi migrate:rollback --all      # 전체 롤백
 ```
+
+## init 상세
+
+```bash
+bun run bi init my-app      # 새 프로젝트 디렉토리 생성
+bun run bi init .            # 현재 디렉토리에 초기화
+bun run bi init my-app --force  # 기존 파일 덮어쓰기
+```
+
+생성되는 파일:
+
+- `package.json` — bunigniter 의존성 포함
+- `tsconfig.json` — system/* 경로 매핑
+- `.env` — 환경 변수
+- `.gitignore`
+- `app/config/` — app, database, routes, autoload 설정
+- `app/controllers/welcome_controller.ts` — 기본 컨트롤러
+- `app/views/` — layout, partials, welcome, errors 뷰
+- `database/migrate.ts` — 마이그레이션 실행기
+- `public/css/style.css` — 기본 스타일
 
 ## list:routes 상세
 

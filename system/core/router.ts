@@ -159,7 +159,7 @@ export class Router {
 	 *   router.autoRoute({ enabled: false });  // 비활성화
 	 */
 	autoRoute(config?: Partial<AutoRouterConfig>): Router {
-		const appRoot = process.env.APP_ROOT ?? new URL("../../app", import.meta.url).pathname;
+		const appRoot = process.env.APP_ROOT ?? `${process.cwd()}/app`;
 
 		if (config?.enabled === false) {
 			this.autoRouter = null;

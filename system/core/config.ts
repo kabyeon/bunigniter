@@ -1,13 +1,14 @@
 // ============================================================
 // BunIgniter - CodeIgniter 3 Style MVC Framework
 // 설정 로더
+// npm 패키지 + clone 모두 지원: process.cwd() 기반
 // ============================================================
 
 import { join } from "node:path";
 
-/** APP_ROOT: 환경변수 > import.meta.dir 기반 추론 */
+/** APP_ROOT: 환경변수 > process.cwd() 기반 추론 */
 function getAppRoot(): string {
-	return process.env.APP_ROOT ?? join(import.meta.dir, "..", "..", "app");
+	return process.env.APP_ROOT ?? join(process.cwd(), "app");
 }
 
 /** 설정 파일 캐시 */

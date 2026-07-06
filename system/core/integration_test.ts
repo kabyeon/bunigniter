@@ -35,7 +35,8 @@ export async function startTestServer(port: number = 3999): Promise<IntegrationT
 
 	// 라우트 등록 시도
 	try {
-		const router = (await import("../../app/config/routes.ts")).default;
+		const { getAppRoot } = await import("./config.ts");
+		const router = (await import(`${getAppRoot()}/config/routes.ts`)).default;
 		const { routes, fetch: appFetch } = router.toBunServe();
 
 		// 라우트가 있으면 서버 재시작

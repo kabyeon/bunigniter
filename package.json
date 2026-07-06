@@ -3,6 +3,24 @@
 	"version": "1.0.0",
 	"description": "CodeIgniter 3-style Full Stack MVC Framework for Bun",
 	"type": "module",
+	"bin": {
+		"bi": "./cli/index.ts"
+	},
+	"exports": {
+		".": "./system/core/index.ts",
+		"./core/*": "./system/core/*.ts",
+		"./helpers/*": "./system/helpers/*.ts",
+		"./cli": "./cli/index.ts",
+		"./bootstrap": "./system/core/bootstrap.ts"
+	},
+	"files": [
+		"system/",
+		"cli/",
+		"public/css/style.css",
+		"public/js/app.js",
+		"README.md",
+		"LICENSE"
+	],
 	"scripts": {
 		"dev": "bun run --hot system/core/bootstrap.ts",
 		"start": "bun run system/core/bootstrap.ts",
@@ -21,5 +39,25 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.2",
 		"@types/bun": "latest"
+	},
+	"keywords": [
+		"bun",
+		"codeigniter",
+		"mvc",
+		"framework",
+		"fullstack",
+		"typescript",
+		"sqlite",
+		"web-framework",
+		"bunigniter"
+	],
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kabyeon/bunigniter"
+	},
+	"homepage": "https://github.com/kabyeon/bunigniter",
+	"engines": {
+		"bun": ">=1.0.0"
 	}
 }
