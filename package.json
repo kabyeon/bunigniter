@@ -1,10 +1,10 @@
 {
 	"name": "bunigniter",
-	"version": "0.6.0",
+	"version": "0.6.1",
 	"description": "CodeIgniter 3-style Full Stack MVC Framework for Bun",
 	"type": "module",
 	"bin": {
-		"bi": "./cli/index.ts"
+		"bi": "cli/index.ts"
 	},
 	"exports": {
 		".": "./system/core/index.ts",
@@ -54,7 +54,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/kabyeon/bunigniter"
+		"url": "git+https://github.com/kabyeon/bunigniter.git"
 	},
 	"homepage": "https://github.com/kabyeon/bunigniter",
 	"engines": {
