@@ -17,9 +17,7 @@
 		"check": "biome check .",
 		"check:fix": "biome check --write ."
 	},
-	"dependencies": {
-		"rendu": "^0.1.0"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.2",
 		"@types/bun": "latest"
