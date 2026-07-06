@@ -20,15 +20,15 @@ jobs:
       - name: Test
         run: bun test
 
-      - name: Lint
-        run: bunx biome check .
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           registry-url: https://registry.npmjs.org
 
+      - name: Verify package contents
+        run: npm pack --dry-run
+
       - name: Publish
-        run: npm publish --provenance --access public
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

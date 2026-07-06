@@ -1,3 +1,4 @@
+#!/usr/bin/env bun
 // ============================================================
 // BunIgniter CLI - AdonisJS Ace 스타일 스캐폴딩 CLI
 // 사용법: bun run bi <command> <name> [options]

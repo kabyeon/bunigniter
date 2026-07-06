@@ -1,0 +1,15 @@
+# npm pack 에서 제외
+.env
+.env.*
+.git/
+.github/
+.pi-lens/
+node_modules/
+tests/
+examples/
+docs/
+database/
+app/
+storage/
+biome.json
+tsconfig.json
