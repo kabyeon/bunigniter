@@ -15,6 +15,7 @@ function generateView(name: string, action: string): string {
 	switch (action) {
 		case "index":
 			return `<!-- layout:default -->
+<!-- slot:title -->${pascal} 목록<!-- endslot -->
 
 <h1>${pascal} 목록</h1>
 <a href="/${plural}/create" class="btn btn-primary">새로 만들기</a>
@@ -48,6 +49,7 @@ function generateView(name: string, action: string): string {
 
 		case "show":
 			return `<!-- layout:default -->
+<!-- slot:title -->${pascal} 상세<!-- endslot -->
 
 <h1>${pascal} 상세</h1>
 
@@ -64,10 +66,12 @@ function generateView(name: string, action: string): string {
 
 		case "create":
 			return `<!-- layout:default -->
+<!-- slot:title -->${pascal} 만들기<!-- endslot -->
 
 <h1>${pascal} 만들기</h1>
 
 <form method="POST" action="/${plural}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token ?? "" }}" />
   <div class="form-group">
     <label>이름</label>
     <input type="text" name="name" required />
@@ -80,11 +84,13 @@ function generateView(name: string, action: string): string {
 
 		case "edit":
 			return `<!-- layout:default -->
+<!-- slot:title -->${pascal} 수정<!-- endslot -->
 
 <h1>${pascal} 수정</h1>
 
 <form method="POST" action="/${plural}/{{ ${snake}.id }}">
   <input type="hidden" name="_method" value="PUT" />
+  <input type="hidden" name="_csrf" value="{{ csrf_token ?? "" }}" />
   <div class="form-group">
     <label>이름</label>
     <input type="text" name="name" value="{{ ${snake}.name }}" required />
@@ -97,6 +103,7 @@ function generateView(name: string, action: string): string {
 
 		default:
 			return `<!-- layout:default -->
+<!-- slot:title -->${pascal} - ${action}<!-- endslot -->
 
 <h1>${pascal} - ${action}</h1>
 <!-- 내용을 작성하세요 -->

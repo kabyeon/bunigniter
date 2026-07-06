@@ -4,6 +4,7 @@
 <h1>새 포스트 작성</h1>
 
 <form method="POST" action="/admin/posts">
+  <input type="hidden" name="_csrf" value="{{ csrf_token ?? \"\" }}" />
   <div class="form-group">
     <label>제목</label>
     <input type="text" name="title" required />

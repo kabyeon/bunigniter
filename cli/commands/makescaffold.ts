@@ -103,35 +103,35 @@ import ${model}Model from "app/models/${snake}_model.ts";
 
 export class ${pascal}Controller extends Controller {
   // GET /${plural}
-  async index({ request, response }: Context) {
+  async index(_ctx: Context) {
     const ${modelPlural} = await ${model}Model.findAll();
     return this.json(${modelPlural});
   }
 
   // GET /${plural}/:id
-  async show({ request, params, response }: Context) {
+  async show({ params, response }: Context) {
     const ${model} = await ${model}Model.findById(Number(params.id));
     if (!${model}) return this.json({ error: "Not Found" }, 404);
     return this.json(${model});
   }
 
   // POST /${plural}
-  async store({ request, response }: Context) {
-    const data = request.body();
+  async store({ body, response }: Context) {
+    const data = body();
     const ${model} = await ${model}Model.create(data);
     return this.json(${model}, 201);
   }
 
   // PUT /${plural}/:id
-  async update({ request, params, response }: Context) {
-    const data = request.body();
+  async update({ body, params, response }: Context) {
+    const data = body();
     const ${model} = await ${model}Model.update(Number(params.id), data);
     if (!${model}) return this.json({ error: "Not Found" }, 404);
     return this.json(${model});
   }
 
   // DELETE /${plural}/:id
-  async delete({ request, params, response }: Context) {
+  async delete({ params, response }: Context) {
     const ok = await ${model}Model.delete(Number(params.id));
     if (!ok) return this.json({ error: "Not Found" }, 404);
     return this.json({ success: true });
@@ -150,48 +150,48 @@ import ${model}Model from "app/models/${snake}_model.ts";
 
 export class ${pascal}Controller extends Controller {
   // GET /${plural}
-  async index({ request, response }: Context) {
+  async index(_ctx: Context) {
     const ${modelPlural} = await ${model}Model.findAll();
     return this.view("${plural}/index", { ${modelPlural} });
   }
 
   // GET /${plural}/:id
-  async show({ request, params, response }: Context) {
+  async show({ params, response }: Context) {
     const ${model} = await ${model}Model.findById(Number(params.id));
     if (!${model}) return response.status(404).send("Not Found");
     return this.view("${plural}/show", { ${model} });
   }
 
   // GET /${plural}/create
-  async create({ request, response }: Context) {
+  async create(_ctx: Context) {
     return this.view("${plural}/create");
   }
 
   // POST /${plural}
-  async store({ request, response }: Context) {
-    const data = request.body();
+  async store({ body, response }: Context) {
+    const data = body();
     await ${model}Model.create(data);
     return response.redirect("/${plural}");
   }
 
   // GET /${plural}/:id/edit
-  async edit({ request, params, response }: Context) {
+  async edit({ params, response }: Context) {
     const ${model} = await ${model}Model.findById(Number(params.id));
     if (!${model}) return response.status(404).send("Not Found");
     return this.view("${plural}/edit", { ${model} });
   }
 
   // PUT /${plural}/:id
-  async update({ request, params, response }: Context) {
-    const data = request.body();
+  async update({ body, params }: Context) {
+    const data = body();
     await ${model}Model.update(Number(params.id), data);
-    return response.redirect("/${plural}");
+    return new Response(null, { status: 302, headers: { Location: "/${plural}" } });
   }
 
   // DELETE /${plural}/:id
-  async delete({ request, params, response }: Context) {
+  async delete({ params }: Context) {
     await ${model}Model.delete(Number(params.id));
-    return response.redirect("/${plural}");
+    return new Response(null, { status: 302, headers: { Location: "/${plural}" } });
   }
 }
 
@@ -207,6 +207,7 @@ export default new ${pascal}Controller();
 			createFile(
 				`app/views/${plural}/index.html`,
 				`<!-- layout:default -->
+<!-- slot:title -->${pascal} 목록<!-- endslot -->
 
 <h1>${pascal} 목록</h1>
 <a href="/${plural}/create" class="btn btn-primary">새로 만들기</a>
@@ -242,6 +243,7 @@ ${fields.map((f) => `      <td>{{ item.${f.name} }}</td>`).join("\n")}
 			createFile(
 				`app/views/${plural}/show.html`,
 				`<!-- layout:default -->
+<!-- slot:title -->${pascal} 상세<!-- endslot -->
 
 <h1>${pascal} 상세</h1>
 
@@ -264,10 +266,12 @@ ${fields
 			createFile(
 				`app/views/${plural}/create.html`,
 				`<!-- layout:default -->
+<!-- slot:title -->${pascal} 만들기<!-- endslot -->
 
 <h1>${pascal} 만들기</h1>
 
 <form method="POST" action="/${plural}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token ?? "" }}" />
 ${fields
 	.map(
 		(f) => `  <div class="form-group">
@@ -290,11 +294,13 @@ ${fields
 			createFile(
 				`app/views/${plural}/edit.html`,
 				`<!-- layout:default -->
+<!-- slot:title -->${pascal} 수정<!-- endslot -->
 
 <h1>${pascal} 수정</h1>
 
 <form method="POST" action="/${plural}/{{ ${model}.id }}">
   <input type="hidden" name="_method" value="PUT" />
+  <input type="hidden" name="_csrf" value="{{ csrf_token ?? "" }}" />
 ${fields
 	.map(
 		(f) => `  <div class="form-group">

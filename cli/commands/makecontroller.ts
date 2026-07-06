@@ -9,46 +9,46 @@ import type { Command } from "../registry.ts";
 import { createFile, parseArgs, toPascalCase, toPlural, toSnakeCase } from "../utils.ts";
 
 const RESOURCE_METHODS = `  // GET /{{route}}
-  async index({ request, response }: Context) {
+  async index({ response }: Context) {
     const results = await {{model}}Model.findAll();
     return this.view("{{view_dir}}/index", { {{modelPlural}}: results });
   }
 
   // GET /{{route}}/:id
-  async show({ request, params, response }: Context) {
+  async show({ params, response }: Context) {
     const {{model}} = await {{model}}Model.findById(Number(params.id));
     if (!{{model}}) return response.status(404).send("Not Found");
     return this.view("{{view_dir}}/show", { {{model}} });
   }
 
   // GET /{{route}}/create
-  async create({ request, response }: Context) {
+  async create(_ctx: Context) {
     return this.view("{{view_dir}}/create");
   }
 
   // POST /{{route}}
-  async store({ request, response }: Context) {
-    const data = request.body();
+  async store({ body, response }: Context) {
+    const data = body();
     const result = await {{model}}Model.create(data);
     return response.redirect("/{{route}}");
   }
 
   // GET /{{route}}/:id/edit
-  async edit({ request, params, response }: Context) {
+  async edit({ params, response }: Context) {
     const {{model}} = await {{model}}Model.findById(Number(params.id));
     if (!{{model}}) return response.status(404).send("Not Found");
     return this.view("{{view_dir}}/edit", { {{model}} });
   }
 
   // PUT /{{route}}/:id
-  async update({ request, params, response }: Context) {
-    const data = request.body();
+  async update({ body, params, response }: Context) {
+    const data = body();
     await {{model}}Model.update(Number(params.id), data);
     return response.redirect("/{{route}}");
   }
 
   // DELETE /{{route}}/:id
-  async delete({ request, params, response }: Context) {
+  async delete({ params }: Context) {
     await {{model}}Model.delete(Number(params.id));
     return response.redirect("/{{route}}");
   }`;
@@ -70,10 +70,10 @@ function generateController(name: string, methods: string[], isResource: boolean
 			.replace(/\{\{route\}\}/g, route);
 	} else if (methods.length > 0) {
 		methodsCode = methods
-			.map((m) => `  async ${m}({ request, response }: Context) {\n    // TODO: 구현하기\n  }`)
+			.map((m) => `  async ${m}(_ctx: Context) {\n    // TODO: 구현하기\n  }`)
 			.join("\n\n");
 	} else {
-		methodsCode = `  async index({ request, response }: Context) {\n    // TODO: 구현하기\n  }`;
+		methodsCode = `  async index(_ctx: Context) {\n    // TODO: 구현하기\n  }`;
 	}
 
 	return `import { Controller } from "system/core/controller.ts";

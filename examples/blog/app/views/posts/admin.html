@@ -33,9 +33,20 @@
       <td>
         <a href="/posts/{{ post.slug }}" class="btn btn-sm">보기</a>
         <a href="/admin/posts/{{ post.id }}/edit" class="btn btn-sm">수정</a>
-        <form method="POST" action="/admin/posts/{{ post.id }}" style="display: inline">
+        <form
+          method="POST"
+          action="/admin/posts/{{ post.id }}"
+          style="display: inline"
+        >
           <input type="hidden" name="_method" value="DELETE" />
-          <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('삭제하시겠습니까?');">삭제</button>
+          <input type="hidden" name="_csrf" value="{{ csrf_token ?? \"\" }}" />
+          <button
+            type="submit"
+            class="btn btn-sm btn-danger"
+            onclick="return confirm('삭제하시겠습니까?');"
+          >
+            삭제
+          </button>
         </form>
       </td>
     </tr>

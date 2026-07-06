@@ -9,6 +9,7 @@
   <? } ?>
 
   <form method="POST" action="/login">
+    <input type="hidden" name="_csrf" value="{{ csrf_token ?? \"\" }}" />
     <div class="form-group">
       <label>이메일</label>
       <input type="email" name="email" required />
