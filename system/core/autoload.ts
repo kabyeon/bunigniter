@@ -4,8 +4,6 @@
 // 컨트롤러에서 매번 import 하지 않아도 전역 접근 가능
 // ============================================================
 
-import type { SessionDriver } from "./session_driver.ts";
-
 /**
  * 자동 로드 설정
  * CI3: application/config/autoload.php

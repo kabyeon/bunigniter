@@ -78,19 +78,19 @@ export function pluralize(word: string): string {
 
 	// 변환 규칙 (순서 중요)
 	if (lower.endsWith("y") && !/[aeiou]y$/i.test(lower)) {
-		return preserveCase(word, word.slice(0, -1) + "ies");
+		return preserveCase(word, `${word.slice(0, -1)}ies`);
 	}
 	if (/(?:s|x|z|ch|sh)$/i.test(lower)) {
-		return preserveCase(word, word + "es");
+		return preserveCase(word, `${word}es`);
 	}
 	if (lower.endsWith("f")) {
-		return preserveCase(word, word.slice(0, -1) + "ves");
+		return preserveCase(word, `${word.slice(0, -1)}ves`);
 	}
 	if (lower.endsWith("fe")) {
-		return preserveCase(word, word.slice(0, -2) + "ves");
+		return preserveCase(word, `${word.slice(0, -2)}ves`);
 	}
 
-	return preserveCase(word, word + "s");
+	return preserveCase(word, `${word}s`);
 }
 
 /**
@@ -145,14 +145,14 @@ export function singularize(word: string): string {
 
 	// 변환 규칙
 	if (lower.endsWith("ies") && lower.length > 3) {
-		return preserveCase(word, word.slice(0, -3) + "y");
+		return preserveCase(word, `${word.slice(0, -3)}y`);
 	}
 	if (lower.endsWith("ves")) {
 		// knives → knife, leaves → leaf, lives → life
 		if (lower.endsWith("ives")) {
-			return preserveCase(word, word.slice(0, -3) + "ife");
+			return preserveCase(word, `${word.slice(0, -3)}ife`);
 		}
-		return preserveCase(word, word.slice(0, -3) + "f");
+		return preserveCase(word, `${word.slice(0, -3)}f`);
 	}
 	if (/(?:ses|xes|zes|ches|shes)$/i.test(lower)) {
 		return preserveCase(word, word.slice(0, -2));

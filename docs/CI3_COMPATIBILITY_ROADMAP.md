@@ -605,13 +605,20 @@ CLI             ███████████████░░░░░░ 
 - [ ] 파일: `system/core/profiler.ts` 신규
 - **이유**: 디버그/성능 분석
 
-#### L-5. 라우트 네이밍
+#### L-5. 오토 라우트 ✅
 
-- [ ] `router.get("/users/:id", ctrl, "show").name("users.show")`
-- [ ] `routeUrl("users.show", { id: 1 })` → `/users/1`
-- [ ] 역방향 라우팅
-- [ ] 파일: `system/core/router.ts` 수정
-- **이유**: URL 하드코딩 방지
+- [x] `AutoRouter` 클래스 — URL → Controller/Method 자동 매핑
+- [x] `router.autoRoute()` — CI3 Auto Routing 호환
+- [x] 명시적 라우트가 오토 라우트보다 우선
+- [x] `defaultController`/`defaultMethod` 설정
+- [x] `exclude` 제외 목록
+- [x] `middleware` 오토 라우트 전용 미들웨어
+- [x] 서브디렉토리 지원 (admin/users → admin/user_controller.ts)
+- [x] 파일명 매핑: URL 복수형 → snake_case 단수형
+- [x] `_` 접두사 메서드 제외 (private 메서드 보호)
+- [x] 개발 모드: 캐시 무시 (핫리로드)
+- [x] 파일: `system/core/auto_router.ts`
+- [x] 테스트: 22개 (해석/비활성화/우선순위/제외/이름변환/단수화)
 
 #### L-6. CI3 마이그레이션 가이드
 
@@ -686,7 +693,7 @@ CLI             ███████████████░░░░░░ 
 - [ ] L-2. 다국어 시스템 (i18n)
 - [x] L-3. Auto-loading
 - [x] L-4. 프로파일러
-- [ ] L-5. 라우트 네이밍
+- [x] L-5. 오토 라우트
 - [ ] L-6. CI3 마이그레이션 가이드
 - [ ] L-7. API 레퍼런스 문서
 - [ ] L-8. File Helper

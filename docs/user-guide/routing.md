@@ -1,6 +1,6 @@
 # 🛤 라우팅
 
-`app/config/routes.ts` 에서 라우트를 정의합니다.
+`app/config/routes.ts` 에서 라우트를 정의합니다. 명시적 라우트와 오토 라우트(CI3 호환)를 모두 지원합니다.
 
 ## 기본 라우트
 
@@ -34,6 +34,125 @@ router.resource("users", userController);
 | GET | `/users/:id/edit` | `edit` | 수정 폼 |
 | PUT | `/users/:id` | `update` | 수정 |
 | DELETE | `/users/:id` | `delete` | 삭제 |
+
+## 오토 라우트 (CI3 호환)
+
+CodeIgniter 3의 Auto Routing과 동일합니다. URL만으로 자동으로 컨트롤러/메서드를 매핑합니다.
+
+### 활성화
+
+```typescript
+// 기본 활성화 (기본값: enabled=true, defaultController="welcome")
+router.autoRoute();
+
+// 커스텀 설정
+router.autoRoute({
+  enabled: true,
+  defaultController: "home",    // CI3: $route['default_controller']
+  defaultMethod: "index",       // 기본 메서드
+  exclude: ["api/auth"],        // 제외할 경로
+  middleware: [csrfMiddleware], // 오토 라우트에 적용할 미들웨어
+});
+
+// 비활성화
+router.autoRoute({ enabled: false });
+```
+
+### 동작 방식
+
+| URL | 매핑 | 설명 |
+|-----|------|------|
+| `/` | `WelcomeController::index()` | 기본 컨트롤러 |
+| `/posts` | `PostController::index()` | 기본 메서드 |
+| `/posts/show` | `PostController::show()` | 메서드 지정 |
+| `/posts/show/5` | `PostController::show(5)` | 메서드 + 파라미터 |
+| `/posts/edit/5/draft` | `PostController::edit(5, "draft")` | 다중 파라미터 |
+| `/admin/users` | `admin/user_controller.ts` → `UserController::index()` | 서브디렉토리 |
+
+### 파일명 매핑 규칙
+
+URL의 컨트롤러 이름은 snake_case 파일명으로 자동 변환됩니다:
+
+| URL 컨트롤러 | 파일명 | 클래스명 |
+|-------------|--------|---------|
+| `posts` | `post_controller.ts` | `PostController` |
+| `users` | `user_controller.ts` | `UserController` |
+| `post-categories` | `post_category_controller.ts` | `PostCategoryController` |
+| `products` | `product_controller.ts` | `ProductController` |
+
+규칙:
+
+1. URL 이름 → 단수형 변환 (posts → post)
+2. kebab-case → snake_case (post-categories → post_category)
+3. 파일명: `{단수형_snake_case}_controller.ts`
+4. 클래스명: `{PascalCase}Controller`
+
+### 명시적 라우트가 우선
+
+오토 라우트와 명시적 라우트를 함께 사용할 수 있습니다. **명시적 라우트가 항상 우선**입니다:
+
+```typescript
+const router = new Router();
+
+// 오토 라우트 활성화
+router.autoRoute();
+
+// 명시적 라우트 → 오토 라우트보다 우선
+router.resource("posts", postController);  // /posts/* 는 리소스 라우트 사용
+router.get("/about", welcomeController, "about");  // /about 은 명시적 라우트
+
+// /products, /orders 등 명시적 라우트가 없으면 오토 라우트 사용
+```
+
+### 오토 라우트 제외
+
+특정 경로를 오토 라우트에서 제외할 수 있습니다:
+
+```typescript
+router.autoRoute({
+  enabled: true,
+  exclude: ["api/auth", "admin/settings"],  // 이 경로는 오토 라우트 제외
+});
+```
+
+### 오토 라우트 미들웨어
+
+오토 라우트에만 적용할 미들웨어를 설정할 수 있습니다:
+
+```typescript
+router.autoRoute({
+  enabled: true,
+  middleware: [csrfMiddleware],  // 오토 라우트된 요청에만 CSRF 적용
+});
+```
+
+### 서브디렉토리 지원
+
+`app/controllers/` 하위 디렉토리의 컨트롤러도 자동 매핑됩니다:
+
+```
+app/controllers/
+├── welcome_controller.ts      → /welcome
+├── post_controller.ts         → /posts
+├── admin/
+│   ├── user_controller.ts     → /admin/users
+│   └── setting_controller.ts  → /admin/settings
+└── api/
+    └── auth_controller.ts     → /api/auth
+```
+
+### CI3 ↔ BunIgniter 대조표
+
+| CodeIgniter 3 | BunIgniter |
+|---------------|-----------|
+| 기본 활성화 | `router.autoRoute()` |
+| `$config['enable_query_strings']` | `router.autoRoute({ enabled: false })` |
+| `$route['default_controller'] = 'welcome'` | `router.autoRoute({ defaultController: "welcome" })` |
+| `/posts/show/5` → `Posts::show(5)` | `/posts/show/5` → `PostController::show(5)` |
+| `application/controllers/admin/Users.php` | `app/controllers/admin/user_controller.ts` |
+| 명시적 라우트 우선 | 명시적 라우트 우선 (동일) |
+
+---
 
 ## 미들웨어 적용
 
@@ -73,22 +192,12 @@ async show({ params }: Context) {
 }
 ```
 
-export default router;
-
 ## 404 커스텀 핸들러
 
 CI3의 `$route['404_override']` 와 동일합니다:
 
 ```typescript
-import { Router } from "system/core/router.ts";
-
-const router = new Router();
-
-// 커스텀 404 핸들러
 router.notFound(async ({ request, params }) => {
-  // Accept 헤더에 따라 자동 분기
-  // application/json → { error: "Not Found" }
-  // text/html → 커스텀 HTML
   return new Response(
     "<!DOCTYPE html><html><body><h1>404 - 페이지를 찾을 수 없습니다</h1></body></html>",
     { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } }
@@ -96,4 +205,4 @@ router.notFound(async ({ request, params }) => {
 });
 ```
 
-`router.notFound()` 가 설정되지 않으면 기본 404 응답이 사용됩니다. `Accept: application/json` 요청에는 자동으로 JSON 에러 응답이 반환됩니다.
+export default router;
