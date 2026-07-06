@@ -20,7 +20,7 @@ AuditLog.configure({
 ## 테이블 생성
 
 ```bash
-bun run igniter migrate
+bun run bi migrate
 ```
 
 또는 수동:

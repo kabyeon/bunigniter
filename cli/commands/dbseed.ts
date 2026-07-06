@@ -1,8 +1,8 @@
 // ============================================================
 // make:seed - 시드 파일 생성 + db:seed - 시드 실행
-// bun run igniter make:seed user_seeder
-// bun run igniter db:seed
-// bun run igniter db:seed --files=user_seeder,post_seeder
+// bun run bi make:seed user_seeder
+// bun run bi db:seed
+// bun run bi db:seed --files=user_seeder,post_seeder
 // ============================================================
 
 import { existsSync, readdirSync } from "node:fs";
@@ -16,7 +16,7 @@ import { createFile, parseArgs, toPascalCase, toSnakeCase } from "../utils.ts";
 export const makeSeed: Command = {
 	name: "make:seed",
 	description: "시드 파일 생성",
-	usage: "bun run igniter make:seed <name>",
+	usage: "bun run bi make:seed <name>",
 	options: [],
 	async run(args: string[]): Promise<void> {
 		const { positional } = parseArgs(args);
@@ -24,7 +24,7 @@ export const makeSeed: Command = {
 
 		if (!name) {
 			console.log("❌ 시더 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:seed user_seeder");
+			console.log("   예: bun run bi make:seed user_seeder");
 			return;
 		}
 
@@ -39,7 +39,7 @@ export const makeSeed: Command = {
  * 시더: ${snake}
  * 생성일: ${new Date().toISOString().split("T")[0]}
  *
- * 실행: bun run igniter db:seed --files=${snake}
+ * 실행: bun run bi db:seed --files=${snake}
  */
 import { SQL } from "bun";
 
@@ -55,7 +55,7 @@ export async function run(sql: SQL): Promise<void> {
 		);
 
 		console.log(`\n  📌 실행 방법:`);
-		console.log(`    bun run igniter db:seed\n`);
+		console.log(`    bun run bi db:seed\n`);
 	},
 };
 
@@ -64,7 +64,7 @@ export async function run(sql: SQL): Promise<void> {
 export const dbSeed: Command = {
 	name: "db:seed",
 	description: "데이터베이스 시드 실행",
-	usage: "bun run igniter db:seed [--files=name1,name2]",
+	usage: "bun run bi db:seed [--files=name1,name2]",
 	options: [
 		{
 			flag: "--files",
@@ -89,7 +89,7 @@ export const dbSeed: Command = {
 
 		if (!existsSync(seedsDir)) {
 			console.log("  ⚠️  database/seeds/ 폴더가 없습니다.");
-			console.log("  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n");
+			console.log("  💡 bun run bi make:seed <name> 으로 시더를 생성하세요.\n");
 			await db.close();
 			return;
 		}
@@ -107,7 +107,7 @@ export const dbSeed: Command = {
 
 		if (files.length === 0) {
 			console.log("  📋 실행할 시더가 없습니다.");
-			console.log("  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n");
+			console.log("  💡 bun run bi make:seed <name> 으로 시더를 생성하세요.\n");
 			await db.close();
 			return;
 		}

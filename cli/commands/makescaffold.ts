@@ -1,8 +1,8 @@
 // ============================================================
 // make:scaffold - MVC 스캐폴딩 전체 생성
-// bun run igniter make:scaffold post
-// bun run igniter make:scaffold post --fields=title:string,content:text
-// bun run igniter make:scaffold post --api --fields=title:string
+// bun run bi make:scaffold post
+// bun run bi make:scaffold post --fields=title:string,content:text
+// bun run bi make:scaffold post --api --fields=title:string
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -11,7 +11,7 @@ import { createFile, parseArgs, toPascalCase, toPlural, toSnakeCase } from "../u
 export const makeScaffold: Command = {
 	name: "make:scaffold",
 	description: "Controller + Model + Views + Migration 전체 생성",
-	usage: "bun run igniter make:scaffold <name> [--fields=name:type,...] [--api]",
+	usage: "bun run bi make:scaffold <name> [--fields=name:type,...] [--api]",
 	options: [
 		{
 			flag: "--fields",
@@ -28,9 +28,9 @@ export const makeScaffold: Command = {
 
 		if (!name) {
 			console.log("❌ 리소스 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:scaffold post");
-			console.log("   예: bun run igniter make:scaffold post --fields=title:string,content:text");
-			console.log("   예: bun run igniter make:scaffold post --api --fields=title:string");
+			console.log("   예: bun run bi make:scaffold post");
+			console.log("   예: bun run bi make:scaffold post --fields=title:string,content:text");
+			console.log("   예: bun run bi make:scaffold post --api --fields=title:string");
 			return;
 		}
 
@@ -374,6 +374,6 @@ export async function down(sql: SQL): Promise<void> {
 		console.log("\n─────────────────────────────────────");
 		console.log(`\n✨ ${pascal} 스캐폴딩 완료!\n`);
 		console.log(`\n  📌 마이그레이션 실행:`);
-		console.log(`    bun run igniter migrate\n`);
+		console.log(`    bun run bi migrate\n`);
 	},
 };

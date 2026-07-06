@@ -322,7 +322,7 @@ import { createFile, parseArgs } from "../utils.ts";
 export const makeSomething: Command = {
   name: "make:something",
   description: "설명",
-  usage: "bun run igniter make:something <name>",
+  usage: "bun run bi make:something <name>",
   options: [
     { flag: "--option", description: "옵션 설명" },
   ],

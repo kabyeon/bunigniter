@@ -1,6 +1,6 @@
 // ============================================================
 // make:library - 라이브러리 생성
-// bun run igniter make:library email
+// bun run bi make:library email
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -39,13 +39,13 @@ export default ${camel}Library;
 export const makeLibrary: Command = {
 	name: "make:library",
 	description: "새 라이브러리 클래스 생성",
-	usage: "bun run igniter make:library <name>",
+	usage: "bun run bi make:library <name>",
 	async run(args: string[]): Promise<void> {
 		const name = args[0];
 
 		if (!name) {
 			console.log("❌ 라이브러리 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:library email");
+			console.log("   예: bun run bi make:library email");
 			return;
 		}
 

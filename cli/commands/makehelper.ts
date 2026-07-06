@@ -1,6 +1,6 @@
 // ============================================================
 // make:helper - 헬퍼 함수 생성
-// bun run igniter make:helper string
+// bun run bi make:helper string
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -26,13 +26,13 @@ export function exampleHelper(value: string): string {
 export const makeHelper: Command = {
 	name: "make:helper",
 	description: "새 헬퍼 파일 생성",
-	usage: "bun run igniter make:helper <name>",
+	usage: "bun run bi make:helper <name>",
 	async run(args: string[]): Promise<void> {
 		const name = args[0];
 
 		if (!name) {
 			console.log("❌ 헬퍼 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:helper string");
+			console.log("   예: bun run bi make:helper string");
 			return;
 		}
 

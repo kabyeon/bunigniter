@@ -1,6 +1,6 @@
 // ============================================================
 // list:routes - 등록된 라우트 목록 출력
-// bun run igniter list:routes
+// bun run bi list:routes
 // ============================================================
 
 import { existsSync, readFileSync } from "node:fs";
@@ -10,7 +10,7 @@ import type { Command } from "../registry.ts";
 export const listRoutes: Command = {
 	name: "list:routes",
 	description: "등록된 라우트 목록 출력",
-	usage: "bun run igniter list:routes",
+	usage: "bun run bi list:routes",
 	async run(_args: string[]): Promise<void> {
 		console.log("\n📋 라우트 목록\n");
 

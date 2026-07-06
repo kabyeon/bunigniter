@@ -1,6 +1,6 @@
 // ============================================================
 // BunIgniter CLI - AdonisJS Ace 스타일 스캐폴딩 CLI
-// 사용법: bun run igniter <command> <name> [options]
+// 사용법: bun run bi <command> <name> [options]
 // ============================================================
 
 import { dbSeed, makeSeed } from "./commands/dbseed.ts";

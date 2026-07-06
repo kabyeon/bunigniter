@@ -2,7 +2,7 @@
  * 시더: post_seeder
  * 생성일: 2026-07-05
  *
- * 실행: bun run igniter db:seed --files=post_seeder
+ * 실행: bun run bi db:seed --files=post_seeder
  */
 import type { SQL } from "bun";
 

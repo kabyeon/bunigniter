@@ -5,7 +5,7 @@ BunIgniter는 AdonisJS Ace 스타일 CLI를 제공합니다.
 ## 사용법
 
 ```bash
-bun run igniter <command> [args] [options]
+bun run bi <command> [args] [options]
 ```
 
 ## 명령어 목록
@@ -49,9 +49,9 @@ bun run igniter <command> [args] [options]
 ## serve 상세
 
 ```bash
-bun run igniter serve                # 기본 0.0.0.0:3000
-bun run igniter serve --port=8080    # 포트 변경
-bun run igniter serve --host=127.0.0.1  # 호스트 변경
+bun run bi serve                # 기본 0.0.0.0:3000
+bun run bi serve --port=8080    # 포트 변경
+bun run bi serve --host=127.0.0.1  # 호스트 변경
 ```
 
 `Bun.spawn`으로 `bun run --hot` 실행. 핫리로드 지원.
@@ -59,7 +59,7 @@ bun run igniter serve --host=127.0.0.1  # 호스트 변경
 ## migrate 상세
 
 ```bash
-bun run igniter migrate
+bun run bi migrate
 ```
 
 - `migrations` 추적 테이블에서 이미 실행된 마이그레이션 확인
@@ -69,15 +69,15 @@ bun run igniter migrate
 ## migrate:rollback 상세
 
 ```bash
-bun run igniter migrate:rollback           # 최근 1개 롤백
-bun run igniter migrate:rollback --steps=3  # 3개 롤백
-bun run igniter migrate:rollback --all      # 전체 롤백
+bun run bi migrate:rollback           # 최근 1개 롤백
+bun run bi migrate:rollback --steps=3  # 3개 롤백
+bun run bi migrate:rollback --all      # 전체 롤백
 ```
 
 ## list:routes 상세
 
 ```bash
-bun run igniter list:routes
+bun run bi list:routes
 ```
 
 `app/config/routes.ts` 파일을 파싱하여 HTTP 메서드별 컬러 출력.
@@ -86,9 +86,9 @@ bun run igniter list:routes
 ## make:scaffold 상세
 
 ```bash
-bun run igniter make:scaffold post
-bun run igniter make:scaffold post --fields=title:string,content:text
-bun run igniter make:scaffold post --api --fields=title:string
+bun run bi make:scaffold post
+bun run bi make:scaffold post --fields=title:string,content:text
+bun run bi make:scaffold post --api --fields=title:string
 ```
 
 - Model + Controller + Views + Migration 전체 생성
@@ -98,7 +98,7 @@ bun run igniter make:scaffold post --api --fields=title:string
 ## migrate:status 상세
 
 ```bash
-bun run igniter migrate:status
+bun run bi migrate:status
 ```
 
 마이그레이션 파일 목록과 적용 상태를 표시합니다:

@@ -121,7 +121,7 @@ class ReplContext {
 export const replCommand: Command = {
 	name: "repl",
 	description: "Start an interactive REPL session with framework context",
-	usage: "bun run igniter repl",
+	usage: "bun run bi repl",
 	options: [],
 	async run(_args: string[]) {
 		console.log("");

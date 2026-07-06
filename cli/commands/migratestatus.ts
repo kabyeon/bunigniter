@@ -1,6 +1,6 @@
 // ============================================================
 // migrate:status - 마이그레이션 상태 표시
-// bun run igniter migrate:status
+// bun run bi migrate:status
 // ============================================================
 
 import { existsSync, readdirSync } from "node:fs";
@@ -11,7 +11,7 @@ import type { Command } from "../registry.ts";
 export const migrateStatus: Command = {
 	name: "migrate:status",
 	description: "마이그레이션 상태 표시 (적용/미적용)",
-	usage: "bun run igniter migrate:status",
+	usage: "bun run bi migrate:status",
 	async run(_args: string[]): Promise<void> {
 		const db = new SQL({
 			adapter: "sqlite",
@@ -89,7 +89,7 @@ export const migrateStatus: Command = {
 		console.log(`  적용: ${appliedCount}개 | 미적용: ${pendingCount}개 | 전체: ${files.length}개`);
 
 		if (pendingCount > 0) {
-			console.log("\n  💡 실행: bun run igniter migrate");
+			console.log("\n  💡 실행: bun run bi migrate");
 		}
 
 		console.log("");

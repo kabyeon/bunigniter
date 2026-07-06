@@ -91,12 +91,12 @@ bunigniter/
 ## ⌨️ CLI 요약
 
 ```bash
-bun run igniter make:scaffold post --fields=title:string,content:text  # 전체 생성
-bun run igniter make:scaffold post --api --fields=title:string         # API 전용
-bun run igniter migrate                                               # 마이그레이션
-bun run igniter migrate:rollback --steps=3                            # 롤백
-bun run igniter db:seed                                               # 시드 실행
-bun run igniter list:routes                                           # 라우트 목록
+bun run bi make:scaffold post --fields=title:string,content:text  # 전체 생성
+bun run bi make:scaffold post --api --fields=title:string         # API 전용
+bun run bi migrate                                               # 마이그레이션
+bun run bi migrate:rollback --steps=3                            # 롤백
+bun run bi db:seed                                               # 시드 실행
+bun run bi list:routes                                           # 라우트 목록
 ```
 
 ## 🧪 테스트

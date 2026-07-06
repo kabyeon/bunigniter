@@ -287,11 +287,11 @@ export async function down(sql: SQL): Promise<void> {
 ### 명령어
 
 ```bash
-bun run igniter make:migration create_users_table --fields=name:string,email:string
-bun run igniter migrate                    # 실행
-bun run igniter migrate:rollback           # 1개 롤백
-bun run igniter migrate:rollback --steps=3 # N개 롤백
-bun run igniter migrate:rollback --all     # 전체 롤백
+bun run bi make:migration create_users_table --fields=name:string,email:string
+bun run bi migrate                    # 실행
+bun run bi migrate:rollback           # 1개 롤백
+bun run bi migrate:rollback --steps=3 # N개 롤백
+bun run bi migrate:rollback --all     # 전체 롤백
 ```
 
 ## 시드
@@ -305,7 +305,7 @@ export async function run(sql: SQL): Promise<void> {
 ```
 
 ```bash
-bun run igniter make:seed user_seeder
-bun run igniter db:seed
-bun run igniter db:seed --files=user_seeder,post_seeder
+bun run bi make:seed user_seeder
+bun run bi db:seed
+bun run bi db:seed --files=user_seeder,post_seeder
 ```

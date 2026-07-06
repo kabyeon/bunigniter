@@ -1,8 +1,8 @@
 // ============================================================
 // make:rollback - 마이그레이션 롤백
-// bun run igniter migrate:rollback
-// bun run igniter migrate:rollback --steps=3
-// bun run igniter migrate:rollback --all
+// bun run bi migrate:rollback
+// bun run bi migrate:rollback --steps=3
+// bun run bi migrate:rollback --all
 // ============================================================
 
 import { readdirSync } from "node:fs";
@@ -14,7 +14,7 @@ import { parseArgs } from "../utils.ts";
 export const migrateRollback: Command = {
 	name: "migrate:rollback",
 	description: "마이그레이션 롤백 (최근 실행한 마이그레이션 되돌리기)",
-	usage: "bun run igniter migrate:rollback [--steps=N] [--all]",
+	usage: "bun run bi migrate:rollback [--steps=N] [--all]",
 	options: [
 		{
 			flag: "--steps",

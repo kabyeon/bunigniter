@@ -1,8 +1,8 @@
 // ============================================================
 // make:controller - 컨트롤러 생성
-// bun run igniter make:controller users
-// bun run igniter make:controller users --resource
-// bun run igniter make:controller users index show store update delete
+// bun run bi make:controller users
+// bun run bi make:controller users --resource
+// bun run bi make:controller users index show store update delete
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -91,7 +91,7 @@ export default new ${pascal}Controller();
 export const makeController: Command = {
 	name: "make:controller",
 	description: "새 컨트롤러 생성",
-	usage: "bun run igniter make:controller <name> [methods...] [--resource]",
+	usage: "bun run bi make:controller <name> [methods...] [--resource]",
 	options: [
 		{
 			flag: "--resource",
@@ -104,7 +104,7 @@ export const makeController: Command = {
 
 		if (!name) {
 			console.log("❌ 컨트롤러 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:controller users");
+			console.log("   예: bun run bi make:controller users");
 			return;
 		}
 

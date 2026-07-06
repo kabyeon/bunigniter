@@ -1,7 +1,7 @@
 // ============================================================
 // make:view - 뷰 템플릿 생성
-// bun run igniter make:view posts/create
-// bun run igniter make:view posts/index --resource
+// bun run bi make:view posts/create
+// bun run bi make:view posts/index --resource
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -114,7 +114,7 @@ function generateView(name: string, action: string): string {
 export const makeView: Command = {
 	name: "make:view",
 	description: "새 뷰 템플릿 생성",
-	usage: "bun run igniter make:view <dir/action> [--resource]",
+	usage: "bun run bi make:view <dir/action> [--resource]",
 	options: [
 		{
 			flag: "--resource",
@@ -127,8 +127,8 @@ export const makeView: Command = {
 
 		if (!name) {
 			console.log("❌ 뷰 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:view posts/create");
-			console.log("   예: bun run igniter make:view posts --resource");
+			console.log("   예: bun run bi make:view posts/create");
+			console.log("   예: bun run bi make:view posts --resource");
 			return;
 		}
 

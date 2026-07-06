@@ -5,7 +5,7 @@ AdonisJS Ace REPL 스타일 인터랙티브 셸. 프레임워크 컨텍스트가
 ## 시작
 
 ```bash
-bun run igniter repl
+bun run bi repl
 ```
 
 ## 기본 명령어
@@ -39,7 +39,7 @@ REPL 시작 시 다음 모듈이 자동 주입됩니다:
 ## 사용 예시
 
 ```bash
-bun run igniter repl
+bun run bi repl
 
 > Validator.validate({ email: "bad" }, { email: "required|email" })
 { success: false, errors: [...] }

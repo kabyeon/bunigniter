@@ -1,6 +1,6 @@
 // ============================================================
 // serve - 개발 서버 실행
-// bun run igniter serve [--port=3000] [--host=0.0.0.0]
+// bun run bi serve [--port=3000] [--host=0.0.0.0]
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -9,7 +9,7 @@ import { parseArgs } from "../utils.ts";
 export const serve: Command = {
 	name: "serve",
 	description: "개발 서버 실행 (핫리로드)",
-	usage: "bun run igniter serve [--port=3000] [--host=0.0.0.0]",
+	usage: "bun run bi serve [--port=3000] [--host=0.0.0.0]",
 	options: [
 		{
 			flag: "--port",

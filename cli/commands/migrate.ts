@@ -1,6 +1,6 @@
 // ============================================================
 // migrate - 데이터베이스 마이그레이션 실행
-// bun run igniter migrate
+// bun run bi migrate
 // ============================================================
 
 import { existsSync, readdirSync } from "node:fs";
@@ -11,7 +11,7 @@ import type { Command } from "../registry.ts";
 export const migrate: Command = {
 	name: "migrate",
 	description: "데이터베이스 마이그레이션 실행",
-	usage: "bun run igniter migrate",
+	usage: "bun run bi migrate",
 	async run(_args: string[]): Promise<void> {
 		console.log("\n📦 마이그레이션 실행 중...\n");
 

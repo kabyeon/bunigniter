@@ -1,7 +1,7 @@
 // ============================================================
 // make:migration - 마이그레이션 파일 생성
-// bun run igniter make:migration create_users_table
-// bun run igniter make:migration add_email_to_users --fields=email:string
+// bun run bi make:migration create_users_table
+// bun run bi make:migration add_email_to_users --fields=email:string
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -93,7 +93,7 @@ export async function down(sql: SQL): Promise<void> {
 export const makeMigration: Command = {
 	name: "make:migration",
 	description: "새 마이그레이션 파일 생성",
-	usage: "bun run igniter make:migration <name> [--fields=name:type,...]",
+	usage: "bun run bi make:migration <name> [--fields=name:type,...]",
 	options: [
 		{
 			flag: "--fields",
@@ -106,7 +106,7 @@ export const makeMigration: Command = {
 
 		if (!name) {
 			console.log("❌ 마이그레이션 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:migration create_users_table");
+			console.log("   예: bun run bi make:migration create_users_table");
 			return;
 		}
 

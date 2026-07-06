@@ -1,7 +1,7 @@
 // ============================================================
 // make:model - 모델 생성
-// bun run igniter make:model user
-// bun run igniter make:model user --fields=name:string,email:string,age:number
+// bun run bi make:model user
+// bun run bi make:model user --fields=name:string,email:string,age:number
 // ============================================================
 
 import type { Command } from "../registry.ts";
@@ -88,7 +88,7 @@ export default new ${pascal}Model();
 export const makeModel: Command = {
 	name: "make:model",
 	description: "새 모델 생성",
-	usage: "bun run igniter make:model <name> [--fields=name:type,...]",
+	usage: "bun run bi make:model <name> [--fields=name:type,...]",
 	options: [
 		{
 			flag: "--fields",
@@ -101,7 +101,7 @@ export const makeModel: Command = {
 
 		if (!name) {
 			console.log("❌ 모델 이름을 입력하세요.");
-			console.log("   예: bun run igniter make:model user");
+			console.log("   예: bun run bi make:model user");
 			return;
 		}
 
