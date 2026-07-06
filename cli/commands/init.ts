@@ -205,7 +205,7 @@ export default new WelcomeController();
 <head>
 \t<meta charset="utf-8">
 \t<meta name="viewport" content="width=device-width, initial-scale=1">
-\t<title><!-- slot:title -->BunIgniter<!-- endslot --></title>
+\t<title>{{{ slot:title || "BunIgniter" }}}</title>
 \t<link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
