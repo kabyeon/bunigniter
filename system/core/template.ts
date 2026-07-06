@@ -9,7 +9,7 @@ import { join } from "node:path";
 import { getAppRoot } from "./config.ts";
 
 /** HTML 특수문자 이스케이프 (XSS 방지) */
-export function htmlspecialchars(s: string): string {
+export function escapeHtml(s: string): string {
 	return String(s).replace(/[&<>"']/g, (c) => {
 		const map: Record<string, string> = {
 			"&": "&amp;",
@@ -35,7 +35,7 @@ interface Token {
  * 템플릿 문자열을 토큰 배열로 파싱
  *
  * 지원 문법:
- *   {{ expr }}    → 이스케이프 출력 (htmlspecialchars 자동 적용)
+ *   {{ expr }}    → 이스케이프 출력 (escapeHtml 자동 적용)
  *   {{{ expr }}}  → raw 출력 (이스케이프 없음)
  *   <?= expr ?>   → raw 출력 (이스케이프 없음)
  *   <? code ?>    → 제어문 (for, if, etc.)
@@ -123,8 +123,8 @@ function compileTokensToString(tokens: Token[]): string {
  * 컴파일된 함수 내부에서 사용 가능한 내장 함수/변수:
  *   echo(chunk)           — 출력 버퍼에 추가
  *   include(path, data?)  — 다른 템플릿 포함
- *   htmlspecialchars(s)   — HTML 특수문자 이스케이프
- *   __escape__(s)         — htmlspecialchars 별칭 ({{ }}에서 자동 사용)
+ *   escapeHtml(s)         — HTML 특수문자 이스케이프
+ *   __escape__(s)         — escapeHtml 별칭 ({{ }}에서 자동 사용)
  */
 export function compileTemplate(
 	template: string,
@@ -141,14 +141,14 @@ export function compileTemplate(
 	const fullBody = [
 		"const __chunks__ = [];",
 		"const echo = (chunk) => { __chunks__.push(chunk); };",
-		"const __escape__ = __htmlspecialchars__;",
-		"const htmlspecialchars = __htmlspecialchars__;",
+		"const __escape__ = __escapeFn__;",
+		"const escapeHtml = __escapeFn__;",
 		"const include = async (path, extraData) => {",
 		"  const result = await __include__(path, extraData);",
 		"  __chunks__.push(result);",
 		"};",
 		"const __ctx__ = Object.assign(Object.create(null), __context__, {",
-		"  echo, include, htmlspecialchars, __escape__,",
+		"  echo, include, escapeHtml, __escape__,",
 		"});",
 		"const __proxy__ = new Proxy(__ctx__, {",
 		"  has() { return true; },",
@@ -172,7 +172,7 @@ export function compileTemplate(
 
 	const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 	try {
-		return new AsyncFunction("__context__", "__include__", "__htmlspecialchars__", fullBody) as (
+		return new AsyncFunction("__context__", "__include__", "__escapeFn__", fullBody) as (
 			context: Record<string, any>,
 			includeFn?: (path: string, data?: Record<string, any>) => Promise<string>,
 			escapeFn?: (s: string) => string,
@@ -235,7 +235,7 @@ async function renderTemplateString(template: string, data: Record<string, any>)
 	const includeFn = (path: string, extraData?: Record<string, any>) =>
 		renderInclude(path, extraData, data);
 
-	return render(data, includeFn, htmlspecialchars);
+	return render(data, includeFn, escapeHtml);
 }
 
 // ─── 슬롯 시스템 ───────────────────────────────────
@@ -299,7 +299,7 @@ function applySlots(layoutTemplate: string, slots: Record<string, string>): stri
  *   {{ expr }}                  → 이스케이프 출력
  *   {{{ expr }}}                → raw 출력
  *   <?= expr ?>                 → raw 출력
- *   <?= htmlspecialchars(x) ?>  → 명시적 이스케이프
+ *   <?= escapeHtml(x) ?>        → 명시적 이스케이프
  *   <? code ?>                  → 제어문 (for, if, etc.)
  *
  * 레이아웃/슬롯:

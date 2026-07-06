@@ -25,7 +25,7 @@ export function truncate(str: string, length: number = 100, suffix: string = "..
 
 /**
  * HTML 엔티티 이스케이프 (XSS 방지)
- * CI3: htmlspecialchars() 와 동일
+ * CI3/PHP: htmlspecialchars() 와 동일
  */
 export function escapeHtml(str: string): string {
 	return str

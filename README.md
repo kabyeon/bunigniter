@@ -131,7 +131,7 @@ bun run format      # 포맷만
 | `$this->load->view('partials/header')` | `<? include('partials/header') ?>` |
 | `$layout['title'] = '...'` | `<!-- slot:title -->...<!-- endslot -->` |
 | `<?php echo $title; ?>` | `{{ title }}` |
-| `<?php echo htmlspecialchars($x); ?>` | `{{ x }}` (자동) 또는 `<?= htmlspecialchars(x) ?>` |
+| `<?php echo htmlspecialchars($x); ?>` | `{{ x }}` (자동) 또는 `<?= escapeHtml(x) ?>` |
 | CI Zip | `Archive` (Bun.Archive) |
 | PHP exec() | `Shell` (Bun.spawn) |
 

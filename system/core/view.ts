@@ -6,7 +6,7 @@
 export {
 	clearTemplateCache,
 	compileTemplate,
-	htmlspecialchars,
+	escapeHtml,
 	parseTemplate,
 	renderView,
 } from "./template.ts";

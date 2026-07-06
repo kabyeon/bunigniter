@@ -172,7 +172,7 @@ CLI             █████████████████░░░░ 
 | CI3 기능 | 상태 | 비고 |
 |----------|------|------|
 | CSRF (Double Submit Cookie) | ✅ | `Bun.CSRF.generate/verify` |
-| XSS 방어 (htmlspecialchars) | ✅ | 템플릿 `{{ }}` 자동 이스케이프 |
+| XSS 방어 (escapeHtml) | ✅ | 템플릿 `{{ }}` 자동 이스케이프 |
 | CORS | ✅ | 오리진/메서드/크리덴셜 제어 |
 | Rate Limiting | ✅ | 슬라이딩 윈도우 + trustProxy |
 | 업로드 검증 | ✅ | 위험확장자/MIME/크기/경로순회 |
