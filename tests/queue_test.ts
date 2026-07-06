@@ -2,12 +2,12 @@
 // BunIgniter - Queue 테스트
 // ============================================================
 
-import { describe, test, expect, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import {
-	Queue,
-	MemoryQueueDriver,
-	type JobPayload,
 	type JobHandler,
+	type JobPayload,
+	MemoryQueueDriver,
+	Queue,
 } from "../system/core/queue.ts";
 
 describe("MemoryQueueDriver", () => {

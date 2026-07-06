@@ -72,9 +72,7 @@ export class RouteModelBinding {
 	 * @param params 라우트 파라미터 객체
 	 * @returns 변환된 파라미터 객체 (기존 파라미터 + 바인딩된 모델)
 	 */
-	static async resolve(
-		params: Record<string, string>,
-	): Promise<{
+	static async resolve(params: Record<string, string>): Promise<{
 		params: Record<string, any>;
 		notFound: string | null;
 	}> {

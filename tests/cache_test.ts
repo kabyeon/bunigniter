@@ -2,8 +2,8 @@
 // BunIgniter - Cache Tests
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
-import { MemoryCacheDriver, Cache } from "../system/core/cache.ts";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { Cache, MemoryCacheDriver } from "../system/core/cache.ts";
 
 // ─── MemoryCacheDriver ─────────────────────────────────
 
@@ -73,7 +73,7 @@ describe("MemoryCacheDriver", () => {
 		driver.set("user", { id: 1, name: "Alice" });
 		const user = driver.get<{ id: number; name: string }>("user");
 		expect(user).not.toBeNull();
-		expect(user!.name).toBe("Alice");
+		expect(user?.name).toBe("Alice");
 	});
 });
 

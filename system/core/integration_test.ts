@@ -25,9 +25,7 @@ export interface IntegrationTestServer {
  *
  *   close();
  */
-export async function startTestServer(
-	port: number = 3999,
-): Promise<IntegrationTestServer> {
+export async function startTestServer(port: number = 3999): Promise<IntegrationTestServer> {
 	const server = Bun.serve({
 		port,
 		fetch(_req) {
@@ -96,11 +94,7 @@ export class IntegrationTestClient {
 	}
 
 	/** POST 요청 */
-	async post(
-		path: string,
-		body?: any,
-		headers?: Record<string, string>,
-	): Promise<Response> {
+	async post(path: string, body?: any, headers?: Record<string, string>): Promise<Response> {
 		return fetch(`${this.baseUrl}${path}`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json", ...headers },
@@ -109,11 +103,7 @@ export class IntegrationTestClient {
 	}
 
 	/** PUT 요청 */
-	async put(
-		path: string,
-		body?: any,
-		headers?: Record<string, string>,
-	): Promise<Response> {
+	async put(path: string, body?: any, headers?: Record<string, string>): Promise<Response> {
 		return fetch(`${this.baseUrl}${path}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json", ...headers },
@@ -122,11 +112,7 @@ export class IntegrationTestClient {
 	}
 
 	/** PATCH 요청 */
-	async patch(
-		path: string,
-		body?: any,
-		headers?: Record<string, string>,
-	): Promise<Response> {
+	async patch(path: string, body?: any, headers?: Record<string, string>): Promise<Response> {
 		return fetch(`${this.baseUrl}${path}`, {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json", ...headers },
@@ -135,10 +121,7 @@ export class IntegrationTestClient {
 	}
 
 	/** DELETE 요청 */
-	async delete(
-		path: string,
-		headers?: Record<string, string>,
-	): Promise<Response> {
+	async delete(path: string, headers?: Record<string, string>): Promise<Response> {
 		return fetch(`${this.baseUrl}${path}`, {
 			method: "DELETE",
 			headers: { "Content-Type": "application/json", ...headers },
@@ -146,10 +129,7 @@ export class IntegrationTestClient {
 	}
 
 	/** 폼 데이터 POST */
-	async postForm(
-		path: string,
-		fields: Record<string, string>,
-	): Promise<Response> {
+	async postForm(path: string, fields: Record<string, string>): Promise<Response> {
 		const formData = new FormData();
 		for (const [key, value] of Object.entries(fields)) {
 			formData.append(key, value);
@@ -188,9 +168,7 @@ export class IntegrationTestClient {
  *
  *   close();
  */
-export async function createIntegrationTestClient(
-	port: number = 3999,
-): Promise<{
+export async function createIntegrationTestClient(port: number = 3999): Promise<{
 	client: IntegrationTestClient;
 	close: () => void;
 }> {

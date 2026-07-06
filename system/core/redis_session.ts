@@ -5,8 +5,8 @@
 // 분산 환경에서 세션 공유 가능
 // ============================================================
 
-import type { SessionDriver } from "./session_driver.ts";
 import { RedisClient } from "bun";
+import type { SessionDriver } from "./session_driver.ts";
 
 const SESSION_COOKIE_NAME = "bunigniter_session";
 const SESSION_KEY_PREFIX = "bunigniter:sess:";

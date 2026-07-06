@@ -3,7 +3,7 @@
 // 실행: bun test tests/upload_test.ts
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { Upload } from "../system/core/upload.ts";
 
 describe("Upload.formatFileSize", () => {

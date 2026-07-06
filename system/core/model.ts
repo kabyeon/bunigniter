@@ -5,7 +5,7 @@
 // ============================================================
 
 import { getDB } from "./database.ts";
-import { type QueryBuilder, createQueryBuilder } from "./query_builder.ts";
+import { createQueryBuilder, type QueryBuilder } from "./query_builder.ts";
 
 /**
  * 기본 모델 클래스
@@ -113,10 +113,7 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * CI3: $this->db->insert($data)
 	 */
 	async create(data: Partial<T>): Promise<T> {
-		return this.qb().insertReturning<T>(
-			this.tableName,
-			data as Record<string, any>,
-		);
+		return this.qb().insertReturning<T>(this.tableName, data as Record<string, any>);
 	}
 
 	/**
@@ -133,10 +130,7 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * 조건부 수정
 	 * CI3: $this->db->where($conditions)->update($data)
 	 */
-	async updateWhere(
-		conditions: Partial<T>,
-		data: Partial<T>,
-	): Promise<{ affectedRows: number }> {
+	async updateWhere(conditions: Partial<T>, data: Partial<T>): Promise<{ affectedRows: number }> {
 		return this.qb()
 			.whereObject(conditions as Record<string, any>)
 			.update(this.tableName, data as Record<string, any>);
@@ -147,9 +141,7 @@ export class Model<T extends Record<string, any> = Record<string, any>> {
 	 * CI3: $this->db->where('id', $id)->delete()
 	 */
 	async delete(id: number): Promise<boolean> {
-		const { affectedRows } = await this.qb()
-			.where(this.primaryKey, id)
-			.delete(this.tableName);
+		const { affectedRows } = await this.qb().where(this.primaryKey, id).delete(this.tableName);
 		return affectedRows > 0;
 	}
 

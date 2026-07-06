@@ -4,8 +4,8 @@
 // SQLite / PostgreSQL / MySQL 3종 어댑터 방언 자동 분기
 // ============================================================
 
-import { getDB, getDBAdapter } from "./database.ts";
 import type { SQL } from "bun";
+import { getDB, getDBAdapter } from "./database.ts";
 
 /** 지원 어댑터 타입 */
 type AdapterType = "sqlite" | "postgres" | "mysql";
@@ -339,11 +339,7 @@ export class QueryBuilder {
 	 * CI3: $this->db->like('title', '검색어', 'before')  — %검색어
 	 * CI3: $this->db->like('title', '검색어', 'after')   — 검색어%
 	 */
-	like(
-		column: string,
-		value: string,
-		side: "both" | "before" | "after" = "both",
-	): this {
+	like(column: string, value: string, side: "both" | "before" | "after" = "both"): this {
 		this.validateColumnName(column);
 		this._wheres.push({ type: "and_like", column, value, side });
 		return this;
@@ -353,11 +349,7 @@ export class QueryBuilder {
 	 * OR LIKE 검색
 	 * CI3: $this->db->or_like('content', '검색어')
 	 */
-	orLike(
-		column: string,
-		value: string,
-		side: "both" | "before" | "after" = "both",
-	): this {
+	orLike(column: string, value: string, side: "both" | "before" | "after" = "both"): this {
 		this.validateColumnName(column);
 		this._wheres.push({ type: "or_like", column, value, side });
 		return this;
@@ -498,10 +490,8 @@ export class QueryBuilder {
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
 
-		const insertId =
-			(result as any).lastInsertRowid ?? (result as any).insertId ?? 0;
-		const affectedRows =
-			(result as any).affectedRows ?? (result as any).count ?? 0;
+		const insertId = (result as any).lastInsertRowid ?? (result as any).insertId ?? 0;
+		const affectedRows = (result as any).affectedRows ?? (result as any).count ?? 0;
 
 		// MySQL은 RETURNING 미지원 → 별도 SELECT로 생성된 행 조회
 		let row: T | undefined;
@@ -524,10 +514,7 @@ export class QueryBuilder {
 	 *
 	 * CI3: $this->db->insert($data) + $this->db->insert_id()
 	 */
-	async insertReturning<T = any>(
-		table?: string,
-		data?: Record<string, any>,
-	): Promise<T> {
+	async insertReturning<T = any>(table?: string, data?: Record<string, any>): Promise<T> {
 		const tableName = table ?? this._from;
 		if (!tableName) throw new Error("Table name is required for insert");
 		const insertData = data ?? this._insertData;
@@ -544,10 +531,7 @@ export class QueryBuilder {
 		}
 
 		// PostgreSQL / SQLite: RETURNING * 지원
-		const { query, bindings } = this.buildInsertReturning(
-			tableName,
-			insertData,
-		);
+		const { query, bindings } = this.buildInsertReturning(tableName, insertData);
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
@@ -576,8 +560,7 @@ export class QueryBuilder {
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
-		const affectedRows =
-			(result as any).affectedRows ?? (result as any).count ?? 0;
+		const affectedRows = (result as any).affectedRows ?? (result as any).count ?? 0;
 
 		return { affectedRows };
 	}
@@ -587,10 +570,7 @@ export class QueryBuilder {
 	 * - PostgreSQL/SQLite: RETURNING * 사용
 	 * - MySQL: UPDATE 후 WHERE 조건으로 SELECT 재조회
 	 */
-	async updateReturning<T = any>(
-		table?: string,
-		data?: Record<string, any>,
-	): Promise<T> {
+	async updateReturning<T = any>(table?: string, data?: Record<string, any>): Promise<T> {
 		const tableName = table ?? this._from;
 		if (!tableName) throw new Error("Table name is required for update");
 		const updateData = data ?? this._updateData;
@@ -622,10 +602,7 @@ export class QueryBuilder {
 		}
 
 		// PostgreSQL / SQLite: RETURNING * 지원
-		const { query, bindings } = this.buildUpdateReturning(
-			tableName,
-			updateData,
-		);
+		const { query, bindings } = this.buildUpdateReturning(tableName, updateData);
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
@@ -647,8 +624,7 @@ export class QueryBuilder {
 		this.reset();
 		const sql = await this.getSQL();
 		const result = await sql.unsafe(query, bindings);
-		const affectedRows =
-			(result as any).affectedRows ?? (result as any).count ?? 0;
+		const affectedRows = (result as any).affectedRows ?? (result as any).count ?? 0;
 
 		return { affectedRows };
 	}
@@ -765,15 +741,10 @@ export class QueryBuilder {
 
 		// SELECT
 		const selectCols = this._select.length > 0 ? this._select.join(", ") : "*";
-		parts.push(
-			this._distinctVal
-				? `SELECT DISTINCT ${selectCols}`
-				: `SELECT ${selectCols}`,
-		);
+		parts.push(this._distinctVal ? `SELECT DISTINCT ${selectCols}` : `SELECT ${selectCols}`);
 
 		// FROM
-		if (!this._from)
-			throw new Error("FROM table is required. Call .from() first.");
+		if (!this._from) throw new Error("FROM table is required. Call .from() first.");
 		parts.push(`FROM ${this._from}`);
 
 		// JOIN
@@ -824,11 +795,7 @@ export class QueryBuilder {
 	private buildLimitOffset(parts: string[], bindings: any[]): void {
 		const adapter = this.detectAdapter();
 
-		if (
-			adapter === "mysql" &&
-			this._offsetVal !== null &&
-			this._limitVal !== null
-		) {
+		if (adapter === "mysql" && this._offsetVal !== null && this._limitVal !== null) {
 			// MySQL 레거시: LIMIT offset, count
 			// MySQL 8.0+도 표준 LIMIT/OFFSET 지원하지만,
 			// 레거시 호환을 위해 LIMIT offset, count 사용
@@ -896,8 +863,7 @@ export class QueryBuilder {
 		const whereSql = this.buildWhereClauses(this._wheres, whereBindings);
 		bindings.push(...whereBindings);
 
-		if (!whereSql)
-			throw new Error("WHERE clause is required for update (safety)");
+		if (!whereSql) throw new Error("WHERE clause is required for update (safety)");
 
 		const query = `UPDATE ${this.escapeIdentifier(table)} SET ${setParts.join(", ")} WHERE ${whereSql}`;
 		return { query, bindings };
@@ -918,8 +884,7 @@ export class QueryBuilder {
 		const whereSql = this.buildWhereClauses(this._wheres, whereBindings);
 		bindings.push(...whereBindings);
 
-		if (!whereSql)
-			throw new Error("WHERE clause is required for delete (safety)");
+		if (!whereSql) throw new Error("WHERE clause is required for delete (safety)");
 
 		const query = `DELETE FROM ${this.escapeIdentifier(table)} WHERE ${whereSql}`;
 		return { query, bindings };
@@ -929,19 +894,12 @@ export class QueryBuilder {
 		const parts: string[] = [];
 
 		for (const clause of clauses) {
-			const prefix =
-				parts.length > 0
-					? clause.type.startsWith("or")
-						? " OR "
-						: " AND "
-					: "";
+			const prefix = parts.length > 0 ? (clause.type.startsWith("or") ? " OR " : " AND ") : "";
 
 			switch (clause.type) {
 				case "and":
 				case "or":
-					parts.push(
-						`${prefix}${this.escapeIdentifier(clause.column)} ${clause.operator} ?`,
-					);
+					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} ${clause.operator} ?`);
 					bindings.push(clause.value);
 					break;
 
@@ -967,22 +925,16 @@ export class QueryBuilder {
 					break;
 
 				case "and_between":
-					parts.push(
-						`${prefix}${this.escapeIdentifier(clause.column)} BETWEEN ? AND ?`,
-					);
+					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} BETWEEN ? AND ?`);
 					bindings.push(clause.low, clause.high);
 					break;
 
 				case "and_null":
-					parts.push(
-						`${prefix}${this.escapeIdentifier(clause.column)} IS NULL`,
-					);
+					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} IS NULL`);
 					break;
 
 				case "and_not_null":
-					parts.push(
-						`${prefix}${this.escapeIdentifier(clause.column)} IS NOT NULL`,
-					);
+					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} IS NOT NULL`);
 					break;
 
 				case "and_like":

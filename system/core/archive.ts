@@ -201,7 +201,7 @@ export async function archiveDirectory(
 	for await (const path of glob.scan({ cwd: dir })) {
 		const fullPath = `${dir}/${path}`;
 		const stat = await Bun.file(fullPath).stat();
-		if (stat && stat.isFile()) {
+		if (stat?.isFile()) {
 			const normalizedPath = path.replaceAll("\\", "/");
 			files[normalizedPath] = await Bun.file(fullPath).text();
 		}

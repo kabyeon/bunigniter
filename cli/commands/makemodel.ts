@@ -5,13 +5,7 @@
 // ============================================================
 
 import type { Command } from "../registry.ts";
-import {
-	toPascalCase,
-	toSnakeCase,
-	toPlural,
-	createFile,
-	parseArgs,
-} from "../utils.ts";
+import { createFile, parseArgs, toPascalCase, toPlural, toSnakeCase } from "../utils.ts";
 
 function parseFields(fieldsStr?: string): { name: string; type: string }[] {
 	if (!fieldsStr) return [];
@@ -40,10 +34,7 @@ function tsType(sqlType: string): string {
 	return map[sqlType.toLowerCase()] ?? "string";
 }
 
-function generateModel(
-	name: string,
-	fields: { name: string; type: string }[],
-): string {
+function generateModel(name: string, fields: { name: string; type: string }[]): string {
 	const pascal = toPascalCase(name);
 	const snake = toSnakeCase(name);
 	const table = toPlural(snake);
@@ -53,9 +44,9 @@ function generateModel(
 			? fields.map((f) => `  ${f.name}?: ${tsType(f.type)};`).join("\n")
 			: `  id?: number;\n  // 필드를 추가하세요`;
 
-	const fieldNames = fields.length > 0 ? fields.map((f) => f.name) : [];
+	const _fieldNames = fields.length > 0 ? fields.map((f) => f.name) : [];
 
-	const createFields =
+	const _createFields =
 		fields.length > 0
 			? fields.map((f) => `    ${f.name}: data.${f.name},`).join("\n")
 			: `    // 필드를 매핑하세요`;
@@ -101,8 +92,7 @@ export const makeModel: Command = {
 	options: [
 		{
 			flag: "--fields",
-			description:
-				"필드 정의 (예: --fields=name:string,email:string,age:number)",
+			description: "필드 정의 (예: --fields=name:string,email:string,age:number)",
 		},
 	],
 	async run(args: string[]): Promise<void> {
@@ -115,7 +105,7 @@ export const makeModel: Command = {
 			return;
 		}
 
-		const fields = parseFields(flags["fields"] as string | undefined);
+		const fields = parseFields(flags.fields as string | undefined);
 		const snake = toSnakeCase(name);
 		const fileName = `${snake}_model.ts`;
 

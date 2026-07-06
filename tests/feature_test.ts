@@ -2,19 +2,19 @@
 // BunIgniter - Cookie, Archive, Shell, AuditLog 테스트
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { Archive } from "../system/core/archive.ts";
+import { AuditLog } from "../system/core/audit_log.ts";
 import {
+	deleteCookie,
 	getCookie,
 	getCookies,
 	hasCookie,
-	setCookie,
-	deleteCookie,
-	parseCookie,
 	isCookieExpired,
+	parseCookie,
+	setCookie,
 } from "../system/core/cookie.ts";
-import { Archive } from "../system/core/archive.ts";
 import { Shell } from "../system/core/shell.ts";
-import { AuditLog } from "../system/core/audit_log.ts";
 
 // ─── Cookie 테스트 ──────────────────────────────────────
 
@@ -126,10 +126,7 @@ describe("Archive", () => {
 	});
 
 	test("아카이브 생성 (gzip)", async () => {
-		const archive = Archive.create(
-			{ "test.txt": "Compressed content" },
-			{ compress: "gzip" },
-		);
+		const archive = Archive.create({ "test.txt": "Compressed content" }, { compress: "gzip" });
 		const bytes = await archive.bytes();
 		expect(bytes.length).toBeGreaterThan(0);
 	});

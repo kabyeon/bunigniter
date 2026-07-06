@@ -2,16 +2,13 @@
 // BunIgniter - CORS & Rate Limit Tests
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
+import { corsMiddleware, createCorsMiddleware } from "../system/core/cors.ts";
 import {
-	corsMiddleware,
-	createCorsMiddleware,
-} from "../system/core/cors.ts";
-import {
-	rateLimitMiddleware,
-	createRateLimitMiddleware,
-	resetRateLimitStore,
 	cleanupRateLimitStore,
+	createRateLimitMiddleware,
+	rateLimitMiddleware,
+	resetRateLimitStore,
 } from "../system/core/rate_limit.ts";
 
 // ─── CORS ──────────────────────────────────────────────
@@ -57,7 +54,9 @@ describe("CORS 미들웨어", () => {
 			response: {} as any,
 			next: mockNext,
 		});
-		expect((result as Response).headers.get("Access-Control-Allow-Origin")).toBe("http://allowed.com");
+		expect((result as Response).headers.get("Access-Control-Allow-Origin")).toBe(
+			"http://allowed.com",
+		);
 		expect((result as Response).headers.get("Access-Control-Allow-Credentials")).toBe("true");
 	});
 });

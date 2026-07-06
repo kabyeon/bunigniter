@@ -4,8 +4,8 @@
 // ============================================================
 
 import { SQL } from "bun";
-import { loadConfig } from "./config.ts";
 import type { DatabaseConfig } from "../../app/config/database.ts";
+import { loadConfig } from "./config.ts";
 
 /** 데이터베이스 연결 인스턴스 캐시 */
 const connections: Record<string, SQL> = {};

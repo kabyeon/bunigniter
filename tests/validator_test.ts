@@ -3,7 +3,7 @@
 // 실행: bun test tests/validator_test.ts
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { Validator, validate } from "../system/core/validator.ts";
 
 describe("Validator.check", () => {
@@ -19,10 +19,7 @@ describe("Validator.check", () => {
 	});
 
 	test("이메일 검증", () => {
-		const result = Validator.check(
-			{ email: "invalid-email" },
-			{ email: ["required", "email"] },
-		);
+		const result = Validator.check({ email: "invalid-email" }, { email: ["required", "email"] });
 		expect(result.valid).toBe(false);
 		expect(result.errors[0].rule).toBe("email");
 	});
@@ -36,26 +33,17 @@ describe("Validator.check", () => {
 	});
 
 	test("최소 길이 검증", () => {
-		const result = Validator.check(
-			{ password: "123" },
-			{ password: ["required", "min:8"] },
-		);
+		const result = Validator.check({ password: "123" }, { password: ["required", "min:8"] });
 		expect(result.valid).toBe(false);
 	});
 
 	test("최소 길이 검증 - 통과", () => {
-		const result = Validator.check(
-			{ password: "12345678" },
-			{ password: ["required", "min:8"] },
-		);
+		const result = Validator.check({ password: "12345678" }, { password: ["required", "min:8"] });
 		expect(result.valid).toBe(true);
 	});
 
 	test("숫자 검증", () => {
-		const result = Validator.check(
-			{ age: "not-a-number" },
-			{ age: ["numeric"] },
-		);
+		const result = Validator.check({ age: "not-a-number" }, { age: ["numeric"] });
 		expect(result.valid).toBe(false);
 	});
 

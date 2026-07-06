@@ -3,9 +3,9 @@
 // bun run igniter list:routes
 // ============================================================
 
-import type { Command } from "../registry.ts";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import type { Command } from "../registry.ts";
 
 export const listRoutes: Command = {
 	name: "list:routes",
@@ -36,8 +36,7 @@ export const listRoutes: Command = {
 			}
 
 			// 리소스 라우트
-			const resourcePattern =
-				/\b(?:router|apiRouter)\.resource\s*\(\s*["']([^"']+)["']/g;
+			const resourcePattern = /\b(?:router|apiRouter)\.resource\s*\(\s*["']([^"']+)["']/g;
 			while ((match = resourcePattern.exec(content)) !== null) {
 				const base = match[1];
 				routes.push({ method: "GET", path: base });

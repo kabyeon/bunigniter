@@ -1,5 +1,5 @@
-import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 import { Model } from "system/core/model.ts";
 
 interface CommentRow {
@@ -26,11 +26,7 @@ export class ApiCommentController extends Controller {
 		const postId = Number(params.postId);
 
 		// 포스트 존재 확인
-		const exists = await commentModel
-			.qb()
-			.from("posts")
-			.where("id", postId)
-			.exists();
+		const exists = await commentModel.qb().from("posts").where("id", postId).exists();
 
 		if (!exists) {
 			return response.status(404).json({
@@ -62,11 +58,7 @@ export class ApiCommentController extends Controller {
 		}
 
 		// 포스트 존재 확인
-		const exists = await commentModel
-			.qb()
-			.from("posts")
-			.where("id", postId)
-			.exists();
+		const exists = await commentModel.qb().from("posts").where("id", postId).exists();
 
 		if (!exists) {
 			return response.status(404).json({

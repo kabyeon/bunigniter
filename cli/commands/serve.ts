@@ -22,30 +22,27 @@ export const serve: Command = {
 	],
 	async run(args: string[]): Promise<void> {
 		const { flags } = parseArgs(args);
-		const port = Number(flags["port"] ?? 3000);
-		const host = String(flags["host"] ?? "0.0.0.0");
+		const port = Number(flags.port ?? 3000);
+		const host = String(flags.host ?? "0.0.0.0");
 
 		console.log(`\n🚀 개발 서버 시작 중...`);
 		console.log(`   Host: ${host}`);
 		console.log(`   Port: ${port}\n`);
 
 		// Bun.spawn으로 bun run dev 실행 (핫리로드)
-		const proc = Bun.spawn(
-			["bun", "run", "--hot", "system/core/bootstrap.ts"],
-			{
-				cwd: process.cwd(),
-				env: {
-					...process.env,
-					PORT: String(port),
-					HOST: host,
-				},
-				stdout: "inherit",
-				stderr: "inherit",
-				onExit(_proc, exitCode) {
-					console.log(`\n🔴 서버 종료 (exit code: ${exitCode})`);
-				},
+		const proc = Bun.spawn(["bun", "run", "--hot", "system/core/bootstrap.ts"], {
+			cwd: process.cwd(),
+			env: {
+				...process.env,
+				PORT: String(port),
+				HOST: host,
 			},
-		);
+			stdout: "inherit",
+			stderr: "inherit",
+			onExit(_proc, exitCode) {
+				console.log(`\n🔴 서버 종료 (exit code: ${exitCode})`);
+			},
+		});
 
 		console.log(`   PID: ${proc.pid}`);
 		console.log(`   URL: http://localhost:${port}\n`);

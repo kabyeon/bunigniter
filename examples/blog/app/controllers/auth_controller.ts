@@ -1,6 +1,6 @@
-import { Controller } from "system/core/controller.ts";
-import type { Context } from "system/core/controller.ts";
 import { Auth } from "system/core/auth.ts";
+import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 
 /** 허용된 리다이렉트 경로인지 검증 (오픈 리다이렉트 방지) */
 function safeRedirect(url: string): string {
@@ -18,7 +18,7 @@ function redirect(url: string): Response {
 
 export class AuthController extends Controller {
 	// GET /login
-	async loginForm({}: Context) {
+	async loginForm(_ctx: Context) {
 		return this.view("auth/login", {
 			title: "로그인",
 			error: "",

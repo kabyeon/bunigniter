@@ -3,11 +3,11 @@
 // SQLite / PostgreSQL / MySQL SQL 문법 차이 검증
 // ============================================================
 
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { QueryBuilder, createQueryBuilder } from "system/core/query_builder.ts";
-import { Model } from "system/core/model.ts";
-import { setDB, resetDB } from "system/core/database.ts";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { SQL } from "bun";
+import { resetDB, setDB } from "system/core/database.ts";
+import { Model } from "system/core/model.ts";
+import { createQueryBuilder, QueryBuilder } from "system/core/query_builder.ts";
 
 // ─── SQLite 방언 테스트 ──────────────────────────
 
@@ -43,9 +43,7 @@ describe("QueryBuilder 방언 - SQLite", () => {
 		expect(result.insertId).toBeGreaterThan(0);
 
 		const qb2 = new QueryBuilder();
-		const { affectedRows } = await qb2
-			.where("id", result.insertId)
-			.update("items", { price: 6.0 });
+		const { affectedRows } = await qb2.where("id", result.insertId).update("items", { price: 6.0 });
 		expect(affectedRows).toBeGreaterThan(0);
 	});
 
@@ -69,9 +67,7 @@ describe("QueryBuilder 방언 - SQLite", () => {
 
 	test("RETURNING *: UPDATE 후 행 반환", async () => {
 		const qb = new QueryBuilder();
-		const item = await qb
-			.where("name", "Elderberry")
-			.updateReturning("items", { price: 9.0 });
+		const item = await qb.where("name", "Elderberry").updateReturning("items", { price: 9.0 });
 		expect((item as any).price).toBe(9.0);
 	});
 
@@ -198,9 +194,7 @@ describe("QueryBuilder 방언 - MySQL", () => {
 		await sql`INSERT INTO items (name, price) VALUES ('Original', 1.0)`;
 
 		const qb = new QueryBuilder("mysql_test");
-		const item = await qb
-			.where("id", 1)
-			.updateReturning("items", { price: 9.99 });
+		const item = await qb.where("id", 1).updateReturning("items", { price: 9.99 });
 		expect((item as any).price).toBe(9.99);
 
 		resetDB("mysql_test");
@@ -269,10 +263,7 @@ describe("QueryBuilder 방언 - 다중 그룹 전환", () => {
 		const sqliteQB = new QueryBuilder("sqlite_group");
 		const mysqlQB = new QueryBuilder("mysql_group");
 
-		const { query: sqliteQuery } = sqliteQB
-			.from("users")
-			.where("id", 1)
-			.toSQL();
+		const { query: sqliteQuery } = sqliteQB.from("users").where("id", 1).toSQL();
 		const { query: mysqlQuery } = mysqlQB.from("users").where("id", 1).toSQL();
 
 		// SQLite: 쌍따옴표

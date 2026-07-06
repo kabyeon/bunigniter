@@ -5,13 +5,7 @@
 // ============================================================
 
 import type { Command } from "../registry.ts";
-import {
-	toPascalCase,
-	toSnakeCase,
-	toPlural,
-	createFile,
-	parseArgs,
-} from "../utils.ts";
+import { createFile, parseArgs, toPascalCase, toPlural, toSnakeCase } from "../utils.ts";
 
 function generateView(name: string, action: string): string {
 	const pascal = toPascalCase(name);
@@ -131,7 +125,7 @@ export const makeView: Command = {
 			return;
 		}
 
-		const isResource = !!flags["resource"];
+		const isResource = !!flags.resource;
 
 		console.log(`\n🔨 뷰 생성\n`);
 

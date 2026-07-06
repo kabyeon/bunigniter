@@ -4,8 +4,8 @@
 // CodeIgniter3 의 application/config/routes.php 와 동일
 // ============================================================
 
-import { Router } from "system/core/router.ts";
 import welcomeController from "app/controllers/welcome_controller.ts";
+import { Router } from "system/core/router.ts";
 
 const router = new Router();
 

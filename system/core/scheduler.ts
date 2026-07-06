@@ -91,7 +91,7 @@ export class Scheduler {
 		if (enabled) {
 			cronJob = Bun.cron(schedule, async function (this: any) {
 				const job = Scheduler.jobs.get(name);
-				if (!job || !job.enabled) return;
+				if (!job?.enabled) return;
 
 				// 분산 잠금이 활성화된 경우
 				if (Scheduler.lockEnabled) {
@@ -99,9 +99,7 @@ export class Scheduler {
 						await Scheduler.executeJob(job, handler, this);
 					});
 					if (!result.executed) {
-						console.log(
-							`[BunIgniter] Scheduled job "${name}" skipped (locked by another server)`,
-						);
+						console.log(`[BunIgniter] Scheduled job "${name}" skipped (locked by another server)`);
 						return;
 					}
 					if (result.error) {
@@ -178,9 +176,7 @@ export class Scheduler {
 						await Scheduler.executeJob(job, job.handler, this);
 					});
 					if (!result.executed) {
-						console.log(
-							`[BunIgniter] Scheduled job "${name}" skipped (locked)`,
-						);
+						console.log(`[BunIgniter] Scheduled job "${name}" skipped (locked)`);
 						return;
 					}
 					if (result.error) {
@@ -271,9 +267,7 @@ export class Scheduler {
 	 */
 	static async registerOs(config: OsCronConfig): Promise<void> {
 		await Bun.cron(config.scriptPath, config.schedule, config.title);
-		console.log(
-			`[BunIgniter] OS cron registered: "${config.title}" (${config.schedule})`,
-		);
+		console.log(`[BunIgniter] OS cron registered: "${config.title}" (${config.schedule})`);
 	}
 
 	/**
@@ -313,11 +307,7 @@ export class Scheduler {
 	/**
 	 * 다음 N번의 실행 시각 조회
 	 */
-	static upcomingRuns(
-		schedule: string,
-		count: number = 5,
-		from?: Date | number,
-	): Array<Date> {
+	static upcomingRuns(schedule: string, count: number = 5, from?: Date | number): Array<Date> {
 		const runs: Array<Date> = [];
 		let cursor: Date | number = from ?? Date.now();
 

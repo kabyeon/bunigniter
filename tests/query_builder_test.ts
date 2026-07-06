@@ -3,11 +3,11 @@
 // CI3 스타일 쿼리 빌더 패턴 검증
 // ============================================================
 
-import { describe, test, expect, beforeAll, afterAll } from "bun:test";
-import { QueryBuilder, createQueryBuilder } from "system/core/query_builder.ts";
-import { Model } from "system/core/model.ts";
-import { setDB, resetDB } from "system/core/database.ts";
+import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { SQL } from "bun";
+import { resetDB, setDB } from "system/core/database.ts";
+import { Model } from "system/core/model.ts";
+import { createQueryBuilder, QueryBuilder } from "system/core/query_builder.ts";
 
 // ─── 테스트용 DB 설정 ────────────────────────────
 let sql: SQL;
@@ -37,11 +37,7 @@ afterAll(async () => {
 describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 	test("select + from + where: 공개 포스트 조회", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.select("id, title, published")
-			.from("posts")
-			.where("published", 1)
-			.get();
+		const posts = await qb.select("id, title, published").from("posts").where("published", 1).get();
 
 		expect(posts.length).toBe(2);
 		expect(posts.every((p: any) => p.published === 1)).toBe(true);
@@ -49,11 +45,7 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("where 연산자: age > 25", async () => {
 		const qb = new QueryBuilder();
-		const users = await qb
-			.select("name, age")
-			.from("users")
-			.where("age >", 25)
-			.get();
+		const users = await qb.select("name, age").from("users").where("age >", 25).get();
 
 		expect(users.length).toBe(2);
 		expect(users.every((u: any) => u.age > 25)).toBe(true);
@@ -61,10 +53,7 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("whereObject: 여러 조건", async () => {
 		const qb = new QueryBuilder();
-		const users = await qb
-			.from("users")
-			.whereObject({ role: "admin", age: 35 })
-			.get();
+		const users = await qb.from("users").whereObject({ role: "admin", age: 35 }).get();
 
 		expect(users.length).toBe(1);
 		expect((users[0] as any).name).toBe("Admin");
@@ -72,11 +61,7 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("orWhere: OR 조건", async () => {
 		const qb = new QueryBuilder();
-		const users = await qb
-			.from("users")
-			.where("role", "admin")
-			.orWhere("role", "author")
-			.get();
+		const users = await qb.from("users").where("role", "admin").orWhere("role", "author").get();
 
 		expect(users.length).toBe(2);
 	});
@@ -128,11 +113,7 @@ describe("QueryBuilder - SELECT/FROM/WHERE", () => {
 
 	test("orLike: OR 키워드 검색", async () => {
 		const qb = new QueryBuilder();
-		const posts = await qb
-			.from("posts")
-			.like("title", "Hel")
-			.orLike("title", "Sec")
-			.get();
+		const posts = await qb.from("posts").like("title", "Hel").orLike("title", "Sec").get();
 
 		expect(posts.length).toBe(2);
 	});
@@ -240,10 +221,7 @@ describe("QueryBuilder - GROUP/HAVING/DISTINCT", () => {
 
 	test("selectSum", async () => {
 		const qb = new QueryBuilder();
-		const result = await qb
-			.selectSum("age")
-			.from("users")
-			.get<{ age: number }>();
+		const result = await qb.selectSum("age").from("users").get<{ age: number }>();
 
 		expect((result[0] as any).age).toBe(85); // 35 + 28 + 22
 	});
@@ -279,18 +257,14 @@ describe("QueryBuilder - CRUD", () => {
 
 	test("update: where + 데이터 수정", async () => {
 		const qb = new QueryBuilder();
-		const result = await qb
-			.where("name", "NewUser")
-			.update("users", { age: 31 });
+		const result = await qb.where("name", "NewUser").update("users", { age: 31 });
 
 		expect(result.affectedRows).toBeGreaterThan(0);
 	});
 
 	test("updateReturning: 수정된 행 반환", async () => {
 		const qb = new QueryBuilder();
-		const user = await qb
-			.where("name", "ReturningUser")
-			.updateReturning("users", { age: 26 });
+		const user = await qb.where("name", "ReturningUser").updateReturning("users", { age: 26 });
 
 		expect((user as any).age).toBe(26);
 	});
@@ -311,9 +285,7 @@ describe("QueryBuilder - CRUD", () => {
 
 	test("delete without where → 에러", async () => {
 		const qb = new QueryBuilder();
-		await expect(qb.delete("users")).rejects.toThrow(
-			"WHERE clause is required",
-		);
+		await expect(qb.delete("users")).rejects.toThrow("WHERE clause is required");
 	});
 });
 
@@ -357,10 +329,7 @@ describe("QueryBuilder - 유틸리티", () => {
 
 	test("exists: 조건에 맞는 행이 없음", async () => {
 		const qb = new QueryBuilder();
-		const hasSuper = await qb
-			.from("users")
-			.where("role", "superadmin")
-			.exists();
+		const hasSuper = await qb.from("users").where("role", "superadmin").exists();
 
 		expect(hasSuper).toBe(false);
 	});
@@ -498,9 +467,7 @@ describe("Model - QueryBuilder 통합", () => {
 describe("QueryBuilder - SQL 인젝션 방어", () => {
 	test("where: 악의적 컬럼명 차단", () => {
 		const qb = new QueryBuilder();
-		expect(() => qb.where("id; DROP TABLE users--", 1)).toThrow(
-			"Invalid column name",
-		);
+		expect(() => qb.where("id; DROP TABLE users--", 1)).toThrow("Invalid column name");
 	});
 
 	test("where: OR 조건 인젝션 차단", () => {
@@ -510,16 +477,14 @@ describe("QueryBuilder - SQL 인젝션 방어", () => {
 
 	test("whereIn: 악의적 컬럼명 차단", () => {
 		const qb = new QueryBuilder();
-		expect(() => qb.whereIn("1=1; DROP TABLE", [1])).toThrow(
-			"Invalid column name",
-		);
+		expect(() => qb.whereIn("1=1; DROP TABLE", [1])).toThrow("Invalid column name");
 	});
 
 	test("insert: 악의적 컬럼명 차단", async () => {
 		const qb = new QueryBuilder();
-		await expect(
-			qb.insert("users", { "role; DROP TABLE users--": "admin" }),
-		).rejects.toThrow("Invalid column name");
+		await expect(qb.insert("users", { "role; DROP TABLE users--": "admin" })).rejects.toThrow(
+			"Invalid column name",
+		);
 	});
 
 	test("정상 컬럼명은 통과", () => {

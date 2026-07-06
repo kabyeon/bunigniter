@@ -76,10 +76,7 @@ export function generateCsrfToken(config?: Partial<CsrfConfig>): string {
  * @returns true if valid and not expired, false otherwise
  * @throws 빈 문자열 토큰 전달 시 throw (호출부에서 사전 검증 필요)
  */
-export function verifyCsrfToken(
-	token: string,
-	config?: Partial<CsrfConfig>,
-): boolean {
+export function verifyCsrfToken(token: string, config?: Partial<CsrfConfig>): boolean {
 	const cfg = { ...DEFAULT_CONFIG, ...config };
 
 	return (Bun.CSRF as any).verify(token, {
@@ -162,9 +159,9 @@ export async function csrfMiddleware({
 }: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
+	next: () => Promise<Response | undefined>;
 	config?: Partial<CsrfConfig>;
-}): Promise<Response | void> {
+}): Promise<Response | undefined> {
 	const method = request.method.toUpperCase();
 
 	// 안전한 메서드는 검증 없이 통과
@@ -179,24 +176,18 @@ export async function csrfMiddleware({
 	const cookieToken = cookies[cfg.cookieName];
 
 	if (!cookieToken) {
-		return new Response(
-			JSON.stringify({ error: "CSRF token missing from cookies" }),
-			{
-				status: 403,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return new Response(JSON.stringify({ error: "CSRF token missing from cookies" }), {
+			status: 403,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
 
 	// Bun.CSRF.verify()로 쿠키 토큰의 서명 + 만료 검증
 	if (!verifyCsrfTokenSafe(cookieToken, cfg)) {
-		return new Response(
-			JSON.stringify({ error: "CSRF token expired or invalid" }),
-			{
-				status: 403,
-				headers: { "Content-Type": "application/json" },
-			},
-		);
+		return new Response(JSON.stringify({ error: "CSRF token expired or invalid" }), {
+			status: 403,
+			headers: { "Content-Type": "application/json" },
+		});
 	}
 
 	// 요청에서 토큰 찾기
@@ -215,9 +206,7 @@ export async function csrfMiddleware({
 		try {
 			const formData = await request.clone().formData();
 			requestToken =
-				(formData.get(cfg.tokenName) as string) ??
-				(formData.get("_token") as string) ??
-				null;
+				(formData.get(cfg.tokenName) as string) ?? (formData.get("_token") as string) ?? null;
 		} catch {
 			// FormData가 아닌 경우
 		}
@@ -226,9 +215,7 @@ export async function csrfMiddleware({
 	// 3. 헤더
 	if (!requestToken) {
 		requestToken =
-			request.headers.get("x-csrf-token") ??
-			request.headers.get("x-xsrf-token") ??
-			null;
+			request.headers.get("x-csrf-token") ?? request.headers.get("x-xsrf-token") ?? null;
 	}
 
 	// 4. 쿼리 파라미터

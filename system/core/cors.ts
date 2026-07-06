@@ -21,12 +21,7 @@ export interface CorsConfig {
 const DEFAULT_CONFIG: CorsConfig = {
 	origin: "*",
 	methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-	allowedHeaders: [
-		"Content-Type",
-		"Authorization",
-		"X-CSRF-Token",
-		"X-Requested-With",
-	],
+	allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Requested-With"],
 	exposedHeaders: [],
 	credentials: false,
 	maxAge: 86400,
@@ -52,8 +47,8 @@ export async function corsMiddleware({
 }: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
-}): Promise<Response | void> {
+	next: () => Promise<Response | undefined>;
+}): Promise<Response | undefined> {
 	return handleCors(request, next, DEFAULT_CONFIG);
 }
 
@@ -65,8 +60,8 @@ export function createCorsMiddleware(
 ): (ctx: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
-}) => Promise<Response | void> {
+	next: () => Promise<Response | undefined>;
+}) => Promise<Response | undefined> {
 	const merged = { ...DEFAULT_CONFIG, ...config };
 	return async ({ request, next }) => handleCors(request, next, merged);
 }
@@ -76,17 +71,13 @@ export function createCorsMiddleware(
  */
 async function handleCors(
 	request: Request,
-	next: () => Promise<Response | void>,
+	next: () => Promise<Response | undefined>,
 	config: CorsConfig,
-): Promise<Response | void> {
+): Promise<Response | undefined> {
 	const origin = request.headers.get("origin") ?? "*";
 
 	// 오리진 검증
-	const allowedOrigin = getAllowedOrigin(
-		origin,
-		config.origin,
-		config.credentials,
-	);
+	const allowedOrigin = getAllowedOrigin(origin, config.origin, config.credentials);
 
 	// Preflight (OPTIONS) 요청 처리
 	if (request.method === "OPTIONS") {
@@ -102,8 +93,7 @@ async function handleCors(
 		}
 
 		if (config.exposedHeaders.length > 0) {
-			headers["Access-Control-Expose-Headers"] =
-				config.exposedHeaders.join(", ");
+			headers["Access-Control-Expose-Headers"] = config.exposedHeaders.join(", ");
 		}
 
 		return new Response(null, { status: 204, headers });
@@ -121,10 +111,7 @@ async function handleCors(
 		}
 
 		if (config.exposedHeaders.length > 0) {
-			headers.set(
-				"Access-Control-Expose-Headers",
-				config.exposedHeaders.join(", "),
-			);
+			headers.set("Access-Control-Expose-Headers", config.exposedHeaders.join(", "));
 		}
 
 		return new Response(result.body, {

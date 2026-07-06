@@ -111,10 +111,7 @@ export class ImageEditor {
 	/**
 	 * BunFile에서 이미지 로드
 	 */
-	static fromBunFile(
-		file: Bun.BunFile,
-		options?: ImageInputOptions,
-	): ImageEditor {
+	static fromBunFile(file: Bun.BunFile, options?: ImageInputOptions): ImageEditor {
 		const img = (file as any).image(options);
 		return new ImageEditor(img);
 	}
@@ -122,10 +119,7 @@ export class ImageEditor {
 	/**
 	 * 바이트에서 이미지 로드
 	 */
-	static fromBytes(
-		bytes: Uint8Array | ArrayBuffer,
-		options?: ImageInputOptions,
-	): ImageEditor {
+	static fromBytes(bytes: Uint8Array | ArrayBuffer, options?: ImageInputOptions): ImageEditor {
 		const img = new (Bun as any).Image(bytes, options);
 		return new ImageEditor(img);
 	}
@@ -327,10 +321,7 @@ export class ImageEditor {
 		} else if (options.input instanceof Blob) {
 			editor = ImageEditor.fromBlob(options.input, options.inputOptions);
 		} else {
-			editor = ImageEditor.fromBytes(
-				options.input as Uint8Array,
-				options.inputOptions,
-			);
+			editor = ImageEditor.fromBytes(options.input as Uint8Array, options.inputOptions);
 		}
 
 		if (options.resize) {
@@ -347,16 +338,11 @@ export class ImageEditor {
 		if (options.flop) editor = editor.flop();
 		if (options.modulate) editor = editor.modulate(options.modulate);
 
-		if (options.outputFormat === "jpeg" || options.jpeg)
-			editor = editor.jpeg(options.jpeg);
-		if (options.outputFormat === "png" || options.png)
-			editor = editor.png(options.png);
-		if (options.outputFormat === "webp" || options.webp)
-			editor = editor.webp(options.webp);
-		if (options.outputFormat === "heic" || options.heic)
-			editor = editor.heic(options.heic);
-		if (options.outputFormat === "avif" || options.avif)
-			editor = editor.avif(options.avif);
+		if (options.outputFormat === "jpeg" || options.jpeg) editor = editor.jpeg(options.jpeg);
+		if (options.outputFormat === "png" || options.png) editor = editor.png(options.png);
+		if (options.outputFormat === "webp" || options.webp) editor = editor.webp(options.webp);
+		if (options.outputFormat === "heic" || options.heic) editor = editor.heic(options.heic);
+		if (options.outputFormat === "avif" || options.avif) editor = editor.avif(options.avif);
 
 		return editor;
 	}

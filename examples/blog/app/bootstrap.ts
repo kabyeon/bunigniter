@@ -1,7 +1,7 @@
-import { loadConfig } from "system/core/config.ts";
+import { relative, resolve } from "node:path";
 import type { AppConfig } from "app/config/app.ts";
+import { loadConfig } from "system/core/config.ts";
 import { closeAllConnections } from "system/core/database.ts";
-import { resolve, relative } from "node:path";
 
 const APP_ROOT = resolve(import.meta.dir);
 process.chdir(resolve(import.meta.dir, ".."));
@@ -34,24 +34,15 @@ async function bootstrap() {
 	const { routes: apiRoutes } = apiRouter.toBunServe();
 
 	// ── OpenAPI ──
-	const { getOpenApiSpec, getSwaggerUiHtml } = await import(
-		"./config/openapi.ts"
-	);
+	const { getOpenApiSpec, getSwaggerUiHtml } = await import("./config/openapi.ts");
 	const openApiSpec = getOpenApiSpec();
 	const swaggerHtml = getSwaggerUiHtml();
 
-	console.log(
-		"  📖 API 문서: http://localhost:" +
-			(process.env.PORT ?? 3001) +
-			"/api/docs",
-	);
+	console.log(`  📖 API 문서: http://localhost:${process.env.PORT ?? 3001}/api/docs`);
 	console.log("");
 
 	// ── 정적 파일 라우트 ──
-	const staticRoutes: Record<
-		string,
-		(req: any) => Response | Bun.BunFile | Promise<Response>
-	> = {};
+	const staticRoutes: Record<string, (req: any) => Response | Bun.BunFile | Promise<Response>> = {};
 	for (const prefix of ["/css", "/js", "/images"]) {
 		staticRoutes[`${prefix}/*`] = (req: any) => {
 			try {
@@ -68,10 +59,7 @@ async function bootstrap() {
 	}
 
 	// ── OpenAPI 라우트 ──
-	const openApiRoutes: Record<
-		string,
-		(req: any) => Response | Promise<Response>
-	> = {
+	const openApiRoutes: Record<string, (req: any) => Response | Promise<Response>> = {
 		"/api/docs": () => {
 			return new Response(swaggerHtml, {
 				headers: { "Content-Type": "text/html; charset=utf-8" },

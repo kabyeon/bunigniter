@@ -76,11 +76,7 @@ export interface CookieOptions {
  *   // 응답에 적용:
  *   return new Response(body, { headers: { "Set-Cookie": header } });
  */
-export function setCookie(
-	name: string,
-	value: string,
-	options?: CookieOptions,
-): string {
+export function setCookie(name: string, value: string, options?: CookieOptions): string {
 	const cookie = new Bun.Cookie(name, value, {
 		domain: options?.domain,
 		path: options?.path ?? "/",
@@ -97,10 +93,7 @@ export function setCookie(
 /**
  * 쿠키 삭제 (과거 만료 설정)
  */
-export function deleteCookie(
-	name: string,
-	options?: { domain?: string; path?: string },
-): string {
+export function deleteCookie(name: string, options?: { domain?: string; path?: string }): string {
 	const cookie = new Bun.Cookie(name, "", {
 		path: options?.path ?? "/",
 		domain: options?.domain,

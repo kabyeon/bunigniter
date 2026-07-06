@@ -3,10 +3,10 @@
 // bun run igniter migrate
 // ============================================================
 
-import type { Command } from "../registry.ts";
-import { SQL } from "bun";
-import { readdirSync, existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { SQL } from "bun";
+import type { Command } from "../registry.ts";
 
 export const migrate: Command = {
 	name: "migrate",

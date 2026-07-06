@@ -15,9 +15,7 @@ function generateSessionId(): string {
 
 /** 세션 ID 유효성 검증 (UUID v4 형식, 경로 순회 방지) */
 function isValidSessionId(sid: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-		sid,
-	);
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid);
 }
 
 /**

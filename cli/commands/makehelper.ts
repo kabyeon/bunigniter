@@ -4,7 +4,7 @@
 // ============================================================
 
 import type { Command } from "../registry.ts";
-import { toPascalCase, toSnakeCase, createFile } from "../utils.ts";
+import { createFile, toPascalCase, toSnakeCase } from "../utils.ts";
 
 function generateHelper(name: string): string {
 	const pascal = toPascalCase(name);

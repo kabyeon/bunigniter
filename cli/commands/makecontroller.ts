@@ -6,13 +6,7 @@
 // ============================================================
 
 import type { Command } from "../registry.ts";
-import {
-	toPascalCase,
-	toSnakeCase,
-	toPlural,
-	createFile,
-	parseArgs,
-} from "../utils.ts";
+import { createFile, parseArgs, toPascalCase, toPlural, toSnakeCase } from "../utils.ts";
 
 const RESOURCE_METHODS = `  // GET /{{route}}
   async index({ request, response }: Context) {
@@ -59,11 +53,7 @@ const RESOURCE_METHODS = `  // GET /{{route}}
     return response.redirect("/{{route}}");
   }`;
 
-function generateController(
-	name: string,
-	methods: string[],
-	isResource: boolean,
-): string {
+function generateController(name: string, methods: string[], isResource: boolean): string {
 	const pascal = toPascalCase(name);
 	const snake = toSnakeCase(name);
 	const model = name.toLowerCase();
@@ -80,10 +70,7 @@ function generateController(
 			.replace(/\{\{route\}\}/g, route);
 	} else if (methods.length > 0) {
 		methodsCode = methods
-			.map(
-				(m) =>
-					`  async ${m}({ request, response }: Context) {\n    // TODO: 구현하기\n  }`,
-			)
+			.map((m) => `  async ${m}({ request, response }: Context) {\n    // TODO: 구현하기\n  }`)
 			.join("\n\n");
 	} else {
 		methodsCode = `  async index({ request, response }: Context) {\n    // TODO: 구현하기\n  }`;
@@ -108,8 +95,7 @@ export const makeController: Command = {
 	options: [
 		{
 			flag: "--resource",
-			description:
-				"CRUD 메서드 자동 생성 (index, show, create, store, edit, update, delete)",
+			description: "CRUD 메서드 자동 생성 (index, show, create, store, edit, update, delete)",
 		},
 	],
 	async run(args: string[]): Promise<void> {
@@ -122,7 +108,7 @@ export const makeController: Command = {
 			return;
 		}
 
-		const isResource = !!flags["resource"];
+		const isResource = !!flags.resource;
 		const methods = positional.slice(1);
 		const snake = toSnakeCase(name);
 		const fileName = `${snake}_controller.ts`;

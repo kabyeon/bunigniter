@@ -32,9 +32,7 @@ export class CommandRegistry {
   bun run igniter <command> <name> [options]
 
 명령어:
-${[...this.commands.values()]
-	.map((c) => `  ${c.name.padEnd(22)}${c.description}`)
-	.join("\n")}
+${[...this.commands.values()].map((c) => `  ${c.name.padEnd(22)}${c.description}`).join("\n")}
 
 스캐폴딩 (한 번에 MVC 전체 생성):
   bun run igniter make:scaffold <name>   Controller + Model + View + Migration

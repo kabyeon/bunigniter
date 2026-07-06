@@ -79,10 +79,7 @@ export class SSEManager {
 	 * routes: { "/events": (req) => sse.handleConnection(req, { userId: "1" }) }
 	 * ```
 	 */
-	handleConnection(
-		request?: Request,
-		metadata?: Record<string, string>,
-	): Response {
+	handleConnection(request?: Request, metadata?: Record<string, string>): Response {
 		// 최대 클라이언트 체크
 		if (this.clients.size >= this.config.maxClients) {
 			return new Response("Too many connections", { status: 503 });
@@ -266,7 +263,7 @@ export class SSEManager {
 		if (!this.channels.has(channel)) {
 			this.channels.set(channel, new Set());
 		}
-		this.channels.get(channel)!.add(clientId);
+		this.channels.get(channel)?.add(clientId);
 	}
 
 	/**
@@ -450,9 +447,7 @@ export const sse = new SSEManager();
  * // routes를 앱에 등록
  * ```
  */
-export function createSSERoutes(
-	config?: Partial<SSEConfig> & { basePath?: string },
-): Array<{
+export function createSSERoutes(config?: Partial<SSEConfig> & { basePath?: string }): Array<{
 	method: string;
 	path: string;
 	handler: (ctx: any) => any;
@@ -477,10 +472,7 @@ export function createSSERoutes(
 				const body = await ctx.request?.json();
 				const { clientId, channel } = body ?? {};
 				if (!clientId || !channel) {
-					return Response.json(
-						{ error: "Missing clientId or channel" },
-						{ status: 400 },
-					);
+					return Response.json({ error: "Missing clientId or channel" }, { status: 400 });
 				}
 				manager.subscribe(clientId, channel);
 				return Response.json({ ok: true });
@@ -494,10 +486,7 @@ export function createSSERoutes(
 				const body = await ctx.request?.json();
 				const { clientId, channel } = body ?? {};
 				if (!clientId || !channel) {
-					return Response.json(
-						{ error: "Missing clientId or channel" },
-						{ status: 400 },
-					);
+					return Response.json({ error: "Missing clientId or channel" }, { status: 400 });
 				}
 				manager.unsubscribe(clientId, channel);
 				return Response.json({ ok: true });
@@ -511,10 +500,7 @@ export function createSSERoutes(
 				const body = await ctx.request?.json();
 				const { channel, event, data } = body ?? {};
 				if (!event || !data) {
-					return Response.json(
-						{ error: "Missing event or data" },
-						{ status: 400 },
-					);
+					return Response.json({ error: "Missing event or data" }, { status: 400 });
 				}
 				const sent = channel
 					? manager.publishJSON(channel, event, data)
@@ -553,9 +539,7 @@ export function createSSERoutes(
 			handler(_ctx: any) {
 				let url: URL;
 				try {
-					url = new URL(
-						_ctx.request?.url ?? `http://localhost${basePath}/api/history`,
-					);
+					url = new URL(_ctx.request?.url ?? `http://localhost${basePath}/api/history`);
 				} catch {
 					url = new URL(`http://localhost${basePath}/api/history`);
 				}

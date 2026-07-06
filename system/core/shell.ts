@@ -89,10 +89,7 @@ export class Shell {
 	 * 사용자 입력을 직접 전달하면 명령어 인젝션 위험이 있습니다.
 	 * 사용자 입력이 포함된 경우 Shell.exec() 를 사용하세요.
 	 */
-	static async run(
-		command: string,
-		options?: ShellOptions,
-	): Promise<ShellResult> {
+	static async run(command: string, options?: ShellOptions): Promise<ShellResult> {
 		const cmd = command.split(" ");
 		const spawnOptions: any = {
 			cwd: options?.cwd,
@@ -225,10 +222,7 @@ export class Shell {
 	/**
 	 * 명령어 실행 후 표준 출력만 반환
 	 */
-	static async output(
-		command: string,
-		options?: ShellOptions,
-	): Promise<string> {
+	static async output(command: string, options?: ShellOptions): Promise<string> {
 		const result = await Shell.run(command, options);
 		return result.stdout.trim();
 	}
@@ -236,10 +230,7 @@ export class Shell {
 	/**
 	 * 명령어 실행 후 성공 여부만 반환
 	 */
-	static async success(
-		command: string,
-		options?: ShellOptions,
-	): Promise<boolean> {
+	static async success(command: string, options?: ShellOptions): Promise<boolean> {
 		const result = await Shell.run(command, options);
 		return result.success;
 	}
@@ -255,10 +246,7 @@ export class Shell {
 	/**
 	 * 파이프라인 실행
 	 */
-	static async pipe(
-		commands: string[],
-		options?: ShellOptions,
-	): Promise<ShellResult> {
+	static async pipe(commands: string[], options?: ShellOptions): Promise<ShellResult> {
 		const pipedCommand = commands.join(" | ");
 		return await Shell.run(pipedCommand, options);
 	}

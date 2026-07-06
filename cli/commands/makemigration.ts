@@ -5,24 +5,19 @@
 // ============================================================
 
 import type { Command } from "../registry.ts";
-import { toSnakeCase, createFile, parseArgs } from "../utils.ts";
+import { createFile, parseArgs, toSnakeCase } from "../utils.ts";
 
-function generateMigration(
-	name: string,
-	fields: { name: string; type: string }[],
-): string {
+function generateMigration(name: string, fields: { name: string; type: string }[]): string {
 	const isCreate = name.startsWith("create_");
 	const isAdd = name.startsWith("add_");
-	const isDrop = name.startsWith("drop_");
+	const _isDrop = name.startsWith("drop_");
 
 	if (isCreate) {
 		const tableName = name.replace(/^create_/, "").replace(/_table$/, "");
 
 		const fieldDefs =
 			fields.length > 0
-				? fields
-						.map((f) => `      ${f.name} ${f.type.toUpperCase()},`)
-						.join("\n")
+				? fields.map((f) => `      ${f.name} ${f.type.toUpperCase()},`).join("\n")
 				: `      -- 컬럼을 정의하세요\n      name TEXT NOT NULL,`;
 
 		return `/**
@@ -115,7 +110,7 @@ export const makeMigration: Command = {
 			return;
 		}
 
-		const fieldsStr = flags["fields"] as string | undefined;
+		const fieldsStr = flags.fields as string | undefined;
 		const fields = fieldsStr
 			? fieldsStr.split(",").map((f) => {
 					const [name, type] = f.split(":");

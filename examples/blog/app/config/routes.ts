@@ -1,7 +1,7 @@
-import { Router } from "system/core/router.ts";
-import postController from "app/controllers/post_controller.ts";
 import authController from "app/controllers/auth_controller.ts";
 import commentController from "app/controllers/comment_controller.ts";
+import postController from "app/controllers/post_controller.ts";
+import { Router } from "system/core/router.ts";
 
 const router = new Router();
 

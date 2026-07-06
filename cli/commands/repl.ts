@@ -4,11 +4,11 @@
 // Bun 내장 REPL + 프레임워크 컨텍스트 주입
 // ============================================================
 
-import type { Command } from "../registry.ts";
+import { readdirSync } from "node:fs";
+import path from "node:path";
 import * as repl from "node:repl";
 import { inspect } from "node:util";
-import path from "node:path";
-import { readdirSync } from "node:fs";
+import type { Command } from "../registry.ts";
 
 // ─── REPL 커스텀 메서드 타입 ────────────────────────────
 
@@ -51,9 +51,7 @@ class ReplContext {
 		console.log("\n\x1b[32mGLOBAL METHODS:\x1b[0m");
 		for (const method of this.methods.values()) {
 			const usage = `\x1b[33m${method.usage}\x1b[0m`;
-			const spaces = " ".repeat(
-				Math.max(1, this.longestMethodName - method.usage.length + 2),
-			);
+			const spaces = " ".repeat(Math.max(1, this.longestMethodName - method.usage.length + 2));
 			const desc = `\x1b[2m${method.description}\x1b[0m`;
 			console.log(`  ${usage}${spaces}${desc}`);
 		}
@@ -110,9 +108,7 @@ class ReplContext {
 					(f: Function) =>
 					(...args: any[]) =>
 						new Promise((resolve, reject) => {
-							f(...args, (err: any, result: any) =>
-								err ? reject(err) : resolve(result),
-							);
+							f(...args, (err: any, result: any) => (err ? reject(err) : resolve(result)));
 						});
 				return promisify(fn);
 			},
@@ -129,9 +125,7 @@ export const replCommand: Command = {
 	options: [],
 	async run(_args: string[]) {
 		console.log("");
-		console.log(
-			"\x1b[33m\x1b[3m🔥 BunIgniter REPL - Type .ls to view available methods\x1b[0m",
-		);
+		console.log("\x1b[33m\x1b[3m🔥 BunIgniter REPL - Type .ls to view available methods\x1b[0m");
 		console.log("\x1b[2m  Type .exit or press Ctrl+C twice to exit\x1b[0m");
 		console.log("");
 
@@ -168,9 +162,7 @@ export const replCommand: Command = {
 				verifyCsrfToken: core.verifyCsrfToken,
 			};
 		} catch (err: any) {
-			console.log(
-				`\x1b[33m⚠ Framework modules not loaded: ${err.message}\x1b[0m`,
-			);
+			console.log(`\x1b[33m⚠ Framework modules not loaded: ${err.message}\x1b[0m`);
 		}
 
 		// 설정 로드
@@ -256,15 +248,13 @@ export const replCommand: Command = {
 				try {
 					// Router가 설정되어 있으면 라우트 목록 출력
 					const router = server.context.Router;
-					if (router && router.getRoutes) {
+					if (router?.getRoutes) {
 						const routes = router.getRoutes();
 						for (const route of routes) {
 							console.log(`  \x1b[36m${route.method}\x1b[0m ${route.path}`);
 						}
 					} else {
-						console.log(
-							"  \x1b[2mRun server first or load routes config\x1b[0m",
-						);
+						console.log("  \x1b[2mRun server first or load routes config\x1b[0m");
 					}
 				} catch (err: any) {
 					console.log(`  \x1b[31m${err.message}\x1b[0m`);
@@ -316,46 +306,30 @@ export const replCommand: Command = {
 			help: "Show REPL help",
 			action() {
 				console.log("\n\x1b[32mBUNIGNITER REPL COMMANDS:\x1b[0m");
-				console.log(
-					"  \x1b[33m.ls\x1b[0m       List context properties and methods",
-				);
+				console.log("  \x1b[33m.ls\x1b[0m       List context properties and methods");
 				console.log("  \x1b[33m.models\x1b[0m   List available models");
 				console.log("  \x1b[33m.routes\x1b[0m   List registered routes");
-				console.log(
-					"  \x1b[33m.config\x1b[0m   Show application configuration",
-				);
-				console.log(
-					"  \x1b[33m.load\x1b[0m    Load a module (.load ./path/to/module)",
-				);
-				console.log(
-					"  \x1b[33m.clear\x1b[0m   Clear a context property (clear <name>)",
-				);
+				console.log("  \x1b[33m.config\x1b[0m   Show application configuration");
+				console.log("  \x1b[33m.load\x1b[0m    Load a module (.load ./path/to/module)");
+				console.log("  \x1b[33m.clear\x1b[0m   Clear a context property (clear <name>)");
 				console.log("  \x1b[33m.exit\x1b[0m    Exit the REPL");
 				console.log("\n\x1b[32mNODE REPL COMMANDS:\x1b[0m");
 				console.log("  \x1b[33m.break\x1b[0m   Exit from multi-line input");
-				console.log(
-					"  \x1b[33m.editor\x1b[0m  Enter editor mode (ctrl+C to finish)",
-				);
+				console.log("  \x1b[33m.editor\x1b[0m  Enter editor mode (ctrl+C to finish)");
 				console.log("  \x1b[33m.save\x1b[0m    Save REPL session to a file");
-				console.log(
-					"  \x1b[33m.load\x1b[0m    Load a JS file into the REPL session",
-				);
+				console.log("  \x1b[33m.load\x1b[0m    Load a JS file into the REPL session");
 				console.log("");
 				this.displayPrompt();
 			},
 		});
 
 		// 히스토리 파일 설정
-		const historyPath = path.resolve(
-			process.cwd(),
-			"storage/logs/.repl_history",
-		);
+		const historyPath = path.resolve(process.cwd(), "storage/logs/.repl_history");
 		try {
 			const { mkdirSync } = await import("node:fs");
 			mkdirSync(path.dirname(historyPath), { recursive: true });
 			server.setupHistory(historyPath, (err) => {
-				if (err)
-					console.log(`\x1b[33m⚠ History file warning: ${err.message}\x1b[0m`);
+				if (err) console.log(`\x1b[33m⚠ History file warning: ${err.message}\x1b[0m`);
 			});
 		} catch {}
 

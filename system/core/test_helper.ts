@@ -3,18 +3,10 @@
 // Bun 내장 테스트 러너(bun:test)를 위한 헬퍼
 // ============================================================
 
-import {
-	describe,
-	test,
-	expect,
-	beforeAll,
-	afterAll,
-	beforeEach,
-	afterEach,
-} from "bun:test";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { SQL } from "bun";
 
-export { describe, test, expect, beforeAll, afterAll, beforeEach, afterEach };
+export { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test };
 
 /**
  * 테스트용 인메모리 SQLite 데이터베이스 생성

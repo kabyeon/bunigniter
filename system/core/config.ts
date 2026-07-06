@@ -27,7 +27,7 @@ export async function loadConfig<T = any>(name: string): Promise<T> {
 		const config = mod.default ?? mod;
 		configCache[name] = config;
 		return config as T;
-	} catch (e) {
+	} catch (_e) {
 		throw new Error(`Config file not found: ${filePath}`);
 	}
 }

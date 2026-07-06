@@ -3,8 +3,8 @@
 // CodeIgniter3 의 application/controllers/Welcome.php 와 동일
 // ============================================================
 
-import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 
 export class WelcomeController extends Controller {
 	/**

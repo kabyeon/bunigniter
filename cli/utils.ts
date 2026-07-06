@@ -2,8 +2,8 @@
 // CLI 유틸리티 - 파일 생성, 이름 변환 등
 // ============================================================
 
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
 
 /** 프로젝트 루트 경로 */
 export const PROJECT_ROOT = join(import.meta.dir, "..");
@@ -50,28 +50,20 @@ export function toPlural(str: string): string {
 		str.endsWith("x") ||
 		str.endsWith("z")
 	) {
-		return str + "es";
+		return `${str}es`;
 	}
-	if (
-		str.endsWith("y") &&
-		!["a", "e", "i", "o", "u"].includes(str.charAt(str.length - 2))
-	) {
-		return str.slice(0, -1) + "ies";
+	if (str.endsWith("y") && !["a", "e", "i", "o", "u"].includes(str.charAt(str.length - 2))) {
+		return `${str.slice(0, -1)}ies`;
 	}
-	return str + "s";
+	return `${str}s`;
 }
 
 /**
  * 단수형 변환 (간단한 규칙)
  */
 export function toSingular(str: string): string {
-	if (str.endsWith("ies")) return str.slice(0, -3) + "y";
-	if (
-		str.endsWith("ses") ||
-		str.endsWith("shes") ||
-		str.endsWith("ches") ||
-		str.endsWith("xes")
-	) {
+	if (str.endsWith("ies")) return `${str.slice(0, -3)}y`;
+	if (str.endsWith("ses") || str.endsWith("shes") || str.endsWith("ches") || str.endsWith("xes")) {
 		return str.slice(0, -2);
 	}
 	if (str.endsWith("s") && !str.endsWith("ss")) return str.slice(0, -1);

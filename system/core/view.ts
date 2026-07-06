@@ -3,9 +3,9 @@
 // Rendu 템플릿 엔진 기반 + 레이아웃 시스템
 // ============================================================
 
-import { compileTemplate, createRenderContext } from "rendu";
-import { readFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
+import { compileTemplate, createRenderContext } from "rendu";
 
 import { getAppRoot } from "./config.ts";
 
@@ -51,10 +51,7 @@ export async function renderView(
 		if (existsSync(layoutPath)) {
 			const layoutContent = readFileSync(layoutPath, "utf-8");
 			// 레이아웃의 {{{ content }}} 자리에 뷰 삽입
-			finalTemplate = layoutContent.replace(
-				/\{\{\{\s*content\s*\}\}\}/,
-				viewContent,
-			);
+			finalTemplate = layoutContent.replace(/\{\{\{\s*content\s*\}\}\}/, viewContent);
 		} else {
 			finalTemplate = viewContent;
 		}

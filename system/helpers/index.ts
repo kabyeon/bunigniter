@@ -36,11 +36,7 @@ export function slug(str: string): string {
 		.replace(/^-|-$/g, "");
 }
 
-export function truncate(
-	str: string,
-	length: number = 100,
-	suffix: string = "...",
-): string {
+export function truncate(str: string, length: number = 100, suffix: string = "..."): string {
 	if (str.length <= length) return str;
 	return str.slice(0, length) + suffix;
 }
@@ -57,12 +53,8 @@ export function escapeHtml(str: string): string {
 /**
  * 배열/객체 헬퍼
  */
-export function plural(
-	count: number,
-	singular: string,
-	pluralStr?: string,
-): string {
-	return count === 1 ? singular : (pluralStr ?? singular + "s");
+export function plural(count: number, singular: string, pluralStr?: string): string {
+	return count === 1 ? singular : (pluralStr ?? `${singular}s`);
 }
 
 export function formatNumber(num: number): string {
@@ -70,16 +62,13 @@ export function formatNumber(num: number): string {
 }
 
 export function formatCurrency(amount: number): string {
-	return amount.toLocaleString("ko-KR") + "원";
+	return `${amount.toLocaleString("ko-KR")}원`;
 }
 
 /**
  * 날짜 헬퍼
  */
-export function formatDate(
-	date: Date | string,
-	format: string = "Y-m-d H:i:s",
-): string {
+export function formatDate(date: Date | string, format: string = "Y-m-d H:i:s"): string {
 	const d = typeof date === "string" ? new Date(date) : date;
 
 	const map: Record<string, string> = {

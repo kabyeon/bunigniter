@@ -1,5 +1,5 @@
-import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 import { Model } from "system/core/model.ts";
 
 interface UserRow {
@@ -83,11 +83,7 @@ export class ApiAuthController extends Controller {
 		}
 
 		// 데모: admin 사용자 반환
-		const user = await userModel
-			.qb()
-			.select("id, email, name, role")
-			.where("id", 1)
-			.first();
+		const user = await userModel.qb().select("id, email, name, role").where("id", 1).first();
 
 		if (!user) {
 			return response.status(401).json({

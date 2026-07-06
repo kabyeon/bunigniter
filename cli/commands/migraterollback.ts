@@ -5,11 +5,11 @@
 // bun run igniter migrate:rollback --all
 // ============================================================
 
-import type { Command } from "../registry.ts";
-import { parseArgs } from "../utils.ts";
-import { SQL } from "bun";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
+import { SQL } from "bun";
+import type { Command } from "../registry.ts";
+import { parseArgs } from "../utils.ts";
 
 export const migrateRollback: Command = {
 	name: "migrate:rollback",
@@ -27,8 +27,8 @@ export const migrateRollback: Command = {
 	],
 	async run(args: string[]): Promise<void> {
 		const { flags } = parseArgs(args);
-		const rollbackAll = !!flags["all"];
-		const steps = rollbackAll ? Infinity : Number(flags["steps"] ?? 1);
+		const rollbackAll = !!flags.all;
+		const steps = rollbackAll ? Infinity : Number(flags.steps ?? 1);
 
 		console.log("\n⏪ 마이그레이션 롤백 중...\n");
 

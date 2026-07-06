@@ -3,9 +3,9 @@
 // CodeIgniter3 의 Upload 라이브러리와 동일
 // ============================================================
 
-import { writeFileSync, existsSync, mkdirSync, unlinkSync } from "node:fs";
-import { join, extname, basename } from "node:path";
 import { randomUUID } from "node:crypto";
+import { existsSync, mkdirSync, unlinkSync, writeFileSync } from "node:fs";
+import { basename, extname, join } from "node:path";
 
 export interface UploadOptions {
 	/** 허용된 MIME 타입 (예: ["image/jpeg", "image/png"]) */
@@ -174,9 +174,7 @@ export class Upload {
 			return { success: false, files: [], errors: [] };
 		}
 
-		const allFiles = formData
-			.getAll(fieldName)
-			.filter((f): f is File => f instanceof File);
+		const allFiles = formData.getAll(fieldName).filter((f): f is File => f instanceof File);
 
 		if (allFiles.length === 0) {
 			return { success: false, files: [], errors: [] };
@@ -200,10 +198,7 @@ export class Upload {
 	/**
 	 * 파일 처리 (검증 + 저장)
 	 */
-	private static async processFile(
-		file: File,
-		options: UploadOptions,
-	): Promise<UploadResult> {
+	private static async processFile(file: File, options: UploadOptions): Promise<UploadResult> {
 		const originalName = file.name;
 		const extension = extname(originalName).slice(1).toLowerCase();
 		const mimeType = file.type;
@@ -309,10 +304,7 @@ export class Upload {
 		}
 
 		// 파일명 생성
-		const fileName = Upload.generateFileName(
-			originalName,
-			options.naming ?? "uuid",
-		);
+		const fileName = Upload.generateFileName(originalName, options.naming ?? "uuid");
 
 		// 저장 경로
 		const uploadDir = options.uploadDir ?? "public/uploads";

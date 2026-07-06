@@ -5,11 +5,11 @@
 // bun run igniter db:seed --files=user_seeder,post_seeder
 // ============================================================
 
-import type { Command } from "../registry.ts";
-import { toPascalCase, toSnakeCase, createFile, parseArgs } from "../utils.ts";
-import { SQL } from "bun";
-import { readdirSync, existsSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { SQL } from "bun";
+import type { Command } from "../registry.ts";
+import { createFile, parseArgs, toPascalCase, toSnakeCase } from "../utils.ts";
 
 // ─── make:seed 명령어 ──────────────────────────────────
 
@@ -73,10 +73,8 @@ export const dbSeed: Command = {
 	],
 	async run(args: string[]): Promise<void> {
 		const { flags } = parseArgs(args);
-		const filesStr = flags["files"] as string | undefined;
-		const specificFiles = filesStr
-			? filesStr.split(",").map((f) => f.trim())
-			: null;
+		const filesStr = flags.files as string | undefined;
+		const specificFiles = filesStr ? filesStr.split(",").map((f) => f.trim()) : null;
 
 		console.log("\n🌱 시드 실행 중...\n");
 
@@ -91,9 +89,7 @@ export const dbSeed: Command = {
 
 		if (!existsSync(seedsDir)) {
 			console.log("  ⚠️  database/seeds/ 폴더가 없습니다.");
-			console.log(
-				"  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n",
-			);
+			console.log("  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n");
 			await db.close();
 			return;
 		}
@@ -111,9 +107,7 @@ export const dbSeed: Command = {
 
 		if (files.length === 0) {
 			console.log("  📋 실행할 시더가 없습니다.");
-			console.log(
-				"  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n",
-			);
+			console.log("  💡 bun run igniter make:seed <name> 으로 시더를 생성하세요.\n");
 			await db.close();
 			return;
 		}
@@ -122,9 +116,7 @@ export const dbSeed: Command = {
 		const targetFiles = specificFiles
 			? files.filter((f) => {
 					const baseName = f.replace(".ts", "");
-					return specificFiles.some(
-						(sf) => sf === f || sf === baseName || f.startsWith(sf),
-					);
+					return specificFiles.some((sf) => sf === f || sf === baseName || f.startsWith(sf));
 				})
 			: files;
 

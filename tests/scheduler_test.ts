@@ -2,7 +2,7 @@
 // BunIgniter - Scheduler 테스트
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { Scheduler } from "../system/core/scheduler.ts";
 
 describe("Scheduler", () => {
@@ -127,12 +127,7 @@ describe("Scheduler", () => {
 	});
 
 	test("크론 표현식 5-field 지원", () => {
-		const expressions = [
-			"*/5 * * * *",
-			"0 * * * *",
-			"0 9 * * MON-FRI",
-			"30 2 * * MON",
-		];
+		const expressions = ["*/5 * * * *", "0 * * * *", "0 9 * * MON-FRI", "30 2 * * MON"];
 		for (const expr of expressions) {
 			const next = Scheduler.nextRun(expr);
 			expect(next).not.toBeNull();

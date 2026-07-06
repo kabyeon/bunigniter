@@ -6,11 +6,11 @@
 
 import {
 	existsSync,
-	readFileSync,
-	writeFileSync,
 	mkdirSync,
 	readdirSync,
+	readFileSync,
 	unlinkSync,
+	writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
 
@@ -246,9 +246,7 @@ export class FileCacheDriver implements CacheDriver {
 		return join(this.cacheDir, `cache_${hash}`);
 	}
 
-	private readEntry(
-		key: string,
-	): { value: any; expiration: number | null } | null {
+	private readEntry(key: string): { value: any; expiration: number | null } | null {
 		const filePath = this.getFilePath(key);
 		try {
 			const content = readFileSync(filePath, "utf-8");
@@ -315,7 +313,6 @@ export class Cache {
 					Cache.driver = new RedisCacheDriver(Cache.config);
 					break;
 				}
-				case "memory":
 				default:
 					Cache.driver = new MemoryCacheDriver(Cache.config);
 					break;
@@ -368,11 +365,7 @@ export class Cache {
 	 * 콜백 캐시 (Remember)
 	 * 캐시에 값이 있으면 반환, 없으면 콜백을 실행하고 결과를 캐시에 저장
 	 */
-	static async remember<T>(
-		key: string,
-		ttl: number,
-		callback: () => Promise<T>,
-	): Promise<T> {
+	static async remember<T>(key: string, ttl: number, callback: () => Promise<T>): Promise<T> {
 		const cached = await Cache.getDriver().get<T>(key);
 		if (cached !== null) return cached;
 
@@ -384,10 +377,7 @@ export class Cache {
 	/**
 	 * 영구 콜백 캐시
 	 */
-	static async rememberForever<T>(
-		key: string,
-		callback: () => Promise<T>,
-	): Promise<T> {
+	static async rememberForever<T>(key: string, callback: () => Promise<T>): Promise<T> {
 		const cached = await Cache.getDriver().get<T>(key);
 		if (cached !== null) return cached;
 

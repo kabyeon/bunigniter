@@ -4,11 +4,11 @@
 // Bun.serve 네이티브 HTTP 서버
 // ============================================================
 
-import { loadConfig } from "./config.ts";
+import { relative, resolve } from "node:path";
 import type { AppConfig } from "../../app/config/app.ts";
+import { loadConfig } from "./config.ts";
 import { closeAllConnections } from "./database.ts";
 import { logger } from "./logger.ts";
-import { resolve, relative } from "node:path";
 
 /**
  * 정적 파일 경로 검증 (Path Traversal 방지)
@@ -16,11 +16,7 @@ import { resolve, relative } from "node:path";
  */
 function safeStaticPath(urlPathname: string): string | null {
 	const publicDir = resolve(process.cwd(), "public");
-	const resolvedPath = resolve(
-		process.cwd(),
-		"public",
-		urlPathname.replace(/^\//, ""),
-	);
+	const resolvedPath = resolve(process.cwd(), "public", urlPathname.replace(/^\//, ""));
 	const relativePath = relative(publicDir, resolvedPath);
 
 	// 경로가 public/ 외부를 가리키면 거부
@@ -69,10 +65,7 @@ async function bootstrap() {
 	const { routes: appRoutes, fetch: appFetch } = router.toBunServe();
 
 	// ── 정적 파일 라우트 ──────────────────────────────
-	const staticRoutes: Record<
-		string,
-		(req: any) => Response | Bun.BunFile | Promise<Response>
-	> = {};
+	const staticRoutes: Record<string, (req: any) => Response | Bun.BunFile | Promise<Response>> = {};
 	for (const prefix of ["/css", "/js", "/images", "/uploads"]) {
 		staticRoutes[`${prefix}/*`] = (req: any) => {
 			try {
@@ -155,9 +148,7 @@ async function bootstrap() {
 	console.log(`  ⚡ 서버: Bun.serve (네이티브)`);
 	console.log("");
 
-	logger.info(
-		`BunIgniter 서버 시작: http://localhost:${port} (${appConfig.env})`,
-	);
+	logger.info(`BunIgniter 서버 시작: http://localhost:${port} (${appConfig.env})`);
 
 	// 종료 시 정리
 	process.on("SIGINT", async () => {

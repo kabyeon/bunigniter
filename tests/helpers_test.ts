@@ -3,17 +3,17 @@
 // 실행: bun test tests/helpers_test.ts
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
-	slug,
-	truncate,
 	escapeHtml,
-	formatDate,
-	timeAgo,
-	formatNumber,
 	formatCurrency,
+	formatDate,
+	formatNumber,
 	plural,
 	siteUrl,
+	slug,
+	timeAgo,
+	truncate,
 } from "../system/helpers/index.ts";
 
 describe("slug", () => {

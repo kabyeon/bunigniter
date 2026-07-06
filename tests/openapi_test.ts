@@ -2,10 +2,10 @@
 // BunIgniter - OpenAPI Generator Tests
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
+import { Controller } from "../system/core/controller.ts";
 import { OpenApiGenerator } from "../system/core/openapi.ts";
 import { Router } from "../system/core/router.ts";
-import { Controller } from "../system/core/controller.ts";
 
 class TestController extends Controller {}
 
@@ -51,9 +51,7 @@ describe("OpenApiGenerator", () => {
 		expect(showPath).toBeDefined();
 		expect(showPath.get.parameters).toBeDefined();
 
-		const idParam = showPath.get.parameters.find(
-			(p: any) => p.name === "id",
-		);
+		const idParam = showPath.get.parameters.find((p: any) => p.name === "id");
 		expect(idParam).toBeDefined();
 		expect(idParam.in).toBe("path");
 		expect(idParam.required).toBe(true);

@@ -28,10 +28,7 @@ const config: CacheConfig = {
 
 	defaultTtl: Number(process.env.CACHE_TTL ?? "3600"),
 
-	redisUrl:
-		process.env.CACHE_REDIS_URL ??
-		process.env.REDIS_URL ??
-		"redis://localhost:6379",
+	redisUrl: process.env.CACHE_REDIS_URL ?? process.env.REDIS_URL ?? "redis://localhost:6379",
 
 	redisPrefix: process.env.CACHE_REDIS_PREFIX ?? "bunigniter:cache:",
 };

@@ -1,10 +1,10 @@
-import { Controller } from "system/core/controller.ts";
-import type { Context } from "system/core/controller.ts";
 import productModel from "app/models/product_model.ts";
+import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 
 export class ProductController extends Controller {
 	// GET /products
-	async index({}: Context) {
+	async index(_ctx: Context) {
 		const products = await productModel.findAll();
 		return this.json(products);
 	}

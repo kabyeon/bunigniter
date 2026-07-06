@@ -6,19 +6,12 @@
 // ============================================================
 
 import type { Command } from "../registry.ts";
-import {
-	toPascalCase,
-	toSnakeCase,
-	toPlural,
-	createFile,
-	parseArgs,
-} from "../utils.ts";
+import { createFile, parseArgs, toPascalCase, toPlural, toSnakeCase } from "../utils.ts";
 
 export const makeScaffold: Command = {
 	name: "make:scaffold",
 	description: "Controller + Model + Views + Migration 전체 생성",
-	usage:
-		"bun run igniter make:scaffold <name> [--fields=name:type,...] [--api]",
+	usage: "bun run igniter make:scaffold <name> [--fields=name:type,...] [--api]",
 	options: [
 		{
 			flag: "--fields",
@@ -36,12 +29,8 @@ export const makeScaffold: Command = {
 		if (!name) {
 			console.log("❌ 리소스 이름을 입력하세요.");
 			console.log("   예: bun run igniter make:scaffold post");
-			console.log(
-				"   예: bun run igniter make:scaffold post --fields=title:string,content:text",
-			);
-			console.log(
-				"   예: bun run igniter make:scaffold post --api --fields=title:string",
-			);
+			console.log("   예: bun run igniter make:scaffold post --fields=title:string,content:text");
+			console.log("   예: bun run igniter make:scaffold post --api --fields=title:string");
 			return;
 		}
 
@@ -51,7 +40,7 @@ export const makeScaffold: Command = {
 		const model = name.toLowerCase();
 		const modelPlural = toPlural(model);
 
-		const fieldsStr = flags["fields"] as string | undefined;
+		const fieldsStr = flags.fields as string | undefined;
 		const fields = fieldsStr
 			? fieldsStr.split(",").map((f) => {
 					const [n, t] = f.split(":");
@@ -59,7 +48,7 @@ export const makeScaffold: Command = {
 				})
 			: [{ name: "name", type: "string" }];
 
-		const isApi = !!flags["api"];
+		const isApi = !!flags.api;
 
 		console.log(`\n🔥 스캐폴딩 생성: ${pascal}${isApi ? " (API 모드)" : ""}\n`);
 		console.log("─────────────────────────────────────");

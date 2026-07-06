@@ -3,11 +3,11 @@
 // 실제 Redis 연결 없이 클래스 구조 검증
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
-import { RedisSession } from "../system/core/redis_session.ts";
-import { RedisCacheDriver } from "../system/core/redis_cache.ts";
-import type { SessionDriver } from "../system/core/session_driver.ts";
+import { describe, expect, test } from "bun:test";
 import type { CacheDriver } from "../system/core/cache.ts";
+import { RedisCacheDriver } from "../system/core/redis_cache.ts";
+import { RedisSession } from "../system/core/redis_session.ts";
+import type { SessionDriver } from "../system/core/session_driver.ts";
 
 describe("RedisSession 구조 검증", () => {
 	test("SessionDriver 인터페이스 구현", () => {

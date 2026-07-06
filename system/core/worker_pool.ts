@@ -131,8 +131,7 @@ export class WorkerPool {
 	// ─── 이벤트 리스너 ──────────────────────────────────
 
 	on(event: keyof WorkerPoolEvents, handler: Function): void {
-		const key =
-			`on${event.charAt(0).toUpperCase()}${event.slice(1)}` as keyof WorkerPoolEvents;
+		const key = `on${event.charAt(0).toUpperCase()}${event.slice(1)}` as keyof WorkerPoolEvents;
 		(this.events as any)[key] = handler;
 	}
 
@@ -149,9 +148,7 @@ export class WorkerPool {
 			return;
 		}
 
-		console.log(
-			`[BunIgniter] Starting worker pool with ${this.config.concurrency} workers`,
-		);
+		console.log(`[BunIgniter] Starting worker pool with ${this.config.concurrency} workers`);
 
 		// 핸들러 스크립트가 있는 경우: 독립 워커 스크립트 모드
 		if (this.config.handlerScript) {
@@ -168,9 +165,7 @@ export class WorkerPool {
 		// 워커 준비 대기
 		await new Promise<void>((resolve) => {
 			const timeout = setTimeout(() => {
-				console.warn(
-					"[BunIgniter] Worker pool ready timeout, continuing anyway",
-				);
+				console.warn("[BunIgniter] Worker pool ready timeout, continuing anyway");
 				resolve();
 			}, this.config.readyTimeout);
 
@@ -390,9 +385,7 @@ export class WorkerPool {
 		// 타임아웃 감시
 		setTimeout(() => {
 			if (slot.currentJob?.id === job.id) {
-				console.warn(
-					`[BunIgniter] Job ${job.id} timed out in worker ${slot.id}`,
-				);
+				console.warn(`[BunIgniter] Job ${job.id} timed out in worker ${slot.id}`);
 				slot.currentJob = null;
 				slot.jobStartedAt = null;
 				this.events.onJobFailed?.(job.id, slot.id, "Job timed out");
@@ -431,9 +424,7 @@ export class WorkerPool {
 		}
 
 		this.restartCounts.set(id, restartCount);
-		console.log(
-			`[BunIgniter] Restarting worker ${id} (attempt ${restartCount})`,
-		);
+		console.log(`[BunIgniter] Restarting worker ${id} (attempt ${restartCount})`);
 
 		slot.worker.terminate();
 

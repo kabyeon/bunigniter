@@ -13,10 +13,10 @@ export interface MiddlewareContext {
 		send: (body: string) => Response;
 		headers: (headers: Record<string, string>) => any;
 	};
-	next: () => Promise<Response | void>;
+	next: () => Promise<Response | undefined>;
 }
 
-export type MiddlewareFn = (ctx: MiddlewareContext) => Promise<Response | void>;
+export type MiddlewareFn = (ctx: MiddlewareContext) => Promise<Response | undefined>;
 
 /**
  * 미들웨어 파이프라인 실행
@@ -38,9 +38,7 @@ export async function runMiddlewarePipeline(
 	let index = 0;
 	let finalResponse: Response | null = null;
 
-	const createNext = (
-		currentIndex: number,
-	): (() => Promise<Response | void>) => {
+	const createNext = (currentIndex: number): (() => Promise<Response | undefined>) => {
 		return async () => {
 			index = currentIndex + 1;
 			if (index < middlewares.length) {
@@ -55,8 +53,7 @@ export async function runMiddlewarePipeline(
 			request,
 			response: {
 				status: (code: number) => ({ status: code }),
-				redirect: (url: string) =>
-					new Response(null, { status: 302, headers: { Location: url } }),
+				redirect: (url: string) => new Response(null, { status: 302, headers: { Location: url } }),
 				json: (data: any) =>
 					new Response(JSON.stringify(data), {
 						headers: { "Content-Type": "application/json" },

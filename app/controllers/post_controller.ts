@@ -1,6 +1,6 @@
-import { Controller } from "system/core/controller.ts";
-import type { Context } from "system/core/controller.ts";
 import postModel from "app/models/post_model.ts";
+import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 
 /** 허용된 리다이렉트 경로인지 검증 (오픈 리다이렉트 방지) */
 function safeRedirect(url: string): string {
@@ -18,7 +18,7 @@ function redirect(url: string): Response {
 
 export class PostController extends Controller {
 	// GET /posts
-	async index({}: Context) {
+	async index(_ctx: Context) {
 		const posts = await postModel.findAll();
 		return this.view("posts/index", { posts });
 	}
@@ -31,7 +31,7 @@ export class PostController extends Controller {
 	}
 
 	// GET /posts/create
-	async create({}: Context) {
+	async create(_ctx: Context) {
 		return this.view("posts/create");
 	}
 

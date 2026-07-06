@@ -1,20 +1,27 @@
 {
-  "name": "bunigniter",
-  "version": "1.0.0",
-  "description": "CodeIgniter 3-style Full Stack MVC Framework for Bun + Rendu",
-  "type": "module",
-  "scripts": {
-    "dev": "bun run --hot system/core/bootstrap.ts",
-    "start": "bun run system/core/bootstrap.ts",
-    "migrate": "bun run database/migrate.ts",
-    "igniter": "bun run cli/index.ts",
-    "test": "bun test",
-    "test:watch": "bun test --watch"
-  },
-  "dependencies": {
-    "rendu": "^0.1.0"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+	"name": "bunigniter",
+	"version": "1.0.0",
+	"description": "CodeIgniter 3-style Full Stack MVC Framework for Bun + Rendu",
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --hot system/core/bootstrap.ts",
+		"start": "bun run system/core/bootstrap.ts",
+		"migrate": "bun run database/migrate.ts",
+		"igniter": "bun run cli/index.ts",
+		"test": "bun test",
+		"test:watch": "bun test --watch",
+		"lint": "biome lint .",
+		"lint:fix": "biome lint --write .",
+		"format": "biome format .",
+		"format:fix": "biome format --write .",
+		"check": "biome check .",
+		"check:fix": "biome check --write ."
+	},
+	"dependencies": {
+		"rendu": "^0.1.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.2",
+		"@types/bun": "latest"
+	}
 }

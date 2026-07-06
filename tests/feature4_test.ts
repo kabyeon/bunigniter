@@ -2,15 +2,15 @@
 // BunIgniter - CSRF, Email, CLI 테스트
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
-	generateCsrfToken,
-	verifyCsrfToken,
-	verifyCsrfTokenSafe,
-	getCsrfToken,
-	csrfMiddleware,
 	csrfField,
 	csrfMeta,
+	csrfMiddleware,
+	generateCsrfToken,
+	getCsrfToken,
+	verifyCsrfToken,
+	verifyCsrfTokenSafe,
 } from "../system/core/csrf.ts";
 import { Email } from "../system/core/email.ts";
 
@@ -111,7 +111,7 @@ describe("CSRF - Bun.CSRF 기반", () => {
 
 	test("verifyCsrfToken - 변조된 토큰", () => {
 		const token = generateCsrfToken({ secret: "my-secret" });
-		const tampered = token.slice(0, -4) + "XXXX";
+		const tampered = `${token.slice(0, -4)}XXXX`;
 		const valid = verifyCsrfToken(tampered, { secret: "my-secret" });
 		expect(valid).toBe(false);
 	});
@@ -203,7 +203,7 @@ describe("CSRF - csrfMiddleware", () => {
 			config: { secret: "test-secret" },
 		});
 		expect(result).toBeInstanceOf(Response);
-		expect(result!.status).toBe(200);
+		expect(result?.status).toBe(200);
 	});
 
 	test("POST - 쿠키 없으면 403", async () => {
@@ -215,7 +215,7 @@ describe("CSRF - csrfMiddleware", () => {
 			config: { secret: "test-secret" },
 		});
 		expect(result).toBeInstanceOf(Response);
-		expect(result!.status).toBe(403);
+		expect(result?.status).toBe(403);
 	});
 
 	test("POST - 유효한 토큰이면 통과", async () => {
@@ -236,7 +236,7 @@ describe("CSRF - csrfMiddleware", () => {
 			config: { secret: "test-secret" },
 		});
 		expect(result).toBeInstanceOf(Response);
-		expect(result!.status).toBe(200);
+		expect(result?.status).toBe(200);
 	});
 
 	test("POST - 토큰 불일치면 403", async () => {
@@ -259,7 +259,7 @@ describe("CSRF - csrfMiddleware", () => {
 			config: { secret: "test-secret" },
 		});
 		expect(result).toBeInstanceOf(Response);
-		expect(result!.status).toBe(403);
+		expect(result?.status).toBe(403);
 	});
 
 	test("POST - X-CSRF-Token 헤더 지원", async () => {
@@ -282,7 +282,7 @@ describe("CSRF - csrfMiddleware", () => {
 			config: { secret: "test-secret" },
 		});
 		expect(result).toBeInstanceOf(Response);
-		expect(result!.status).toBe(200);
+		expect(result?.status).toBe(200);
 	});
 });
 
@@ -347,11 +347,7 @@ describe("Email - Log 드라이버", () => {
 
 	test("sendSimple", async () => {
 		const mailer = new Email({ driver: "log" });
-		const result = await mailer.sendSimple(
-			"test@example.com",
-			"간편 발송",
-			"<p>Test</p>",
-		);
+		const result = await mailer.sendSimple("test@example.com", "간편 발송", "<p>Test</p>");
 		expect(result.success).toBe(true);
 	});
 
@@ -434,9 +430,7 @@ describe("CLI 명령어 구조", () => {
 	});
 
 	test("migrate:rollback - Command 인터페이스", async () => {
-		const { migrateRollback } = await import(
-			"../cli/commands/migraterollback.ts"
-		);
+		const { migrateRollback } = await import("../cli/commands/migraterollback.ts");
 		expect(migrateRollback.name).toBe("migrate:rollback");
 		expect(typeof migrateRollback.run).toBe("function");
 	});
@@ -445,7 +439,7 @@ describe("CLI 명령어 구조", () => {
 		const { serve } = await import("../cli/commands/serve.ts");
 		expect(serve.name).toBe("serve");
 		expect(serve.options).toBeDefined();
-		expect(serve.options!.length).toBeGreaterThan(0);
+		expect(serve.options?.length).toBeGreaterThan(0);
 	});
 
 	test("list:routes - Command 인터페이스", async () => {
@@ -455,9 +449,7 @@ describe("CLI 명령어 구조", () => {
 	});
 
 	test("make:controller - Command 인터페이스", async () => {
-		const { makeController } = await import(
-			"../cli/commands/makecontroller.ts"
-		);
+		const { makeController } = await import("../cli/commands/makecontroller.ts");
 		expect(makeController.name).toBe("make:controller");
 		expect(makeController.options).toBeDefined();
 	});
@@ -478,9 +470,7 @@ describe("CLI 명령어 구조", () => {
 	});
 
 	test("make:middleware - Command 인터페이스", async () => {
-		const { makeMiddleware } = await import(
-			"../cli/commands/makemiddleware.ts"
-		);
+		const { makeMiddleware } = await import("../cli/commands/makemiddleware.ts");
 		expect(makeMiddleware.name).toBe("make:middleware");
 	});
 
@@ -544,12 +534,7 @@ describe("CLI 유틸리티", () => {
 
 	test("parseArgs", async () => {
 		const { parseArgs } = await import("../cli/utils.ts");
-		const result = parseArgs([
-			"posts",
-			"--resource",
-			"--fields",
-			"name:string",
-		]);
+		const result = parseArgs(["posts", "--resource", "--fields", "name:string"]);
 		expect(result.positional).toEqual(["posts"]);
 		expect(result.flags.resource).toBe(true);
 		expect(result.flags.fields).toBe("name:string");

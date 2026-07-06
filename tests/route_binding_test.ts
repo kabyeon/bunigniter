@@ -2,9 +2,9 @@
 // BunIgniter - Route Model Binding Tests
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
-import { RouteModelBinding } from "../system/core/route_model_binding.ts";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { Model } from "../system/core/model.ts";
+import { RouteModelBinding } from "../system/core/route_model_binding.ts";
 
 // 테스트용 모델
 interface TestUser {

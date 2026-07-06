@@ -2,11 +2,11 @@
 // BunIgniter - 보안 테스트
 // ============================================================
 
-import { describe, test, expect } from "bun:test";
-import { csrfField, csrfMeta } from "../system/core/csrf.ts";
-import { Upload } from "../system/core/upload.ts";
-import { Model } from "../system/core/model.ts";
+import { describe, expect, test } from "bun:test";
 import { getAllowedOrigin } from "../system/core/cors.ts";
+import { csrfField, csrfMeta } from "../system/core/csrf.ts";
+import { Model } from "../system/core/model.ts";
+import { Upload } from "../system/core/upload.ts";
 
 // ─── CSRF XSS 방어 ────────────────────────────────────
 
@@ -174,9 +174,9 @@ describe("Model - SQL 인젝션 방어", () => {
 		const model = new TestModel();
 
 		// SQL 인젝션 시도: 컬럼명에 SQL 메타문자
-		await expect(
-			model.findWhere({ "id; DROP TABLE users--": 1 } as any),
-		).rejects.toThrow("Invalid column name");
+		await expect(model.findWhere({ "id; DROP TABLE users--": 1 } as any)).rejects.toThrow(
+			"Invalid column name",
+		);
 	});
 
 	test("findWhere - OR 조건 인젝션 차단", async () => {
@@ -185,9 +185,9 @@ describe("Model - SQL 인젝션 방어", () => {
 		}
 		const model = new TestModel();
 
-		await expect(
-			model.findWhere({ "id = 1 OR 1=1": 1 } as any),
-		).rejects.toThrow("Invalid column name");
+		await expect(model.findWhere({ "id = 1 OR 1=1": 1 } as any)).rejects.toThrow(
+			"Invalid column name",
+		);
 	});
 
 	test("count - 악의적 컬럼명 차단", async () => {
@@ -196,9 +196,9 @@ describe("Model - SQL 인젝션 방어", () => {
 		}
 		const model = new TestModel();
 
-		await expect(
-			model.count({ "1=1); DROP TABLE users; --": 1 } as any),
-		).rejects.toThrow("Invalid column name");
+		await expect(model.count({ "1=1); DROP TABLE users; --": 1 } as any)).rejects.toThrow(
+			"Invalid column name",
+		);
 	});
 
 	test("findWhere - 정상 컬럼명 통과", async () => {
@@ -250,9 +250,7 @@ describe("CORS - 보안 검증", () => {
 	});
 
 	test("허용되지 않은 오리진은 빈 값 반환", () => {
-		const result = getAllowedOrigin("https://evil.com", [
-			"https://example.com",
-		]);
+		const result = getAllowedOrigin("https://evil.com", ["https://example.com"]);
 		expect(result).toBe("");
 	});
 });
@@ -261,9 +259,7 @@ describe("CORS - 보안 검증", () => {
 
 describe("Rate Limit - IP 스푸핑 방어", () => {
 	test("trustProxy=false 시 X-Forwarded-For 무시", async () => {
-		const { rateLimitMiddleware } = await import(
-			"../system/core/rate_limit.ts"
-		);
+		const { rateLimitMiddleware } = await import("../system/core/rate_limit.ts");
 
 		// X-Forwarded-For 헤더가 있어도 trustProxy=false면 무시
 		const request = new Request("http://localhost/", {
@@ -412,11 +408,7 @@ describe("Bootstrap - 정적 파일 Path Traversal 방어", () => {
 		const { resolve, relative } = require("node:path");
 		const publicDir = resolve(process.cwd(), "public");
 		const urlPathname = "/css/style.css";
-		const resolvedPath = resolve(
-			process.cwd(),
-			"public",
-			urlPathname.replace(/^\//, ""),
-		);
+		const resolvedPath = resolve(process.cwd(), "public", urlPathname.replace(/^\//, ""));
 		const relativePath = relative(publicDir, resolvedPath);
 		expect(relativePath.startsWith("..")).toBe(false);
 	});
@@ -425,11 +417,7 @@ describe("Bootstrap - 정적 파일 Path Traversal 방어", () => {
 		const { resolve, relative } = require("node:path");
 		const publicDir = resolve(process.cwd(), "public");
 		const urlPathname = "/../../../etc/passwd";
-		const resolvedPath = resolve(
-			process.cwd(),
-			"public",
-			urlPathname.replace(/^\//, ""),
-		);
+		const resolvedPath = resolve(process.cwd(), "public", urlPathname.replace(/^\//, ""));
 		const relativePath = relative(publicDir, resolvedPath);
 		// 정규화 후에는 public 외부를 가리킴
 		expect(relativePath.startsWith("..")).toBe(true);

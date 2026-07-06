@@ -75,16 +75,12 @@ export class OpenApiGenerator {
 	 *     },
 	 *   });
 	 */
-	describe(
-		method: string,
-		path: string,
-		description: OpenApiPath,
-	): OpenApiGenerator {
+	describe(method: string, path: string, description: OpenApiPath): OpenApiGenerator {
 		const upperMethod = method.toUpperCase();
 		if (!this.pathOverrides.has(path)) {
 			this.pathOverrides.set(path, new Map());
 		}
-		this.pathOverrides.get(path)!.set(upperMethod, description);
+		this.pathOverrides.get(path)?.set(upperMethod, description);
 		return this;
 	}
 
@@ -107,9 +103,7 @@ export class OpenApiGenerator {
 			tags.add(tag);
 
 			// 오버라이드 확인
-			const override = this.pathOverrides
-				.get(route.path)
-				?.get(route.method);
+			const override = this.pathOverrides.get(route.path)?.get(route.method);
 
 			// 파라미터 추출
 			const parameters = this.extractParameters(openApiPath, route.method);
@@ -209,10 +203,7 @@ export class OpenApiGenerator {
 	}
 
 	/** 파라미터 추출 */
-	private extractParameters(
-		openApiPath: string,
-		method: string,
-	): any[] {
+	private extractParameters(openApiPath: string, method: string): any[] {
 		const params: any[] = [];
 
 		// 경로 파라미터

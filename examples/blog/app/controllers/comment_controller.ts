@@ -1,5 +1,5 @@
-import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 import { getDB } from "system/core/database.ts";
 
 /** 허용된 리다이렉트 경로인지 검증 (오픈 리다이렉트 방지) */

@@ -72,8 +72,8 @@ export async function rateLimitMiddleware({
 }: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
-}): Promise<Response | void> {
+	next: () => Promise<Response | undefined>;
+}): Promise<Response | undefined> {
 	return handleRateLimit(request, next, DEFAULT_CONFIG);
 }
 
@@ -85,8 +85,8 @@ export function createRateLimitMiddleware(
 ): (ctx: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
-}) => Promise<Response | void> {
+	next: () => Promise<Response | undefined>;
+}) => Promise<Response | undefined> {
 	const merged = { ...DEFAULT_CONFIG, ...config };
 	return async ({ request, next }) => handleRateLimit(request, next, merged);
 }
@@ -96,9 +96,9 @@ export function createRateLimitMiddleware(
  */
 async function handleRateLimit(
 	request: Request,
-	next: () => Promise<Response | void>,
+	next: () => Promise<Response | undefined>,
 	config: RateLimitConfig,
-): Promise<Response | void> {
+): Promise<Response | undefined> {
 	const key = config.keyGenerator
 		? config.keyGenerator(request)
 		: getClientIp(request, config.trustProxy);
@@ -223,9 +223,7 @@ export function resetRateLimitForKey(key: string): boolean {
 /**
  * 현재 Rate Limit 상태 조회
  */
-export function getRateLimitStatus(
-	key: string,
-): { count: number; resetTime: number } | null {
+export function getRateLimitStatus(key: string): { count: number; resetTime: number } | null {
 	const entry = rateLimitStore.get(key);
 	if (!entry) return null;
 	return { count: entry.count, resetTime: entry.resetTime };

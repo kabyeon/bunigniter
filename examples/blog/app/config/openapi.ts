@@ -1,6 +1,6 @@
-import { OpenApiGenerator } from "system/core/openapi.ts";
-import type { OpenApiConfig } from "system/core/openapi.ts";
 import apiRouter from "app/config/api_routes.ts";
+import type { OpenApiConfig } from "system/core/openapi.ts";
+import { OpenApiGenerator } from "system/core/openapi.ts";
 
 export const openApiConfig: OpenApiConfig = {
 	info: {

@@ -1,5 +1,5 @@
-import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 import { Model } from "system/core/model.ts";
 
 // ─── 모델 정의 ──────────────────────────────────
@@ -117,10 +117,7 @@ export class ApiPostController extends Controller {
 			published: Number(data.published) ?? 0,
 		} as any);
 
-		return this.json(
-			{ data: { id: created.id, title: created.title, slug: created.slug } },
-			201,
-		);
+		return this.json({ data: { id: created.id, title: created.title, slug: created.slug } }, 201);
 	}
 
 	// PUT /api/posts/:id — 포스트 수정

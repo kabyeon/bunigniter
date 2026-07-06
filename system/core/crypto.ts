@@ -96,10 +96,7 @@ export class Crypto {
 	 * Crypto.hash("hello world", { encoding: "base64" });  // sha256 base64
 	 * ```
 	 */
-	static hash(
-		data: string | Uint8Array | ArrayBuffer,
-		options?: HashOptions,
-	): string {
+	static hash(data: string | Uint8Array | ArrayBuffer, options?: HashOptions): string {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
 
@@ -139,10 +136,7 @@ export class Crypto {
 	 * const fileHash = await Crypto.hashFile("photo.jpg", { algorithm: "sha256" });
 	 * ```
 	 */
-	static async hashFile(
-		filePath: string,
-		options?: HashOptions,
-	): Promise<string> {
+	static async hashFile(filePath: string, options?: HashOptions): Promise<string> {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
 
@@ -164,11 +158,7 @@ export class Crypto {
 	 * Crypto.hmac("hello world", "secret-key", { algorithm: "sha512" });
 	 * ```
 	 */
-	static hmac(
-		data: string | Uint8Array | ArrayBuffer,
-		key: string,
-		options?: HmacOptions,
-	): string {
+	static hmac(data: string | Uint8Array | ArrayBuffer, key: string, options?: HmacOptions): string {
 		const algorithm = options?.algorithm ?? "sha256";
 		const encoding = options?.encoding ?? "hex";
 
@@ -227,10 +217,7 @@ export class Crypto {
 	/**
 	 * xxHash64
 	 */
-	static xxHash64(
-		data: string | Uint8Array | ArrayBuffer,
-		seed?: bigint,
-	): bigint {
+	static xxHash64(data: string | Uint8Array | ArrayBuffer, seed?: bigint): bigint {
 		return Bun.hash.xxHash64(data, seed);
 	}
 
@@ -245,10 +232,7 @@ export class Crypto {
 	 * const hash = await Crypto.hashPassword("mypassword", { algorithm: "bcrypt", cost: 12 });
 	 * ```
 	 */
-	static async hashPassword(
-		password: string,
-		options?: PasswordHashOptions,
-	): Promise<string> {
+	static async hashPassword(password: string, options?: PasswordHashOptions): Promise<string> {
 		const algorithm = options?.algorithm ?? "argon2id";
 
 		if (algorithm === "bcrypt") {
@@ -268,10 +252,7 @@ export class Crypto {
 	/**
 	 * 비밀번호 해시 (동기)
 	 */
-	static hashPasswordSync(
-		password: string,
-		options?: PasswordHashOptions,
-	): string {
+	static hashPasswordSync(password: string, options?: PasswordHashOptions): string {
 		const algorithm = options?.algorithm ?? "argon2id";
 
 		if (algorithm === "bcrypt") {
@@ -296,10 +277,7 @@ export class Crypto {
 	 * const valid = await Crypto.verifyPassword("mypassword", storedHash);
 	 * ```
 	 */
-	static async verifyPassword(
-		password: string,
-		hash: string,
-	): Promise<boolean> {
+	static async verifyPassword(password: string, hash: string): Promise<boolean> {
 		return await Bun.password.verify(password, hash);
 	}
 

@@ -174,9 +174,7 @@ export function dashboardHtml(data: DashboardData): string {
 <div class="card">
   ${
 		data.registeredHandlers.length > 0
-			? data.registeredHandlers
-					.map((h) => `<span class="tag">${h}</span>`)
-					.join(" ")
+			? data.registeredHandlers.map((h) => `<span class="tag">${h}</span>`).join(" ")
 			: '<p style="color:#666">No handlers registered</p>'
 	}
 </div>
@@ -263,9 +261,7 @@ export async function collectDashboardData(
  *   const routes = createDashboardRoutes(["default", "emails"]);
  *   // routes를 Bun.serve routes에 등록
  */
-export function createDashboardRoutes(
-	queueNames: string[] = ["default"],
-): Array<{
+export function createDashboardRoutes(queueNames: string[] = ["default"]): Array<{
 	method: string;
 	path: string;
 	handler: (ctx: any) => any;

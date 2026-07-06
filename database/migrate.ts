@@ -2,9 +2,9 @@
 // BunIgniter - 데이터베이스 마이그레이션 실행기
 // ============================================================
 
-import { SQL } from "bun";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
+import { SQL } from "bun";
 
 async function migrate() {
 	console.log("\n📦 마이그레이션 실행 중...\n");

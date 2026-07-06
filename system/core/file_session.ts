@@ -5,17 +5,17 @@
 // SessionDriver 인터페이스 구현
 // ============================================================
 
-import type { SessionDriver } from "./session_driver.ts";
 import {
-	readFileSync,
-	writeFileSync,
 	existsSync,
 	mkdirSync,
 	readdirSync,
-	unlinkSync,
+	readFileSync,
 	statSync,
+	unlinkSync,
+	writeFileSync,
 } from "node:fs";
 import { join } from "node:path";
+import type { SessionDriver } from "./session_driver.ts";
 
 const DEFAULT_SESSION_DIR = join(process.cwd(), "storage", "sessions");
 const SESSION_COOKIE_NAME = "bunigniter_session";
@@ -24,9 +24,7 @@ const DEFAULT_EXPIRATION = 7200; // 2시간 (초)
 
 /** 세션 ID 유효성 검증 (UUID v4 형식, 경로 순회 방지) */
 function isValidSessionId(sid: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-		sid,
-	);
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(sid);
 }
 
 /** 파일 기반 세션 드라이버 */
@@ -37,10 +35,7 @@ export class FileSession implements SessionDriver {
 	private sessionDir: string;
 	private cookieName: string;
 
-	constructor(
-		request: Request,
-		options?: { sessionDir?: string; cookieName?: string },
-	) {
+	constructor(request: Request, options?: { sessionDir?: string; cookieName?: string }) {
 		this.sessionDir = options?.sessionDir ?? DEFAULT_SESSION_DIR;
 		this.cookieName = options?.cookieName ?? SESSION_COOKIE_NAME;
 

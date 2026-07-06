@@ -1,5 +1,5 @@
-import { Controller } from "system/core/controller.ts";
 import type { Context } from "system/core/controller.ts";
+import { Controller } from "system/core/controller.ts";
 import { getDB } from "system/core/database.ts";
 
 /** 허용된 리다이렉트 경로인지 검증 (오픈 리다이렉트 방지) */
@@ -23,8 +23,7 @@ export class PostController extends Controller {
 		const perPage = 5;
 
 		const sql = await getDB();
-		const total =
-			await sql`SELECT COUNT(*) as count FROM posts WHERE published = 1`;
+		const total = await sql`SELECT COUNT(*) as count FROM posts WHERE published = 1`;
 		const count = (total[0] as any).count;
 		const totalPages = Math.ceil(count / perPage);
 		const offset = (page - 1) * perPage;
@@ -61,7 +60,7 @@ export class PostController extends Controller {
 	}
 
 	// GET /admin/posts — 관리 포스트 목록
-	async admin({}: Context) {
+	async admin(_ctx: Context) {
 		const sql = await getDB();
 		const posts =
 			await sql`SELECT p.*, u.name as author_name FROM posts p JOIN users u ON p.author_id = u.id ORDER BY p.created_at DESC`;
@@ -73,7 +72,7 @@ export class PostController extends Controller {
 	}
 
 	// GET /admin/posts/create
-	async create({}: Context) {
+	async create(_ctx: Context) {
 		return this.view("posts/create", {
 			title: "새 포스트 작성",
 		});
@@ -97,8 +96,7 @@ export class PostController extends Controller {
 	// GET /admin/posts/:id/edit
 	async edit({ params, response }: Context) {
 		const sql = await getDB();
-		const posts =
-			await sql`SELECT * FROM posts WHERE id = ${Number(params.id)}`;
+		const posts = await sql`SELECT * FROM posts WHERE id = ${Number(params.id)}`;
 		const post = posts[0] as any;
 
 		if (!post) return response.status(404).send("포스트를 찾을 수 없습니다");

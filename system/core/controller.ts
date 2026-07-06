@@ -51,10 +51,7 @@ export class Controller {
 	 * CodeIgniter3: $this->load->view('welcome_message', $data)
 	 * BunIgniter: this.view('welcome/index', { title: 'Hello' })
 	 */
-	async view(
-		viewPath: string,
-		data: Record<string, any> = {},
-	): Promise<Response> {
+	async view(viewPath: string, data: Record<string, any> = {}): Promise<Response> {
 		return renderView(viewPath, data);
 	}
 

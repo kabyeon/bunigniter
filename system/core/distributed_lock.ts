@@ -54,8 +54,7 @@ export class RedisLockDriver implements DistributedLockDriver {
 	`;
 
 	constructor(options?: { redisUrl?: string; keyPrefix?: string }) {
-		const url =
-			options?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379";
+		const url = options?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379";
 		this.keyPrefix = options?.keyPrefix ?? "bunigniter:lock:";
 		this.client = new RedisClient(url, {
 			autoReconnect: true,
@@ -129,13 +128,7 @@ export class RedisLockDriver implements DistributedLockDriver {
 		// SCAN으로 키 찾기 (대량 키 안전 처리)
 		let cursor = "0";
 		do {
-			const result = await this.client.send("SCAN", [
-				cursor,
-				"MATCH",
-				pattern,
-				"COUNT",
-				"100",
-			]);
+			const result = await this.client.send("SCAN", [cursor, "MATCH", pattern, "COUNT", "100"]);
 
 			const [nextCursor, keys] = result as [string, string[]];
 			cursor = nextCursor;
@@ -305,7 +298,6 @@ export class DistributedLock {
 						keyPrefix: DistributedLock.config.keyPrefix,
 					});
 					break;
-				case "memory":
 				default:
 					DistributedLock.driver = new MemoryLockDriver();
 					break;
@@ -344,10 +336,7 @@ export class DistributedLock {
 	/**
 	 * 잠금 연장
 	 */
-	static async renew(
-		lock: { key: string; owner: string },
-		ttlMs?: number,
-	): Promise<boolean> {
+	static async renew(lock: { key: string; owner: string }, ttlMs?: number): Promise<boolean> {
 		const ttl = ttlMs ?? DistributedLock.config.defaultTtl;
 		return DistributedLock.getDriver().renew(lock.key, ttl, lock.owner);
 	}
@@ -383,18 +372,13 @@ export class DistributedLock {
 		ttl: number;
 		attempts: number;
 	}> {
-		const retryInterval =
-			options?.retryInterval ?? DistributedLock.config.retryInterval;
+		const retryInterval = options?.retryInterval ?? DistributedLock.config.retryInterval;
 		const maxRetries = options?.maxRetries ?? DistributedLock.config.maxRetries;
 		const owner = crypto.randomUUID();
 		const ttl = ttlMs ?? DistributedLock.config.defaultTtl;
 
 		for (let attempt = 0; attempt < maxRetries; attempt++) {
-			const acquired = await DistributedLock.getDriver().acquire(
-				key,
-				ttl,
-				owner,
-			);
+			const acquired = await DistributedLock.getDriver().acquire(key, ttl, owner);
 			if (acquired) {
 				return { acquired: true, key, owner, ttl, attempts: attempt + 1 };
 			}

@@ -4,10 +4,10 @@
 // 설정에 따라 Memory/File/Redis 드라이버를 자동 선택
 // ============================================================
 
-import type { SessionDriver, SessionConfig } from "./session_driver.ts";
-import { MemorySession } from "./memory_session.ts";
 import { FileSession } from "./file_session.ts";
+import { MemorySession } from "./memory_session.ts";
 import { RedisSession } from "./redis_session.ts";
+import type { SessionConfig, SessionDriver } from "./session_driver.ts";
 
 /** 기본 세션 설정 */
 const DEFAULT_CONFIG: SessionConfig = {

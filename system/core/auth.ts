@@ -5,9 +5,9 @@
 // SessionDriver 인터페이스 기반으로 리팩토링
 // ============================================================
 
-import { createSession } from "./session_manager.ts";
-import type { SessionDriver } from "./session_driver.ts";
 import { getDB } from "./database.ts";
+import type { SessionDriver } from "./session_driver.ts";
+import { createSession } from "./session_manager.ts";
 
 export interface AuthUser {
 	id: number;
@@ -64,8 +64,7 @@ export class Auth {
 	): Promise<AuthResult> {
 		const sql = await getDB();
 
-		const users =
-			await sql`SELECT * FROM ${sql(tableName)} WHERE email = ${email}`;
+		const users = await sql`SELECT * FROM ${sql(tableName)} WHERE email = ${email}`;
 		const user = users[0] as AuthUser | undefined;
 
 		if (!user) {
@@ -119,8 +118,7 @@ export class Auth {
 		tableName: string = "users",
 	): Promise<AuthResult> {
 		const sql = await getDB();
-		const users =
-			await sql`SELECT * FROM ${sql(tableName)} WHERE id = ${userId}`;
+		const users = await sql`SELECT * FROM ${sql(tableName)} WHERE id = ${userId}`;
 		const user = users[0] as AuthUser | undefined;
 
 		if (!user) {
@@ -188,10 +186,7 @@ export class Auth {
 	/**
 	 * 비밀번호 검증
 	 */
-	static async verifyPassword(
-		password: string,
-		hash: string,
-	): Promise<boolean> {
+	static async verifyPassword(password: string, hash: string): Promise<boolean> {
 		return await Bun.password.verify(password, hash, "bcrypt");
 	}
 }
@@ -206,8 +201,8 @@ export async function authGuard({
 }: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
-}): Promise<Response | void> {
+	next: () => Promise<Response | undefined>;
+}): Promise<Response | undefined> {
 	if (!(await Auth.check(request))) {
 		return new Response(null, {
 			status: 302,
@@ -227,8 +222,8 @@ export async function guestGuard({
 }: {
 	request: Request;
 	response: any;
-	next: () => Promise<Response | void>;
-}): Promise<Response | void> {
+	next: () => Promise<Response | undefined>;
+}): Promise<Response | undefined> {
 	if (await Auth.check(request)) {
 		return new Response(null, {
 			status: 302,

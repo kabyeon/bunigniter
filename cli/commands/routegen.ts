@@ -4,9 +4,9 @@
 // app/config/routes.ts 에 추가할 라우트 코드를 생성합니다.
 // ============================================================
 
-import { toSnakeCase, toPascalCase, toPlural } from "../utils.ts";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { toPascalCase, toPlural, toSnakeCase } from "../utils.ts";
 
 export interface RouteGenOptions {
 	name: string;
@@ -43,10 +43,7 @@ export function generateRouteCode(options: RouteGenOptions): string {
 /**
  * 생성된 라우트 코드를 routes.ts 파일에 자동으로 추가합니다.
  */
-export function appendRouteToFile(
-	projectRoot: string,
-	options: RouteGenOptions,
-): boolean {
+export function appendRouteToFile(projectRoot: string, options: RouteGenOptions): boolean {
 	const routeFile = join(projectRoot, "app", "config", "routes.ts");
 
 	if (!existsSync(routeFile)) {
@@ -66,10 +63,7 @@ export function appendRouteToFile(
 
 	// export default 앞에 추가
 	if (content.includes("export default")) {
-		const updated = content.replace(
-			"export default",
-			`${routeCode}\n\nexport default`,
-		);
+		const updated = content.replace("export default", `${routeCode}\n\nexport default`);
 		writeFileSync(routeFile, updated, "utf-8");
 	} else {
 		writeFileSync(routeFile, `${content}\n\n${routeCode}`, "utf-8");

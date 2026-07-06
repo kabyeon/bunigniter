@@ -267,9 +267,7 @@ document.addEventListener("keydown", (e) => {
  *   const routes = createAuditLogRoutes();
  *   // routes를 앱에 등록
  */
-export function createAuditLogRoutes(
-	config?: Partial<AuditLogUIConfig>,
-): Array<{
+export function createAuditLogRoutes(config?: Partial<AuditLogUIConfig>): Array<{
 	method: string;
 	path: string;
 	handler: (ctx: any) => any;
@@ -289,9 +287,7 @@ export function createAuditLogRoutes(
 			async handler(ctx: any) {
 				let url: URL;
 				try {
-					url = new URL(
-						ctx.request?.url ?? `http://localhost${uiConfig.basePath}`,
-					);
+					url = new URL(ctx.request?.url ?? `http://localhost${uiConfig.basePath}`);
 				} catch {
 					url = new URL(`http://localhost${uiConfig.basePath}`);
 				}
@@ -306,21 +302,11 @@ export function createAuditLogRoutes(
 
 				try {
 					if (event) {
-						entries = await AuditLog.getLogsByEvent(
-							event,
-							uiConfig.perPage * page,
-						);
+						entries = await AuditLog.getLogsByEvent(event, uiConfig.perPage * page);
 					} else if (entityType) {
-						entries = await AuditLog.getLogs(
-							entityType,
-							undefined,
-							uiConfig.perPage * page,
-						);
+						entries = await AuditLog.getLogs(entityType, undefined, uiConfig.perPage * page);
 					} else if (userId) {
-						entries = await AuditLog.getLogsByUser(
-							Number(userId),
-							uiConfig.perPage * page,
-						);
+						entries = await AuditLog.getLogsByUser(Number(userId), uiConfig.perPage * page);
 					} else {
 						// 전체 로그 (가장 최근 항목)
 						const model = new (await import("./audit_log.ts")).AuditLogModel();
@@ -328,10 +314,7 @@ export function createAuditLogRoutes(
 					}
 
 					totalCount = entries.length;
-					entries = entries.slice(
-						(page - 1) * uiConfig.perPage,
-						page * uiConfig.perPage,
-					);
+					entries = entries.slice((page - 1) * uiConfig.perPage, page * uiConfig.perPage);
 				} catch {
 					// 테이블이 없거나 조회 실패
 				}
@@ -419,10 +402,7 @@ export function createAuditLogRoutes(
 			async handler(ctx: any) {
 				const type = ctx.params?.type;
 				if (!type) {
-					return Response.json(
-						{ error: "Missing entity type" },
-						{ status: 400 },
-					);
+					return Response.json({ error: "Missing entity type" }, { status: 400 });
 				}
 
 				const entries = await AuditLog.getLogs(type);
@@ -436,10 +416,7 @@ export function createAuditLogRoutes(
 			async handler(ctx: any) {
 				const event = ctx.params?.event;
 				if (!event) {
-					return Response.json(
-						{ error: "Missing event type" },
-						{ status: 400 },
-					);
+					return Response.json({ error: "Missing event type" }, { status: 400 });
 				}
 
 				const entries = await AuditLog.getLogsByEvent(event);

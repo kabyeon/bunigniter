@@ -5,8 +5,7 @@
 // ============================================================
 
 import { RedisClient } from "bun";
-import { Queue, type JobPayload } from "./queue.ts";
-import { logger } from "./logger.ts";
+import { Queue } from "./queue.ts";
 
 // ─── 인터페이스 ──────────────────────────────────────
 
@@ -76,8 +75,7 @@ export class BroadcastQueue {
 
 	constructor(config?: Partial<BroadcastQueueConfig>) {
 		this.config = {
-			redisUrl:
-				config?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379",
+			redisUrl: config?.redisUrl ?? process.env.REDIS_URL ?? "redis://localhost:6379",
 			channelPrefix: config?.channelPrefix ?? "bunigniter:broadcast:",
 			queues: config?.queues ?? ["default"],
 			maxRetries: config?.maxRetries ?? 10,
@@ -123,9 +121,7 @@ export class BroadcastQueue {
 		});
 
 		this.connected = true;
-		console.log(
-			`[BunIgniter] BroadcastQueue connected: ${this.config.queues.join(", ")}`,
-		);
+		console.log(`[BunIgniter] BroadcastQueue connected: ${this.config.queues.join(", ")}`);
 	}
 
 	/**
@@ -225,14 +221,9 @@ export class BroadcastQueue {
 
 	// ─── 내부 메서드 ────────────────────────────────────
 
-	private async publish(
-		channelName: string,
-		message: BroadcastMessage,
-	): Promise<void> {
+	private async publish(channelName: string, message: BroadcastMessage): Promise<void> {
 		if (!this.publisher || !this.connected) {
-			console.warn(
-				"[BunIgniter] BroadcastQueue not connected, skipping publish",
-			);
+			console.warn("[BunIgniter] BroadcastQueue not connected, skipping publish");
 			return;
 		}
 
@@ -240,7 +231,7 @@ export class BroadcastQueue {
 		await this.publisher.publish(channel, JSON.stringify(message));
 	}
 
-	private handleMessage(rawMessage: string, channel: string): void {
+	private handleMessage(rawMessage: string, _channel: string): void {
 		let message: BroadcastMessage;
 		try {
 			message = JSON.parse(rawMessage) as BroadcastMessage;
@@ -288,17 +279,13 @@ export class BroadcastQueue {
 			case "worker:start": {
 				const queue = message.payload?.queue ?? "default";
 				Queue.work(queue);
-				console.log(
-					`[BunIgniter] Received worker:start command for "${queue}"`,
-				);
+				console.log(`[BunIgniter] Received worker:start command for "${queue}"`);
 				break;
 			}
 			case "flush:failed": {
 				const queue = message.payload?.queue ?? "default";
 				Queue.flushFailed(queue);
-				console.log(
-					`[BunIgniter] Received flush:failed command for "${queue}"`,
-				);
+				console.log(`[BunIgniter] Received flush:failed command for "${queue}"`);
 				break;
 			}
 			case "scheduler:stop":
@@ -328,8 +315,7 @@ export class BroadcastQueue {
 function Scheduler_stopAll(): void {
 	try {
 		// 동적 임포트 대신 직접 호출
-		const { Scheduler } =
-			require("./scheduler.ts") as typeof import("./scheduler.ts");
+		const { Scheduler } = require("./scheduler.ts") as typeof import("./scheduler.ts");
 		Scheduler.stopAll();
 	} catch {
 		console.error("[BunIgniter] Failed to stop scheduler via broadcast");

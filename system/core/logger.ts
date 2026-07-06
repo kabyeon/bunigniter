@@ -4,15 +4,7 @@
 // 파일 기반 로깅 + 레벨 필터링 + 로그 회전
 // ============================================================
 
-import {
-	writeFileSync,
-	existsSync,
-	mkdirSync,
-	readdirSync,
-	statSync,
-	unlinkSync,
-	appendFileSync,
-} from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
 
 export type LogLevel = "debug" | "info" | "warn" | "error" | "fatal";
@@ -80,9 +72,7 @@ export class Logger {
 
 	constructor(options: LoggerOptions = {}) {
 		this.logDir = options.logDir ?? join(process.cwd(), "storage", "logs");
-		this.minLevel =
-			options.minLevel ??
-			(process.env.NODE_ENV === "production" ? "info" : "debug");
+		this.minLevel = options.minLevel ?? (process.env.NODE_ENV === "production" ? "info" : "debug");
 		this.enableConsole = options.console ?? true;
 		this.enableFile = options.file ?? true;
 		this.format = options.format ?? "[{timestamp}] [{level}] {message}";
@@ -123,11 +113,7 @@ export class Logger {
 	/**
 	 * 로그 작성
 	 */
-	private log(
-		level: LogLevel,
-		message: string,
-		context?: Record<string, any>,
-	): void {
+	private log(level: LogLevel, message: string, context?: Record<string, any>): void {
 		// 레벨 필터링
 		if (LOG_LEVELS[level] < LOG_LEVELS[this.minLevel]) return;
 
@@ -169,7 +155,7 @@ export class Logger {
 				}
 			}
 
-			appendFileSync(filePath, formatted + "\n", "utf-8");
+			appendFileSync(filePath, `${formatted}\n`, "utf-8");
 		} catch (err: any) {
 			console.error(`로그 파일 쓰기 실패: ${err.message}`);
 		}

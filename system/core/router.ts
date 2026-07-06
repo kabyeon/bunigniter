@@ -4,11 +4,7 @@
 // Bun.serve 네이티브 라우터 기반
 // ============================================================
 
-import type {
-	Controller,
-	Context,
-	ResponseStatusBuilder,
-} from "./controller.ts";
+import type { Context, Controller, ResponseStatusBuilder } from "./controller.ts";
 import type { MiddlewareFn } from "./middleware.ts";
 import { runMiddlewarePipeline } from "./middleware.ts";
 import { RouteModelBinding } from "./route_model_binding.ts";
@@ -51,12 +47,7 @@ export class Router {
 	private globalMiddleware: MiddlewareFn[] = [];
 
 	/** GET 라우트 */
-	get(
-		path: string,
-		controller: Controller,
-		method: string,
-		middleware?: MiddlewareFn[],
-	): Router {
+	get(path: string, controller: Controller, method: string, middleware?: MiddlewareFn[]): Router {
 		this.routes.push({
 			method: "GET",
 			path,
@@ -67,12 +58,7 @@ export class Router {
 	}
 
 	/** POST 라우트 */
-	post(
-		path: string,
-		controller: Controller,
-		method: string,
-		middleware?: MiddlewareFn[],
-	): Router {
+	post(path: string, controller: Controller, method: string, middleware?: MiddlewareFn[]): Router {
 		this.routes.push({
 			method: "POST",
 			path,
@@ -83,12 +69,7 @@ export class Router {
 	}
 
 	/** PUT 라우트 */
-	put(
-		path: string,
-		controller: Controller,
-		method: string,
-		middleware?: MiddlewareFn[],
-	): Router {
+	put(path: string, controller: Controller, method: string, middleware?: MiddlewareFn[]): Router {
 		this.routes.push({
 			method: "PUT",
 			path,
@@ -115,12 +96,7 @@ export class Router {
 	}
 
 	/** PATCH 라우트 */
-	patch(
-		path: string,
-		controller: Controller,
-		method: string,
-		middleware?: MiddlewareFn[],
-	): Router {
+	patch(path: string, controller: Controller, method: string, middleware?: MiddlewareFn[]): Router {
 		this.routes.push({
 			method: "PATCH",
 			path,
@@ -143,11 +119,7 @@ export class Router {
 	 *   PUT    /resource/:id       -> update
 	 *   DELETE /resource/:id       -> delete
 	 */
-	resource(
-		path: string,
-		controller: Controller,
-		middleware?: MiddlewareFn[],
-	): Router {
+	resource(path: string, controller: Controller, middleware?: MiddlewareFn[]): Router {
 		this.get(`/${path}`, controller, "index", middleware);
 		this.get(`/${path}/create`, controller, "create", middleware);
 		this.post(`/${path}`, controller, "store", middleware);
@@ -165,11 +137,7 @@ export class Router {
 	}
 
 	/** API 전용 라우트 그룹 (미들웨어 적용) */
-	group(
-		prefix: string,
-		middleware: MiddlewareFn[],
-		callback: (router: Router) => void,
-	): Router {
+	group(prefix: string, middleware: MiddlewareFn[], callback: (router: Router) => void): Router {
 		const subRouter = new Router();
 		callback(subRouter);
 
@@ -218,8 +186,7 @@ export class Router {
 			pathGroups[route.path].set(route.method, route);
 		}
 
-		const routeMap: Record<string, (req: any) => Response | Promise<Response>> =
-			{};
+		const routeMap: Record<string, (req: any) => Response | Promise<Response>> = {};
 
 		for (const [path, methodMap] of Object.entries(pathGroups)) {
 			routeMap[path] = async (req: any) => {
@@ -235,14 +202,8 @@ export class Router {
 				}
 
 				// ── 미들웨어 파이프라인 실행 ──
-				const allMiddleware = [
-					...this.globalMiddleware,
-					...(route.middleware ?? []),
-				];
-				const middlewareResponse = await runMiddlewarePipeline(
-					req,
-					allMiddleware,
-				);
+				const allMiddleware = [...this.globalMiddleware, ...(route.middleware ?? [])];
+				const middlewareResponse = await runMiddlewarePipeline(req, allMiddleware);
 				if (middlewareResponse) return middlewareResponse;
 
 				// ── URL 파라미터 추출 (BunRequest.params) ──
@@ -252,20 +213,14 @@ export class Router {
 				}
 
 				// ── 라우트 모델 바인딩 ──
-				const hasBinding = Object.keys(params).some((p) =>
-					RouteModelBinding.has(p),
-				);
+				const hasBinding = Object.keys(params).some((p) => RouteModelBinding.has(p));
 				if (hasBinding) {
-					const { params: resolvedParams, notFound } =
-						await RouteModelBinding.resolve(params);
+					const { params: resolvedParams, notFound } = await RouteModelBinding.resolve(params);
 					if (notFound) {
-						return new Response(
-							JSON.stringify({ error: `${notFound} not found` }),
-							{
-								status: 404,
-								headers: { "Content-Type": "application/json" },
-							},
-						);
+						return new Response(JSON.stringify({ error: `${notFound} not found` }), {
+							status: 404,
+							headers: { "Content-Type": "application/json" },
+						});
 					}
 					Object.assign(params, resolvedParams);
 				}
@@ -291,9 +246,7 @@ export class Router {
 					} else if (contentType.includes("multipart/form-data")) {
 						const formData = await req.formData();
 						bodyData = Object.fromEntries(formData.entries());
-					} else if (
-						contentType.includes("application/x-www-form-urlencoded")
-					) {
+					} else if (contentType.includes("application/x-www-form-urlencoded")) {
 						const text = await req.text();
 						bodyData = Object.fromEntries(new URLSearchParams(text).entries());
 					}
@@ -363,8 +316,8 @@ export class Router {
 	 */
 	printRoutes(): void {
 		console.log("\n📋 등록된 라우트:\n");
-		console.log("  " + "Method".padEnd(8) + "Path".padEnd(30) + "Handler");
-		console.log("  " + "─".repeat(8) + "─".repeat(30) + "─".repeat(20));
+		console.log(`  ${"Method".padEnd(8)}${"Path".padEnd(30)}Handler`);
+		console.log(`  ${"─".repeat(8)}${"─".repeat(30)}${"─".repeat(20)}`);
 		for (const route of this.routes) {
 			const methodStr = route.method.padEnd(8);
 			const pathStr = route.path.padEnd(30);

@@ -3,21 +3,21 @@
 // 사용법: bun run igniter <command> <name> [options]
 // ============================================================
 
-import { CommandRegistry } from "./registry.ts";
+import { dbSeed, makeSeed } from "./commands/dbseed.ts";
+import { listRoutes } from "./commands/listroutes.ts";
 import { makeController } from "./commands/makecontroller.ts";
-import { makeModel } from "./commands/makemodel.ts";
-import { makeView } from "./commands/makeview.ts";
-import { makeMigration } from "./commands/makemigration.ts";
-import { makeMiddleware } from "./commands/makemiddleware.ts";
-import { makeScaffold } from "./commands/makescaffold.ts";
 import { makeHelper } from "./commands/makehelper.ts";
 import { makeLibrary } from "./commands/makelibrary.ts";
-import { listRoutes } from "./commands/listroutes.ts";
-import { serve } from "./commands/serve.ts";
+import { makeMiddleware } from "./commands/makemiddleware.ts";
+import { makeMigration } from "./commands/makemigration.ts";
+import { makeModel } from "./commands/makemodel.ts";
+import { makeScaffold } from "./commands/makescaffold.ts";
+import { makeView } from "./commands/makeview.ts";
 import { migrate } from "./commands/migrate.ts";
 import { migrateRollback } from "./commands/migraterollback.ts";
-import { makeSeed, dbSeed } from "./commands/dbseed.ts";
 import { replCommand } from "./commands/repl.ts";
+import { serve } from "./commands/serve.ts";
+import { CommandRegistry } from "./registry.ts";
 
 const registry = new CommandRegistry();
 
@@ -41,12 +41,7 @@ registry.register("repl", replCommand);
 // CLI 실행
 const args = process.argv.slice(2);
 
-if (
-	args.length === 0 ||
-	args[0] === "help" ||
-	args[0] === "--help" ||
-	args[0] === "-h"
-) {
+if (args.length === 0 || args[0] === "help" || args[0] === "--help" || args[0] === "-h") {
 	registry.showHelp();
 	process.exit(0);
 }

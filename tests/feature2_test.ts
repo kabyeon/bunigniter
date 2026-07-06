@@ -2,18 +2,15 @@
 // BunIgniter - Worker Pool, Distributed Lock, Audit Log UI 테스트
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
-import { WorkerPool, resetWorkerPool } from "../system/core/worker_pool.ts";
+import { beforeEach, describe, expect, test } from "bun:test";
+import type { AuditLogEntry } from "../system/core/audit_log.ts";
+import { auditLogHtml, createAuditLogRoutes } from "../system/core/audit_log_ui.ts";
 import {
 	DistributedLock,
 	MemoryLockDriver,
 	RedisLockDriver,
 } from "../system/core/distributed_lock.ts";
-import {
-	auditLogHtml,
-	createAuditLogRoutes,
-} from "../system/core/audit_log_ui.ts";
-import type { AuditLogEntry } from "../system/core/audit_log.ts";
+import { resetWorkerPool, WorkerPool } from "../system/core/worker_pool.ts";
 
 // ─── WorkerPool 테스트 ──────────────────────────────────
 

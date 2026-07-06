@@ -1,18 +1,18 @@
 {
-  "name": "bunigniter-blog",
-  "version": "1.0.0",
-  "description": "BunIgniter Blog Example App",
-  "type": "module",
-  "scripts": {
-    "dev": "bun run --hot app/bootstrap.ts",
-    "start": "bun run app/bootstrap.ts",
-    "migrate": "bun run database/migrate.ts",
-    "seed": "bun run database/seed.ts"
-  },
-  "dependencies": {
-    "rendu": "^0.1.0"
-  },
-  "devDependencies": {
-    "@types/bun": "latest"
-  }
+	"name": "bunigniter-blog",
+	"version": "1.0.0",
+	"description": "BunIgniter Blog Example App",
+	"type": "module",
+	"scripts": {
+		"dev": "bun run --hot app/bootstrap.ts",
+		"start": "bun run app/bootstrap.ts",
+		"migrate": "bun run database/migrate.ts",
+		"seed": "bun run database/seed.ts"
+	},
+	"dependencies": {
+		"rendu": "^0.1.0"
+	},
+	"devDependencies": {
+		"@types/bun": "latest"
+	}
 }

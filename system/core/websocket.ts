@@ -6,11 +6,7 @@
 
 export type WebSocketHandler = (ws: any, message: any) => void;
 export type WebSocketOpenHandler = (ws: any) => void;
-export type WebSocketCloseHandler = (
-	ws: any,
-	code: number,
-	reason: string,
-) => void;
+export type WebSocketCloseHandler = (ws: any, code: number, reason: string) => void;
 
 export interface WebSocketConfig {
 	/** 경로 (기본값: "/ws") */
@@ -59,7 +55,7 @@ export class WebSocketManager {
 		if (!this.channels.has(channel)) {
 			this.channels.set(channel, new Set());
 		}
-		this.channels.get(channel)!.add(ws);
+		this.channels.get(channel)?.add(ws);
 	}
 
 	/** 채널 구독 해제 */

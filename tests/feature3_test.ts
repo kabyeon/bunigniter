@@ -2,11 +2,11 @@
 // BunIgniter - SSE, Image, Crypto 테스트
 // ============================================================
 
-import { describe, test, expect, beforeEach } from "bun:test";
-import { SSEManager, createSSERoutes } from "../system/core/sse.ts";
-import { ImageEditor } from "../system/core/image.ts";
+import { beforeEach, describe, expect, test } from "bun:test";
 import { Crypto } from "../system/core/crypto.ts";
-import type { SSEEvent, SSEConfig } from "../system/core/sse.ts";
+import { ImageEditor } from "../system/core/image.ts";
+import type { SSEConfig, SSEEvent } from "../system/core/sse.ts";
+import { createSSERoutes, SSEManager } from "../system/core/sse.ts";
 
 // ─── SSE 테스트 ────────────────────────────────────────
 
@@ -142,9 +142,7 @@ describe("SSEManager", () => {
 			allowedOrigin: "https://example.com",
 		});
 		const response = corsManager.handleConnection();
-		expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
-			"https://example.com",
-		);
+		expect(response.headers.get("Access-Control-Allow-Origin")).toBe("https://example.com");
 	});
 });
 
@@ -254,9 +252,7 @@ describe("ImageEditor", () => {
 describe("Crypto", () => {
 	test("hash - SHA-256 기본", () => {
 		const hash = Crypto.hash("hello world");
-		expect(hash).toBe(
-			"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
-		);
+		expect(hash).toBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
 	});
 
 	test("hash - SHA-512", () => {
@@ -272,9 +268,7 @@ describe("Crypto", () => {
 	test("hash - Uint8Array 입력", () => {
 		const data = new TextEncoder().encode("hello world");
 		const hash = Crypto.hash(data);
-		expect(hash).toBe(
-			"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
-		);
+		expect(hash).toBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
 	});
 
 	test("createHasher - 증분 해시", () => {
@@ -283,16 +277,12 @@ describe("Crypto", () => {
 		hasher.update(" ");
 		hasher.update("world");
 		const result = hasher.digest("hex");
-		expect(result).toBe(
-			"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
-		);
+		expect(result).toBe("b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9");
 	});
 
 	test("hmac - SHA-256", () => {
 		const hmac = Crypto.hmac("hello world", "secret-key");
-		expect(hmac).toBe(
-			"095d5a21fe6d0646db223fdf3de6436bb8dfb2fab0b51677ecf6441fcf5f2a67",
-		);
+		expect(hmac).toBe("095d5a21fe6d0646db223fdf3de6436bb8dfb2fab0b51677ecf6441fcf5f2a67");
 	});
 
 	test("hmac - base64 인코딩", () => {
@@ -356,9 +346,7 @@ describe("Crypto", () => {
 
 	test("uuid", () => {
 		const uuid = Crypto.uuid();
-		expect(uuid).toMatch(
-			/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
-		);
+		expect(uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
 	});
 
 	test("uuidBatch", () => {

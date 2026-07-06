@@ -4,9 +4,9 @@
 // CI3의 $this->db->insert_id() + 로깅 대체
 // ============================================================
 
-import { Model } from "./model.ts";
 import { getDB } from "./database.ts";
 import { logger } from "./logger.ts";
+import { Model } from "./model.ts";
 
 // ─── 인터페이스 ──────────────────────────────────────
 
@@ -138,15 +138,11 @@ export class AuditLog {
 		if (!AuditLog.config.enabled) return null;
 
 		// 이벤트 필터링
-		if (
-			AuditLog.config.trackEvents.length > 0 &&
-			!AuditLog.config.trackEvents.includes(event)
-		) {
+		if (AuditLog.config.trackEvents.length > 0 && !AuditLog.config.trackEvents.includes(event)) {
 			return null;
 		}
 
-		const userId =
-			options?.userId ?? AuditLog.config.userIdResolver?.() ?? null;
+		const userId = options?.userId ?? AuditLog.config.userIdResolver?.() ?? null;
 		const ipAddress = options?.ipAddress ?? "unknown";
 		const description = options?.description ?? null;
 
@@ -281,10 +277,7 @@ export class AuditLog {
 	/**
 	 * 특정 이벤트 타입의 로그 조회
 	 */
-	static async getLogsByEvent(
-		event: string,
-		limit: number = 50,
-	): Promise<AuditLogEntry[]> {
+	static async getLogsByEvent(event: string, limit: number = 50): Promise<AuditLogEntry[]> {
 		if (!AuditLog.modelInstance) {
 			AuditLog.modelInstance = new AuditLogModel();
 		}
@@ -295,10 +288,7 @@ export class AuditLog {
 	/**
 	 * 사용자의 감사 로그 조회
 	 */
-	static async getLogsByUser(
-		userId: number,
-		limit: number = 50,
-	): Promise<AuditLogEntry[]> {
+	static async getLogsByUser(userId: number, limit: number = 50): Promise<AuditLogEntry[]> {
 		if (!AuditLog.modelInstance) {
 			AuditLog.modelInstance = new AuditLogModel();
 		}
@@ -314,10 +304,7 @@ export class AuditLog {
 	 * 모델에 감사 추적 설정
 	 * 모델의 create/update/delete 후 자동 로그 기록
 	 */
-	static track(
-		model: any,
-		events: string[] = ["create", "update", "delete"],
-	): void {
+	static track(model: any, events: string[] = ["create", "update", "delete"]): void {
 		const tableName = model.tableName ?? "unknown";
 		AuditLog.trackedModels.set(tableName, { model, events });
 	}

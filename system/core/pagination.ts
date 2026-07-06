@@ -124,9 +124,7 @@ export function paginationInfo(pagination: PaginationData): string {
 /**
  * API 응답용 페이지네이션 메타데이터
  */
-export function paginationMeta(
-	pagination: PaginationData,
-): Record<string, any> {
+export function paginationMeta(pagination: PaginationData): Record<string, any> {
 	const { total, page, perPage, totalPages } = pagination;
 	return {
 		current_page: page,
@@ -143,11 +141,7 @@ export function paginationMeta(
 /**
  * 페이지 범위 계산 (현재 페이지 중심)
  */
-function getPageRange(
-	current: number,
-	total: number,
-	maxVisible: number,
-): (number | "...")[] {
+function getPageRange(current: number, total: number, maxVisible: number): (number | "...")[] {
 	if (total <= maxVisible) {
 		return Array.from({ length: total }, (_, i) => i + 1);
 	}

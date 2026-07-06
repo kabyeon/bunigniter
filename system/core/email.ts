@@ -112,7 +112,6 @@ export class Email {
 					return await this.sendViaSmtp(message, from, to);
 				case "sendmail":
 					return await this.sendViaSendmail(message, from, to);
-				case "log":
 				default:
 					return this.sendViaLog(message, from, to);
 			}
@@ -122,11 +121,7 @@ export class Email {
 	}
 
 	/** 간편 발송 */
-	async sendSimple(
-		to: string,
-		subject: string,
-		html: string,
-	): Promise<EmailResult> {
+	async sendSimple(to: string, subject: string, html: string): Promise<EmailResult> {
 		return this.send({ to, subject, html });
 	}
 
@@ -178,16 +173,8 @@ export class Email {
 			// RCPT TO (to + cc + bcc)
 			const allRecipients = [
 				...to,
-				...(message.cc
-					? Array.isArray(message.cc)
-						? message.cc
-						: [message.cc]
-					: []),
-				...(message.bcc
-					? Array.isArray(message.bcc)
-						? message.bcc
-						: [message.bcc]
-					: []),
+				...(message.cc ? (Array.isArray(message.cc) ? message.cc : [message.cc]) : []),
+				...(message.bcc ? (Array.isArray(message.bcc) ? message.bcc : [message.bcc]) : []),
 			];
 			for (const rcpt of allRecipients) {
 				await this.smtpWrite(socket, `RCPT TO:<${rcpt}>`);
@@ -220,11 +207,7 @@ export class Email {
 		}
 	}
 
-	private async smtpConnect(
-		host: string,
-		port: number,
-		secure: boolean,
-	): Promise<any> {
+	private async smtpConnect(host: string, port: number, secure: boolean): Promise<any> {
 		return Bun.connect({
 			hostname: host,
 			port,
@@ -285,10 +268,7 @@ export class Email {
 	 * Bun.spawn으로 sendmail 실행
 	 * stdin: "pipe" → FileSink로 빠른 증분 쓰기
 	 */
-	private async sendViaSendmailSpawn(
-		content: string,
-		to: string[],
-	): Promise<EmailResult> {
+	private async sendViaSendmailSpawn(content: string, to: string[]): Promise<EmailResult> {
 		const sendmailPath = this.config.sendmailPath ?? "sendmail";
 		const sendmailArgs = this.config.sendmailArgs ?? ["-t", "-i"];
 
@@ -328,10 +308,7 @@ export class Email {
 	 * Bun.$ 셸로 sendmail 실행
 	 * 템플릿 리터럴로 안전한 명령어 구성 (자동 이스케이프)
 	 */
-	private async sendViaSendmailShell(
-		content: string,
-		to: string[],
-	): Promise<EmailResult> {
+	private async sendViaSendmailShell(content: string, to: string[]): Promise<EmailResult> {
 		const sendmailPath = this.config.sendmailPath ?? "sendmail";
 		const sendmailArgs = this.config.sendmailArgs ?? ["-t", "-i"];
 
@@ -386,9 +363,7 @@ export class Email {
 			`From: ${from.email}`,
 			`To: ${to.join(", ")}`,
 			`Subject: ${message.subject}`,
-			message.cc
-				? `CC: ${Array.isArray(message.cc) ? message.cc.join(", ") : message.cc}`
-				: "",
+			message.cc ? `CC: ${Array.isArray(message.cc) ? message.cc.join(", ") : message.cc}` : "",
 			`Body: ${(message.html ?? message.text ?? "").substring(0, 500)}`,
 			"---",
 		]
@@ -417,14 +392,12 @@ export class Email {
 			`To: ${to.join(", ")}`,
 			`Subject: =?UTF-8?B?${btoa(unescape(encodeURIComponent(message.subject)))}?=`,
 			"MIME-Version: 1.0",
-			"Date: " + new Date().toUTCString(),
-			"Message-ID: <" + crypto.randomUUID() + "@bunigniter>",
+			`Date: ${new Date().toUTCString()}`,
+			`Message-ID: <${crypto.randomUUID()}@bunigniter>`,
 		];
 
 		if (message.cc) {
-			headers.push(
-				`Cc: ${Array.isArray(message.cc) ? message.cc.join(", ") : message.cc}`,
-			);
+			headers.push(`Cc: ${Array.isArray(message.cc) ? message.cc.join(", ") : message.cc}`);
 		}
 
 		if (message.replyTo) {
@@ -439,9 +412,7 @@ export class Email {
 
 		let body: string;
 		if (message.html && message.text) {
-			headers.push(
-				`Content-Type: multipart/alternative; boundary="${boundary}"`,
-			);
+			headers.push(`Content-Type: multipart/alternative; boundary="${boundary}"`);
 			body = [
 				`--${boundary}`,
 				"Content-Type: text/plain; charset=UTF-8",
