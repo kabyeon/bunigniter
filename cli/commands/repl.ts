@@ -1,118 +1,199 @@
 // ============================================================
 // BunIgniter - CLI REPL 명령어
-// AdonisJS Ace REPL 스타일 인터랙티브 셸
-// Bun 내장 REPL + 프레임워크 컨텍스트 주입
+// Bun 네이티브 readline 기반 REPL
+// list:routes 와 동일한 parseRoutesFromFile/printRoutes 사용
 // ============================================================
 
-import { readdirSync } from "node:fs";
-import path from "node:path";
-import * as repl from "node:repl";
-import { inspect } from "node:util";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
+import * as readline from "node:readline";
 import type { Command } from "../registry.ts";
+import { parseRoutesFromFile, printRoutes } from "./route_list.ts";
 
-// ─── REPL 커스텀 메서드 타입 ────────────────────────────
+// ─── 히스토리 ──────────────────────────────────────────
 
-interface ReplMethod {
-	name: string;
-	description: string;
-	usage: string;
-	handler: (replCtx: ReplContext, ...args: any[]) => any;
+const HISTORY_FILE = join(process.cwd(), "storage/logs/.repl_history");
+const MAX_HISTORY = 500;
+
+function loadHistory(): string[] {
+	try {
+		if (existsSync(HISTORY_FILE)) {
+			return readFileSync(HISTORY_FILE, "utf-8").split("\n").filter(Boolean).slice(-MAX_HISTORY);
+		}
+	} catch (_e) {
+		/* ignore */
+	}
+	return [];
 }
 
-// ─── REPL 컨텍스트 ────────────────────────────────────
+function saveHistory(entry: string): void {
+	try {
+		mkdirSync(join(process.cwd(), "storage/logs"), { recursive: true });
+		const existing = loadHistory();
+		existing.push(entry);
+		writeFileSync(HISTORY_FILE, existing.slice(-MAX_HISTORY).join("\n"));
+	} catch (_e) {
+		/* ignore */
+	}
+}
 
-class ReplContext {
-	private methods: Map<string, ReplMethod> = new Map();
-	private longestMethodName = 0;
+// ─── 프레임워크 컨텍스트 ─────────────────────────────
 
-	constructor() {
-		this.registerBuiltinMethods();
+async function loadFrameworkContext(): Promise<Record<string, any>> {
+	const context: Record<string, any> = {};
+
+	try {
+		const core = await import("../../system/core/index.ts");
+		context.Controller = core.Controller;
+		context.Model = core.Model;
+		context.Router = core.Router;
+		context.Validator = core.Validator;
+		context.validate = core.validate;
+		context.Auth = core.Auth;
+		context.Cache = core.Cache;
+		context.Queue = core.Queue;
+		context.Scheduler = core.Scheduler;
+		context.Email = core.Email;
+		context.Logger = core.Logger;
+		context.Upload = core.Upload;
+		context.AuditLog = core.AuditLog;
+		context.DistributedLock = core.DistributedLock;
+		context.Crypto = core.Crypto;
+		context.SSEManager = core.SSEManager;
+		context.WebSocketManager = core.WebSocketManager;
+		context.CryptoHasher = Bun.CryptoHasher;
+		context.getCookie = core.getCookie;
+		context.setCookie = core.setCookie;
+		context.paginationHtml = core.paginationHtml;
+		context.generateCsrfToken = core.generateCsrfToken;
+		context.verifyCsrfToken = core.verifyCsrfToken;
+		context.UserAgent = (await import("../../system/core/user_agent.ts")).UserAgent;
+		context.Profiler = (await import("../../system/core/profiler.ts")).Profiler;
+		context.autoloadRegistry = (await import("../../system/core/autoload.ts")).autoloadRegistry;
+		context.AutoRouter = (await import("../../system/core/auto_router.ts")).AutoRouter;
+	} catch (err: any) {
+		console.log(`\x1b[33m⚠ Framework modules: ${err.message}\x1b[0m`);
 	}
 
-	/** 커스텀 메서드 등록 */
-	addMethod(
-		name: string,
-		description: string,
-		usage: string,
-		handler: (ctx: ReplContext, ...args: any[]) => any,
-	): void {
-		const width = usage.length;
-		if (width > this.longestMethodName) this.longestMethodName = width;
-		this.methods.set(name, { name, description, usage, handler });
+	try {
+		context.config = (await import("../../app/config/app.ts")).default ?? {};
+	} catch (_e) {
+		/* ignore */
 	}
 
-	/** 등록된 메서드 목록 */
-	getMethods(): ReplMethod[] {
-		return [...this.methods.values()];
+	try {
+		context.db = (await import("../../system/core/database.ts")).getDB;
+	} catch (_e) {
+		/* ignore */
 	}
 
-	/** 도움말 출력 */
-	printHelp(): void {
-		console.log("\n\x1b[32mGLOBAL METHODS:\x1b[0m");
-		for (const method of this.methods.values()) {
-			const usage = `\x1b[33m${method.usage}\x1b[0m`;
-			const spaces = " ".repeat(Math.max(1, this.longestMethodName - method.usage.length + 2));
-			const desc = `\x1b[2m${method.description}\x1b[0m`;
-			console.log(`  ${usage}${spaces}${desc}`);
+	context.env = { ...process.env };
+	context.app = {
+		name: "BunIgniter",
+		version: "1.0.0",
+		runtime: `Bun ${Bun.version}`,
+		platform: process.platform,
+		pid: process.pid,
+	};
+
+	return context;
+}
+
+// ─── 닷 커맨드 ──────────────────────────────────────────
+
+function handleDotCommand(cmd: string, ctx: Record<string, any>): void {
+	switch (cmd.trim()) {
+		case ".help": {
+			console.log("");
+			console.log("\x1b[32mBUNIGNITER REPL COMMANDS:\x1b[0m");
+			console.log("  \x1b[33m.help\x1b[0m     Show this help message");
+			console.log("  \x1b[33m.ls\x1b[0m      List context properties");
+			console.log(
+				"  \x1b[33m.routes\x1b[0m  List registered routes (same as `bun run bi list:routes`)",
+			);
+			console.log("  \x1b[33m.models\x1b[0m  List available models");
+			console.log("  \x1b[33m.config\x1b[0m  Show application configuration");
+			console.log("  \x1b[33m.clear\x1b[0m   Clear screen");
+			console.log("  \x1b[33m.exit\x1b[0m    Exit the REPL");
+			console.log("");
+			console.log("\x1b[32mTIPS:\x1b[0m");
+			console.log("  - Top-level \x1b[33mawait\x1b[0m is supported");
+			console.log("  - Framework classes are auto-imported (Controller, Model, etc.)");
+			console.log(
+				"  - \x1b[33mdb\x1b[0m = database connection, \x1b[33mconfig\x1b[0m = app config",
+			);
+			console.log("");
+			break;
 		}
-		console.log("");
-	}
 
-	/** 컨텍스트 프로퍼티 출력 */
-	printContext(server: repl.REPLServer): void {
-		console.log("\n\x1b[32mCONTEXT PROPERTIES:\x1b[0m");
-		const skip = new Set([
-			"clear",
-			"p",
-			"ls",
-			"help",
-			"load",
-			"models",
-			"config",
-			"db",
-			"routes",
-			"env",
-			"app",
-		]);
-		const context: Record<string, any> = {};
-		for (const key of Object.keys(server.context)) {
-			if (!skip.has(key) && typeof server.context[key] !== "function") {
-				context[key] = server.context[key];
+		case ".ls": {
+			console.log("\n\x1b[32mCONTEXT:\x1b[0m");
+			for (const [key, value] of Object.entries(ctx)) {
+				const type =
+					typeof value === "function"
+						? value.name
+							? `${value.name}()`
+							: "function"
+						: typeof value;
+				console.log(`  \x1b[33m${key}\x1b[0m: ${type}`);
 			}
+			console.log("");
+			break;
 		}
-		console.log(inspect(context, false, 1, true));
-	}
 
-	/** 내장 메서드 등록 */
-	private registerBuiltinMethods(): void {
-		this.addMethod(
-			"clear",
-			"Clear a property from the REPL context",
-			"clear <propertyName>",
-			(_ctx: ReplContext, key: string, server: repl.REPLServer) => {
-				if (!key) {
-					console.log("\x1b[31mDefine a property name to remove\x1b[0m");
-					return;
+		case ".routes": {
+			console.log("");
+			const routes = parseRoutesFromFile();
+			printRoutes(routes);
+			break;
+		}
+
+		case ".models": {
+			console.log("\n\x1b[32mAVAILABLE MODELS:\x1b[0m");
+			try {
+				const modelDir = join(process.cwd(), "app/models");
+				if (existsSync(modelDir)) {
+					const files = readdirSync(modelDir);
+					for (const file of files) {
+						if (file.endsWith(".ts")) {
+							const modelName = file.replace(".ts", "");
+							console.log(`  \x1b[33m${modelName}\x1b[0m`);
+						}
+					}
+				} else {
+					console.log("  \x1b[2mNo models directory\x1b[0m");
 				}
-				delete server.context[key];
-				console.log(`Cleared: ${key}`);
-			},
-		);
+			} catch (_e) {
+				console.log("  \x1b[2mNo models found\x1b[0m");
+			}
+			console.log("");
+			break;
+		}
 
-		this.addMethod(
-			"p",
-			"Promisify a callback function",
-			"p <function>",
-			(_ctx: ReplContext, fn: Function) => {
-				const promisify =
-					(f: Function) =>
-					(...args: any[]) =>
-						new Promise((resolve, reject) => {
-							f(...args, (err: any, result: any) => (err ? reject(err) : resolve(result)));
-						});
-				return promisify(fn);
-			},
-		);
+		case ".config": {
+			console.log("\n\x1b[32mAPPLICATION CONFIG:\x1b[0m");
+			console.log(JSON.stringify(ctx.config, null, 2));
+			console.log("");
+			break;
+		}
+
+		case ".clear": {
+			console.clear();
+			break;
+		}
+
+		case ".exit": {
+			console.log("\x1b[33m🔥 Goodbye!\x1b[0m");
+			process.exit(0);
+			break;
+		}
+
+		default: {
+			console.log(
+				`\x1b[31mUnknown command: ${cmd}\x1b[0m  Type \x1b[33m.help\x1b[0m for available commands.`,
+			);
+			break;
+		}
 	}
 }
 
@@ -125,217 +206,62 @@ export const replCommand: Command = {
 	options: [],
 	async run(_args: string[]) {
 		console.log("");
-		console.log("\x1b[33m\x1b[3m🔥 BunIgniter REPL - Type .ls to view available methods\x1b[0m");
-		console.log("\x1b[2m  Type .exit or press Ctrl+C twice to exit\x1b[0m");
+		console.log("\x1b[33m\x1b[3m🔥 BunIgniter REPL\x1b[0m");
+		console.log("\x1b[2m  Type .help for commands, .exit to quit\x1b[0m");
 		console.log("");
 
-		const ctx = new ReplContext();
+		const ctx = await loadFrameworkContext();
+		const varNames = Object.keys(ctx);
 
-		// 프레임워크 모듈 지연 로드
-		let frameworkModules: Record<string, any> = {};
-
-		try {
-			const core = await import("../../system/core/index.ts");
-			frameworkModules = {
-				Controller: core.Controller,
-				Model: core.Model,
-				Router: core.Router,
-				Validator: core.Validator,
-				validate: core.validate,
-				Auth: core.Auth,
-				Cache: core.Cache,
-				Queue: core.Queue,
-				Scheduler: core.Scheduler,
-				Email: core.Email,
-				Logger: core.Logger,
-				Upload: core.Upload,
-				AuditLog: core.AuditLog,
-				DistributedLock: core.DistributedLock,
-				Crypto: core.Crypto,
-				SSEManager: core.SSEManager,
-				WebSocketManager: core.WebSocketManager,
-				CryptoHasher: Bun.CryptoHasher,
-				getCookie: core.getCookie,
-				setCookie: core.setCookie,
-				paginationHtml: core.paginationHtml,
-				generateCsrfToken: core.generateCsrfToken,
-				verifyCsrfToken: core.verifyCsrfToken,
-			};
-		} catch (err: any) {
-			console.log(`\x1b[33m⚠ Framework modules not loaded: ${err.message}\x1b[0m`);
-		}
-
-		// 설정 로드
-		let appConfig: Record<string, any> = {};
-		try {
-			appConfig = (await import("../../app/config/app.ts")).default ?? {};
-		} catch (err: any) {
-			console.log(`\x1b[33m⚠ Config not loaded: ${err.message}\x1b[0m`);
-		}
-		let db: any = null;
-		try {
-			db = (await import("../../system/core/database.ts")).getDB;
-		} catch (err: any) {
-			console.log(`\x1b[33m⚠ Database not available: ${err.message}\x1b[0m`);
-		}
-		const env: Record<string, string | undefined> = {};
-		for (const [key, value] of Object.entries(process.env)) {
-			if (value !== undefined) env[key] = value;
-		}
-
-		// REPL 서버 시작
-		const server = repl.start({
-			prompt: "\x1b[36m> \x1b[0m",
-			useColors: true,
-			useGlobal: true,
-		});
-
-		// 프레임워크 컨텍스트 주입
-		Object.assign(server.context, frameworkModules);
-
-		// 커스텀 컨텍스트
-		server.context.config = appConfig;
-		server.context.env = env;
-		server.context.app = {
-			name: "BunIgniter",
-			version: "1.0.0",
-			runtime: `Bun ${Bun.version}`,
-			platform: process.platform,
-			pid: process.pid,
-		};
-
-		// DB 컨텍스트 (지연)
-		if (db) {
-			server.context.db = db;
-			ctx.addMethod("db", "Get database connection", "db", () => db);
-		}
-
-		// 커스텀 .ls 명령어
-		server.defineCommand("ls", {
-			help: "View list of available context methods/properties",
-			action() {
-				ctx.printHelp();
-				ctx.printContext(server);
-				this.displayPrompt();
+		const rl = readline.createInterface({
+			input: process.stdin,
+			output: process.stdout,
+			history: loadHistory(),
+			completer: (line: string) => {
+				const commands = [".help", ".ls", ".routes", ".models", ".config", ".clear", ".exit"];
+				const hits = [...varNames, ...commands].filter((c) => c.startsWith(line));
+				return [hits.length ? hits : varNames, line];
 			},
 		});
 
-		// 커스텀 .models 명령어
-		server.defineCommand("models", {
-			help: "List available models",
-			action() {
-				console.log("\n\x1b[32mAVAILABLE MODELS:\x1b[0m");
-				try {
-					const modelDir = path.resolve(process.cwd(), "app/models");
-					const files = readdirSync(modelDir);
-					for (const file of files) {
-						if (file.endsWith(".ts")) {
-							console.log(`  \x1b[33m${file.replace(".ts", "")}\x1b[0m`);
-						}
-					}
-				} catch {
-					console.log("  \x1b[2mNo models found\x1b[0m");
+		rl.setPrompt("\x1b[36m> \x1b[0m");
+		rl.prompt();
+
+		rl.on("line", async (line) => {
+			const trimmed = line.trim();
+			if (!trimmed) {
+				rl.prompt();
+				return;
+			}
+
+			saveHistory(trimmed);
+
+			// 닷 커맨드
+			if (trimmed.startsWith(".")) {
+				handleDotCommand(trimmed, ctx);
+				rl.prompt();
+				return;
+			}
+
+			// 코드 평가
+			try {
+				const varDecls = varNames.map((k) => `const ${k} = __ctx__["${k}"];`).join("");
+				const wrappedCode = `${varDecls}\n${trimmed}`;
+				const fn = new Function("__ctx__", `return (async () => { ${wrappedCode} })()`);
+				const result = await fn(ctx);
+				if (result !== undefined) {
+					console.log(result);
 				}
-				this.displayPrompt();
-			},
+			} catch (err: any) {
+				console.log(`\x1b[31m${err.message}\x1b[0m`);
+			}
+
+			rl.prompt();
 		});
 
-		// 커스텀 .routes 명령어
-		server.defineCommand("routes", {
-			help: "List registered routes",
-			action() {
-				console.log("\n\x1b[32mROUTES:\x1b[0m");
-				try {
-					// Router가 설정되어 있으면 라우트 목록 출력
-					const router = server.context.Router;
-					if (router?.getRoutes) {
-						const routes = router.getRoutes();
-						for (const route of routes) {
-							console.log(`  \x1b[36m${route.method}\x1b[0m ${route.path}`);
-						}
-					} else {
-						console.log("  \x1b[2mRun server first or load routes config\x1b[0m");
-					}
-				} catch (err: any) {
-					console.log(`  \x1b[31m${err.message}\x1b[0m`);
-				}
-				this.displayPrompt();
-			},
-		});
-
-		// 커스텀 .config 명령어
-		server.defineCommand("config", {
-			help: "Show application configuration",
-			action() {
-				console.log("\n\x1b[32mAPPLICATION CONFIG:\x1b[0m");
-				console.log(inspect(server.context.config, false, 3, true));
-				this.displayPrompt();
-			},
-		});
-
-		// 커스텀 .load 명령어
-		server.defineCommand("load", {
-			help: "Load a module into the REPL context (e.g. .load ./app/models/user_model)",
-			action(modulePath: string) {
-				if (!modulePath?.trim()) {
-					console.log("\x1b[31mUsage: .load <module-path>\x1b[0m");
-					this.displayPrompt();
-					return;
-				}
-
-				const resolvedPath = modulePath.trim().startsWith(".")
-					? path.resolve(process.cwd(), modulePath.trim())
-					: modulePath.trim();
-
-				import(resolvedPath)
-					.then((mod) => {
-						const name = path.basename(resolvedPath, ".ts");
-						server.context[name] = mod.default ?? mod;
-						console.log(`\x1b[32mLoaded: ${name}\x1b[0m`);
-						this.displayPrompt();
-					})
-					.catch((err: any) => {
-						console.log(`\x1b[31mFailed to load: ${err.message}\x1b[0m`);
-						this.displayPrompt();
-					});
-			},
-		});
-
-		// 커스텀 .help 명령어 덮어쓰기
-		server.defineCommand("help", {
-			help: "Show REPL help",
-			action() {
-				console.log("\n\x1b[32mBUNIGNITER REPL COMMANDS:\x1b[0m");
-				console.log("  \x1b[33m.ls\x1b[0m       List context properties and methods");
-				console.log("  \x1b[33m.models\x1b[0m   List available models");
-				console.log("  \x1b[33m.routes\x1b[0m   List registered routes");
-				console.log("  \x1b[33m.config\x1b[0m   Show application configuration");
-				console.log("  \x1b[33m.load\x1b[0m    Load a module (.load ./path/to/module)");
-				console.log("  \x1b[33m.clear\x1b[0m   Clear a context property (clear <name>)");
-				console.log("  \x1b[33m.exit\x1b[0m    Exit the REPL");
-				console.log("\n\x1b[32mNODE REPL COMMANDS:\x1b[0m");
-				console.log("  \x1b[33m.break\x1b[0m   Exit from multi-line input");
-				console.log("  \x1b[33m.editor\x1b[0m  Enter editor mode (ctrl+C to finish)");
-				console.log("  \x1b[33m.save\x1b[0m    Save REPL session to a file");
-				console.log("  \x1b[33m.load\x1b[0m    Load a JS file into the REPL session");
-				console.log("");
-				this.displayPrompt();
-			},
-		});
-
-		// 히스토리 파일 설정
-		const historyPath = path.resolve(process.cwd(), "storage/logs/.repl_history");
-		try {
-			const { mkdirSync } = await import("node:fs");
-			mkdirSync(path.dirname(historyPath), { recursive: true });
-			server.setupHistory(historyPath, (err) => {
-				if (err) console.log(`\x1b[33m⚠ History file warning: ${err.message}\x1b[0m`);
-			});
-		} catch {}
-
-		// 종료 처리
-		server.on("exit", () => {
+		rl.on("close", () => {
 			console.log("\n\x1b[33m🔥 BunIgniter REPL closed. Goodbye!\x1b[0m");
+			process.exit(0);
 		});
 	},
 };

@@ -4,6 +4,7 @@ database/*.db
 .env
 .pi-lens/
 storage/logs/*.log
+storage/logs/.repl_history
 storage/sessions/sess_*
 storage/cache/*
 !storage/cache/.gitkeep
