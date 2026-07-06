@@ -10,6 +10,9 @@ import type { DatabaseConfig } from "../../app/config/database.ts";
 /** 데이터베이스 연결 인스턴스 캐시 */
 const connections: Record<string, SQL> = {};
 
+/** 데이터베이스 어댑터 타입 캐시 (QueryBuilder 방언 분기용) */
+const adapterTypes: Record<string, "sqlite" | "postgres" | "mysql"> = {};
+
 /**
  * 데이터베이스 연결을 가져옵니다.
  * CodeIgniter3 의 $this->db 와 동일
@@ -75,7 +78,17 @@ export async function getDB(group?: string): Promise<SQL> {
 	}
 
 	connections[groupName] = sql;
+	adapterTypes[groupName] = groupConfig.adapter;
 	return sql;
+}
+
+/**
+ * 데이터베이스 어댑터 타입 조회
+ * QueryBuilder에서 SQL 방언 분기에 사용
+ */
+export function getDBAdapter(group?: string): "sqlite" | "postgres" | "mysql" {
+	const groupName = group ?? "default";
+	return adapterTypes[groupName] ?? "sqlite"; // 기본값: sqlite
 }
 
 /**
@@ -85,6 +98,7 @@ export async function closeAllConnections(): Promise<void> {
 	for (const [name, sql] of Object.entries(connections)) {
 		await sql.close();
 		delete connections[name];
+		delete adapterTypes[name];
 	}
 }
 
@@ -92,8 +106,9 @@ export async function closeAllConnections(): Promise<void> {
  * 테스트용: DB 연결 직접 주입
  * 메모리 DB 등을 직접 설정할 때 사용
  */
-export function setDB(sql: SQL, group: string = "default"): void {
+export function setDB(sql: SQL, group: string = "default", adapter: "sqlite" | "postgres" | "mysql" = "sqlite"): void {
 	connections[group] = sql;
+	adapterTypes[group] = adapter;
 }
 
 /**
@@ -102,9 +117,11 @@ export function setDB(sql: SQL, group: string = "default"): void {
 export function resetDB(group?: string): void {
 	if (group) {
 		delete connections[group];
+		delete adapterTypes[group];
 	} else {
 		for (const name of Object.keys(connections)) {
 			delete connections[name];
+			delete adapterTypes[name];
 		}
 	}
 }

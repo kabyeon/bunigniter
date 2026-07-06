@@ -6,7 +6,7 @@ export type { Context, ResponseStatusBuilder } from "./controller.ts";
 export { Model } from "./model.ts";
 export { QueryBuilder, createQueryBuilder } from "./query_builder.ts";
 export { Router } from "./router.ts";
-export { getDB, closeAllConnections, setDB, resetDB } from "./database.ts";
+export { getDB, closeAllConnections, setDB, resetDB, getDBAdapter } from "./database.ts";
 export { loadConfig, clearConfigCache, getAppRoot } from "./config.ts";
 export { Input } from "./input.ts";
 export { Session } from "./session.ts";

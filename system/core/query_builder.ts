@@ -1,10 +1,14 @@
 // ============================================================
 // BunIgniter - Query Builder (Active Record 패턴)
 // CodeIgniter3 의 $this->db->select()->from()->where() 와 동일
+// SQLite / PostgreSQL / MySQL 3종 어댑터 방언 자동 분기
 // ============================================================
 
-import { getDB } from "./database.ts";
+import { getDB, getDBAdapter } from "./database.ts";
 import type { SQL } from "bun";
+
+/** 지원 어댑터 타입 */
+type AdapterType = "sqlite" | "postgres" | "mysql";
 
 /**
  * WHERE 절 유형
@@ -69,12 +73,6 @@ interface OrderClause {
  *     .orderBy('created_at', 'DESC')
  *     .limit(10, 0)
  *     .get();
- *
- * 또는 Model에서:
- *   const results = await this.qb()
- *     .select('id, title')
- *     ->where('published', 1)
- *     ->get();
  */
 export class QueryBuilder {
 	private _select: string[] = [];
@@ -89,8 +87,24 @@ export class QueryBuilder {
 	private _distinctVal = false;
 	private _dbGroup?: string;
 
+	/** 어댑터 타입 (지연 로딩: 첫 쿼리 실행 시 결정) */
+	private _adapter: AdapterType | null = null;
+
 	constructor(dbGroup?: string) {
 		this._dbGroup = dbGroup;
+	}
+
+	// ─── 어댑터 감지 ────────────────────────────────
+
+	/**
+	 * 현재 DB 어댑터 타입 반환
+	 * 첫 호출 시 getDBAdapter()에서 가져와 캐시
+	 */
+	private detectAdapter(): AdapterType {
+		if (!this._adapter) {
+			this._adapter = getDBAdapter(this._dbGroup);
+		}
+		return this._adapter;
 	}
 
 	// ─── SELECT ──────────────────────────────────────
@@ -178,7 +192,12 @@ export class QueryBuilder {
 	 * CI3: $this->db->from('posts')
 	 */
 	from(table: string): this {
-		this._from = table;
+		// 테이블 별칭("posts p", "users u")이면 그대로, 단일 테이블명이면 이스케이프
+		if (table.includes(" ") || table.includes(".")) {
+			this._from = table;
+		} else {
+			this._from = this.escapeIdentifier(table);
+		}
 		return this;
 	}
 
@@ -215,6 +234,8 @@ export class QueryBuilder {
 
 	/**
 	 * RIGHT JOIN
+	 * ⚠️ MySQL을 제외한 대부분의 DB에서 RIGHT JOIN 미지원
+	 *     SQLite 3.39.0+ 지원, PostgreSQL 지원
 	 */
 	rightJoin(table: string, condition: string): this {
 		return this.join(table, condition, "RIGHT");
@@ -230,7 +251,6 @@ export class QueryBuilder {
 	 */
 	where(column: string, value?: any): this {
 		if (value === undefined) {
-			// Raw condition: where('title IS NOT NULL')
 			this._wheres.push({ type: "and_raw", sql: column, bindings: [] });
 		} else {
 			const { col, op } = this.parseColumnOperator(column);
@@ -472,6 +492,7 @@ export class QueryBuilder {
 			throw new Error("Data is required for insert");
 		}
 
+		const adapter = this.detectAdapter();
 		const { query, bindings } = this.buildInsert(tableName, insertData);
 		this.reset();
 		const sql = await this.getSQL();
@@ -482,11 +503,25 @@ export class QueryBuilder {
 		const affectedRows =
 			(result as any).affectedRows ?? (result as any).count ?? 0;
 
-		return { insertId, affectedRows };
+		// MySQL은 RETURNING 미지원 → 별도 SELECT로 생성된 행 조회
+		let row: T | undefined;
+		if (adapter === "mysql" && insertId > 0) {
+			const pk = this._lastPrimaryKey ?? "id";
+			const rows = await sql.unsafe(
+				`SELECT * FROM ${this.escapeIdentifier(tableName)} WHERE ${this.escapeIdentifier(pk)} = ?`,
+				[insertId],
+			);
+			row = (rows as T[])[0];
+		}
+
+		return { insertId, affectedRows, row };
 	}
 
 	/**
 	 * INSERT 후 생성된 행 반환
+	 * - PostgreSQL/SQLite: RETURNING * 사용
+	 * - MySQL: INSERT 후 SELECT로 재조회
+	 *
 	 * CI3: $this->db->insert($data) + $this->db->insert_id()
 	 */
 	async insertReturning<T = any>(
@@ -500,6 +535,15 @@ export class QueryBuilder {
 			throw new Error("Data is required for insert");
 		}
 
+		const adapter = this.detectAdapter();
+
+		if (adapter === "mysql") {
+			// MySQL: RETURNING 미지원 → INSERT 후 lastInsertId로 SELECT
+			const insertResult = await this.insert<T>(tableName, insertData);
+			return insertResult.row as T;
+		}
+
+		// PostgreSQL / SQLite: RETURNING * 지원
 		const { query, bindings } = this.buildInsertReturning(
 			tableName,
 			insertData,
@@ -540,6 +584,8 @@ export class QueryBuilder {
 
 	/**
 	 * UPDATE 후 수정된 행 반환
+	 * - PostgreSQL/SQLite: RETURNING * 사용
+	 * - MySQL: UPDATE 후 WHERE 조건으로 SELECT 재조회
 	 */
 	async updateReturning<T = any>(
 		table?: string,
@@ -555,6 +601,27 @@ export class QueryBuilder {
 			throw new Error("WHERE clause is required for update (safety)");
 		}
 
+		const adapter = this.detectAdapter();
+
+		if (adapter === "mysql") {
+			// MySQL: RETURNING 미지원 → UPDATE 후 WHERE 조건으로 SELECT
+			const whereBindings: any[] = [];
+			const whereSql = this.buildWhereClauses(this._wheres, whereBindings);
+
+			const { query, bindings } = this.buildUpdate(tableName, updateData);
+			this.reset();
+			const sql = await this.getSQL();
+			await sql.unsafe(query, bindings);
+
+			// WHERE 조건으로 다시 SELECT
+			const rows = await sql.unsafe(
+				`SELECT * FROM ${this.escapeIdentifier(tableName)} WHERE ${whereSql}`,
+				whereBindings,
+			);
+			return (rows as T[])[0];
+		}
+
+		// PostgreSQL / SQLite: RETURNING * 지원
 		const { query, bindings } = this.buildUpdateReturning(
 			tableName,
 			updateData,
@@ -591,7 +658,6 @@ export class QueryBuilder {
 	 * CI3: $this->db->count_all_results()
 	 */
 	async count(alias = "count"): Promise<number> {
-		// select를 count로 덮어씀
 		this._select = [`COUNT(*) as ${this.escapeIdentifier(alias)}`];
 		const { query, bindings } = this.buildSelect();
 		this.reset();
@@ -623,10 +689,8 @@ export class QueryBuilder {
 		hasNext: boolean;
 		hasPrev: boolean;
 	}> {
-		// 먼저 전체 카운트 (현재 쿼리 조건 유지)
 		const total = await this.clone().count();
 
-		// 데이터 조회
 		const offset = (page - 1) * perPage;
 		this._limitVal = perPage;
 		this._offsetVal = offset;
@@ -660,6 +724,7 @@ export class QueryBuilder {
 		cloned._limitVal = this._limitVal;
 		cloned._offsetVal = this._offsetVal;
 		cloned._distinctVal = this._distinctVal;
+		cloned._adapter = this._adapter;
 		return cloned;
 	}
 
@@ -673,6 +738,13 @@ export class QueryBuilder {
 	// ─── 내부: 데이터 설정용 (Model에서 사용) ──────
 	private _insertData: Record<string, any> | null = null;
 	private _updateData: Record<string, any> | null = null;
+	private _lastPrimaryKey: string = "id";
+
+	/** Model에서 PK 이름 설정 (insertReturning fallback용) */
+	_setPrimaryKey(key: string): this {
+		this._lastPrimaryKey = key;
+		return this;
+	}
 
 	/** Model.set() / Model.setData()에서 사용 */
 	_setInsertData(data: Record<string, any>): this {
@@ -732,17 +804,43 @@ export class QueryBuilder {
 			parts.push(`ORDER BY ${orderParts.join(", ")}`);
 		}
 
-		// LIMIT / OFFSET
-		if (this._limitVal !== null) {
-			parts.push(`LIMIT ?`);
-			bindings.push(this._limitVal);
-		}
-		if (this._offsetVal !== null) {
-			parts.push(`OFFSET ?`);
-			bindings.push(this._offsetVal);
-		}
+		// LIMIT / OFFSET — 어댑터별 방언 분기
+		this.buildLimitOffset(parts, bindings);
 
 		return { query: parts.join(" "), bindings };
+	}
+
+	/**
+	 * LIMIT / OFFSET SQL 생성 (어댑터별 방언)
+	 *
+	 * - PostgreSQL: LIMIT ? OFFSET ?      (표준)
+	 * - SQLite:     LIMIT ? OFFSET ?      (표준, 3.8.6+)
+	 * - MySQL:      LIMIT ? OFFSET ?      (8.0+ 표준)
+	 *               LIMIT offset, count   (5.7 이전 레거시)
+	 *
+	 * 기본적으로 표준 LIMIT/OFFSET 사용.
+	 * MySQL 레거시 호환이 필요한 경우 buildLimitOffsetLegacy 사용.
+	 */
+	private buildLimitOffset(parts: string[], bindings: any[]): void {
+		const adapter = this.detectAdapter();
+
+		if (adapter === "mysql" && this._offsetVal !== null && this._limitVal !== null) {
+			// MySQL 레거시: LIMIT offset, count
+			// MySQL 8.0+도 표준 LIMIT/OFFSET 지원하지만,
+			// 레거시 호환을 위해 LIMIT offset, count 사용
+			parts.push(`LIMIT ?, ?`);
+			bindings.push(this._offsetVal, this._limitVal);
+		} else {
+			// 표준: LIMIT count OFFSET offset
+			if (this._limitVal !== null) {
+				parts.push(`LIMIT ?`);
+				bindings.push(this._limitVal);
+			}
+			if (this._offsetVal !== null) {
+				parts.push(`OFFSET ?`);
+				bindings.push(this._offsetVal);
+			}
+		}
 	}
 
 	private buildInsert(
@@ -771,6 +869,7 @@ export class QueryBuilder {
 		data: Record<string, any>,
 	): { query: string; bindings: any[] } {
 		const { query, bindings } = this.buildInsert(table, data);
+		// PostgreSQL / SQLite만 호출됨 (MySQL은 insertReturning에서 분기)
 		return { query: `${query} RETURNING *`, bindings };
 	}
 
@@ -805,6 +904,7 @@ export class QueryBuilder {
 		data: Record<string, any>,
 	): { query: string; bindings: any[] } {
 		const { query, bindings } = this.buildUpdate(table, data);
+		// PostgreSQL / SQLite만 호출됨
 		return { query: `${query} RETURNING *`, bindings };
 	}
 
@@ -889,7 +989,9 @@ export class QueryBuilder {
 							: clause.side === "before"
 								? `%${clause.value}`
 								: `${clause.value}%`;
-					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} LIKE ?`);
+					parts.push(
+						`${prefix}${this.escapeIdentifier(clause.column)} LIKE ?`,
+					);
 					bindings.push(likeValue);
 					break;
 				}
@@ -905,7 +1007,7 @@ export class QueryBuilder {
 	 * 'title' → { col: 'title', op: '=' }
 	 */
 	private parseColumnOperator(column: string): { col: string; op: string } {
-		const match = column.match(/^(\w+)\s*(>=|<=|!=|<>|>|<|=)?\s*$/);
+		const match = column.match(/^(\w+(?:\.\w+)?)\s*(>=|<=|!=|<>|>|<|=)?\s*$/);
 		if (!match) return { col: column.trim(), op: "=" };
 		return { col: match[1], op: match[2] ?? "=" };
 	}
@@ -921,7 +1023,15 @@ export class QueryBuilder {
 		}
 	}
 
-	/** 식별자 이스케이프 (SQLite 기준) */
+	/**
+	 * 식별자 이스케이프 — 어댑터별 방언
+	 *
+	 * - PostgreSQL: "column"  (쌍따옴표)
+	 * - SQLite:     "column"  (쌍따옴표)
+	 * - MySQL:      `column`  (백틱)
+	 *
+	 * 함수 호출, 별칭, 테이블.컬럼 형식은 그대로 통과
+	 */
 	private escapeIdentifier(name: string): string {
 		if (
 			name.includes("(") ||
@@ -930,8 +1040,16 @@ export class QueryBuilder {
 			name.includes(" as ") ||
 			name.includes(" AS ")
 		) {
-			return name; // 함수 호출, 테이블.컬럼, 별칭은 그대로
+			return name;
 		}
+
+		const adapter = this.detectAdapter();
+
+		if (adapter === "mysql") {
+			return `\`${name.replace(/`/g, "``")}\``;
+		}
+
+		// PostgreSQL, SQLite
 		return `"${name.replace(/"/g, '""')}"`;
 	}
 
@@ -954,6 +1072,7 @@ export class QueryBuilder {
 		this._distinctVal = false;
 		this._insertData = null;
 		this._updateData = null;
+		// _adapter는 초기화하지 않음 — 동일 연결 그룹에서 재사용
 	}
 }
 
