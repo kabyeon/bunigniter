@@ -106,7 +106,11 @@ export async function closeAllConnections(): Promise<void> {
  * 테스트용: DB 연결 직접 주입
  * 메모리 DB 등을 직접 설정할 때 사용
  */
-export function setDB(sql: SQL, group: string = "default", adapter: "sqlite" | "postgres" | "mysql" = "sqlite"): void {
+export function setDB(
+	sql: SQL,
+	group: string = "default",
+	adapter: "sqlite" | "postgres" | "mysql" = "sqlite",
+): void {
 	connections[group] = sql;
 	adapterTypes[group] = adapter;
 }

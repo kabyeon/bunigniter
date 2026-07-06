@@ -43,7 +43,9 @@ describe("QueryBuilder 방언 - SQLite", () => {
 		expect(result.insertId).toBeGreaterThan(0);
 
 		const qb2 = new QueryBuilder();
-		const { affectedRows } = await qb2.where("id", result.insertId).update("items", { price: 6.0 });
+		const { affectedRows } = await qb2
+			.where("id", result.insertId)
+			.update("items", { price: 6.0 });
 		expect(affectedRows).toBeGreaterThan(0);
 	});
 
@@ -57,14 +59,19 @@ describe("QueryBuilder 방언 - SQLite", () => {
 
 	test("RETURNING *: INSERT 후 행 반환", async () => {
 		const qb = new QueryBuilder();
-		const item = await qb.insertReturning("items", { name: "Elderberry", price: 8.0 });
+		const item = await qb.insertReturning("items", {
+			name: "Elderberry",
+			price: 8.0,
+		});
 		expect((item as any).id).toBeGreaterThan(0);
 		expect((item as any).name).toBe("Elderberry");
 	});
 
 	test("RETURNING *: UPDATE 후 행 반환", async () => {
 		const qb = new QueryBuilder();
-		const item = await qb.where("name", "Elderberry").updateReturning("items", { price: 9.0 });
+		const item = await qb
+			.where("name", "Elderberry")
+			.updateReturning("items", { price: 9.0 });
 		expect((item as any).price).toBe(9.0);
 	});
 
@@ -85,7 +92,11 @@ describe("QueryBuilder 방언 - SQLite", () => {
 
 describe("QueryBuilder 방언 - MySQL", () => {
 	test("식별자 이스케이프: WHERE 절에서 백틱", () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "mysql_test", "mysql");
 
 		const qb = new QueryBuilder("mysql_test");
@@ -99,7 +110,11 @@ describe("QueryBuilder 방언 - MySQL", () => {
 	});
 
 	test("식별자 이스케이프: INSERT 컬럼에서 백틱", async () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "mysql_test", "mysql");
 
 		await sql`CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL)`;
@@ -113,7 +128,11 @@ describe("QueryBuilder 방언 - MySQL", () => {
 	});
 
 	test("LIMIT/OFFSET: MySQL LIMIT offset, count", () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "mysql_test", "mysql");
 
 		const qb = new QueryBuilder("mysql_test");
@@ -128,7 +147,11 @@ describe("QueryBuilder 방언 - MySQL", () => {
 	});
 
 	test("LIMIT만 있는 경우: LIMIT ?", () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "mysql_test", "mysql");
 
 		const qb = new QueryBuilder("mysql_test");
@@ -142,13 +165,20 @@ describe("QueryBuilder 방언 - MySQL", () => {
 	});
 
 	test("insertReturning: MySQL은 INSERT 후 SELECT fallback", async () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "mysql_test", "mysql");
 
 		await sql`CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL)`;
 
 		const qb = new QueryBuilder("mysql_test");
-		const item = await qb.insertReturning("items", { name: "Fallback Test", price: 1.0 });
+		const item = await qb.insertReturning("items", {
+			name: "Fallback Test",
+			price: 1.0,
+		});
 		expect((item as any).id).toBeGreaterThan(0);
 		expect((item as any).name).toBe("Fallback Test");
 
@@ -157,14 +187,20 @@ describe("QueryBuilder 방언 - MySQL", () => {
 	});
 
 	test("updateReturning: MySQL은 UPDATE 후 WHERE로 SELECT fallback", async () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "mysql_test", "mysql");
 
 		await sql`CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, price REAL)`;
 		await sql`INSERT INTO items (name, price) VALUES ('Original', 1.0)`;
 
 		const qb = new QueryBuilder("mysql_test");
-		const item = await qb.where("id", 1).updateReturning("items", { price: 9.99 });
+		const item = await qb
+			.where("id", 1)
+			.updateReturning("items", { price: 9.99 });
 		expect((item as any).price).toBe(9.99);
 
 		resetDB("mysql_test");
@@ -176,7 +212,11 @@ describe("QueryBuilder 방언 - MySQL", () => {
 
 describe("QueryBuilder 방언 - PostgreSQL", () => {
 	test("식별자 이스케이프: WHERE 절에서 쌍따옴표", () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "pg_test", "postgres");
 
 		const qb = new QueryBuilder("pg_test");
@@ -190,7 +230,11 @@ describe("QueryBuilder 방언 - PostgreSQL", () => {
 	});
 
 	test("LIMIT/OFFSET: 표준 SQL (LIMIT ? OFFSET ?)", () => {
-		const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 		setDB(sql, "pg_test", "postgres");
 
 		const qb = new QueryBuilder("pg_test");
@@ -208,8 +252,16 @@ describe("QueryBuilder 방언 - PostgreSQL", () => {
 
 describe("QueryBuilder 방언 - 다중 그룹 전환", () => {
 	test("동일 앱에서 SQLite + MySQL 다중 DB 그룹 사용", () => {
-		const sqliteSql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
-		const mysqlSql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sqliteSql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
+		const mysqlSql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 
 		setDB(sqliteSql, "sqlite_group", "sqlite");
 		setDB(mysqlSql, "mysql_group", "mysql");
@@ -217,7 +269,10 @@ describe("QueryBuilder 방언 - 다중 그룹 전환", () => {
 		const sqliteQB = new QueryBuilder("sqlite_group");
 		const mysqlQB = new QueryBuilder("mysql_group");
 
-		const { query: sqliteQuery } = sqliteQB.from("users").where("id", 1).toSQL();
+		const { query: sqliteQuery } = sqliteQB
+			.from("users")
+			.where("id", 1)
+			.toSQL();
 		const { query: mysqlQuery } = mysqlQB.from("users").where("id", 1).toSQL();
 
 		// SQLite: 쌍따옴표
@@ -237,8 +292,16 @@ describe("QueryBuilder 방언 - 다중 그룹 전환", () => {
 	});
 
 	test("SQLite + MySQL LIMIT 차이", () => {
-		const sqliteSql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
-		const mysqlSql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
+		const sqliteSql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
+		const mysqlSql = new SQL({
+			adapter: "sqlite",
+			filename: ":memory:",
+			create: true,
+		});
 
 		setDB(sqliteSql, "sqlite_group", "sqlite");
 		setDB(mysqlSql, "mysql_group", "mysql");
@@ -246,8 +309,14 @@ describe("QueryBuilder 방언 - 다중 그룹 전환", () => {
 		const sqliteQB = new QueryBuilder("sqlite_group");
 		const mysqlQB = new QueryBuilder("mysql_group");
 
-		const { query: sqliteQuery, bindings: sqliteBindings } = sqliteQB.from("items").limit(10, 5).toSQL();
-		const { query: mysqlQuery, bindings: mysqlBindings } = mysqlQB.from("items").limit(10, 5).toSQL();
+		const { query: sqliteQuery, bindings: sqliteBindings } = sqliteQB
+			.from("items")
+			.limit(10, 5)
+			.toSQL();
+		const { query: mysqlQuery, bindings: mysqlBindings } = mysqlQB
+			.from("items")
+			.limit(10, 5)
+			.toSQL();
 
 		// SQLite: LIMIT ? OFFSET ? (표준)
 		expect(sqliteQuery).toContain("LIMIT ?");

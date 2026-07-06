@@ -824,7 +824,11 @@ export class QueryBuilder {
 	private buildLimitOffset(parts: string[], bindings: any[]): void {
 		const adapter = this.detectAdapter();
 
-		if (adapter === "mysql" && this._offsetVal !== null && this._limitVal !== null) {
+		if (
+			adapter === "mysql" &&
+			this._offsetVal !== null &&
+			this._limitVal !== null
+		) {
 			// MySQL 레거시: LIMIT offset, count
 			// MySQL 8.0+도 표준 LIMIT/OFFSET 지원하지만,
 			// 레거시 호환을 위해 LIMIT offset, count 사용
@@ -989,9 +993,7 @@ export class QueryBuilder {
 							: clause.side === "before"
 								? `%${clause.value}`
 								: `${clause.value}%`;
-					parts.push(
-						`${prefix}${this.escapeIdentifier(clause.column)} LIKE ?`,
-					);
+					parts.push(`${prefix}${this.escapeIdentifier(clause.column)} LIKE ?`);
 					bindings.push(likeValue);
 					break;
 				}
