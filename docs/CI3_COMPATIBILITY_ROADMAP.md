@@ -236,21 +236,21 @@ CLI             ███████████████░░░░░░ 
 
 | CI3 헬퍼 | 상태 | BunIgniter 구현 |
 |----------|------|-----------------|
-| **URL Helper** | ✅ | `siteUrl/baselUrl/currentUrl/redirect` |
-| **String Helper** | ⚠️ | `slug/truncate/escapeHtml` — CI3 대비 빈약 |
-| **Date Helper** | ⚠️ | `formatDate/timeAgo` — `now()/mdate()` 없음 |
-| **Array Helper** | ❌ | `element()/random_element()` 없음 |
-| **Form Helper** | ❌ | `form_open/form_close/form_input/form_dropdown` 없음 |
-| **HTML Helper** | ❌ | `anchor/img/heading` 없음 |
-| **Inflector Helper** | ❌ | `singular/plural/camelize` 없음 |
-| **Number Helper** | ⚠️ | `formatNumber/formatCurrency` — `byte_format()` 없음 |
-| **Text Helper** | ❌ | `word_limiter/character_limiter/ellipsis` 없음 |
+| **URL Helper** | ✅ | `siteUrl/baselUrl/currentUrl/redirect` (`url_helper.ts`) |
+| **String Helper** | ✅ | `slug/truncate/escapeHtml/unescapeHtml/camelize/pascalize/snakeCase/kebabCase/ucwords/randomString/reduceMultiples/stripQuotes` (`string_helper.ts`) |
+| **Date Helper** | ✅ | `formatDate/timeAgo/now/nowFormatted/daysBetween/isValidDate/isToday/isYesterday/fromTimestamp/toTimestamp` (`date_helper.ts`) |
+| **Array Helper** | ✅ | `element/elements/randomElement/groupBy/uniqueBy/chunk/flatten/deepMerge` (`array_helper.ts`) |
+| **Form Helper** | ✅ | `formOpen/formClose/formInput/formPassword/formEmail/formHidden/formTextarea/formUpload/formDropdown/formMultiselect/formCheckbox/formRadio/formLabel/formSubmit/formReset/formButton/formError/setValue/setSelect/setCheckbox/setRadio/csrfField/methodField` (`form_helper.ts`) |
+| **HTML Helper** | ✅ | `anchor/anchorPopup/mailto/img/heading/ul/ol/br/nbsp/meta/style/script` (`html_helper.ts`) |
+| **Inflector Helper** | ✅ | `pluralize/singularize/classify/tableize/humanize` (`inflector_helper.ts`) |
+| **Number Helper** | ✅ | `formatNumber/formatCurrency/formatBytes/formatPercent/plural/clamp/toRoman` (`number_helper.ts`) |
+| **Text Helper** | ✅ | `wordLimiter/characterLimiter/asciiOnly/convertAccentedChars/wordCensor/highlightPhrase/wordWrap/ellipsize/autoLink/nl2br` (`text_helper.ts`) |
 | **Typography Helper** | ❌ | `auto_typography()` 없음 |
 | **Security Helper** | ⚠️ | CSRF 헬퍼만 — `do_hash/strip_image_tags` 없음 |
 | **File Helper** | ❌ | `write_file/delete_file/get_filenames` 없음 |
 | **Directory Helper** | ❌ | `directory_map()` 없음 |
 | **Download Helper** | ❌ | `force_download()` 없음 |
-| **Cookie Helper** | ✅ | `getCookie/getCookies/setCookie/deleteCookie` |
+| **Cookie Helper** | ✅ | `getCookie/getCookies/setCookie/deleteCookie` (`cookie.ts`) |
 | **Language Helper** | ❌ | 다국어 시스템 없음 |
 | **Path Helper** | ❌ | `set_realpath()` 없음 |
 | **Smiley Helper** | ❌ | (구식, 불필요) |
@@ -332,28 +332,28 @@ CLI             ███████████████░░░░░░ 
 
 #### H-1. Form 헬퍼
 
-- [ ] `form_open(action, attributes, hidden)` — 폼 시작 + CSRF 자동 삽입
-- [ ] `form_close()` — 폼 종료
-- [ ] `form_input(name, value, attributes)` — 텍스트 입력
-- [ ] `form_password(name, value, attributes)`
-- [ ] `form_email(name, value, attributes)`
-- [ ] `form_textarea(name, value, attributes)`
-- [ ] `form_hidden(name, value)`
-- [ ] `form_checkbox(name, value, checked, attributes)`
-- [ ] `form_radio(name, value, checked, attributes)`
-- [ ] `form_dropdown(name, options, selected, attributes)` — 셀렉트 박스
-- [ ] `form_multiselect(name, options, selected, attributes)`
-- [ ] `form_upload(name, attributes)`
-- [ ] `form_label(label, for, attributes)`
-- [ ] `form_button(name, content, attributes)`
-- [ ] `form_submit(name, value, attributes)`
-- [ ] `form_reset(name, value, attributes)`
-- [ ] `form_error(field, prefix, suffix)` — 검증 에러 표시
-- [ ] `set_value(field, default)` — 재입력 값 유지
-- [ ] `set_select(field, value, default)`
-- [ ] `set_checkbox(field, value, default)`
-- [ ] 파일: `system/helpers/form_helper.ts`
-- [ ] 테스트: `tests/form_helper_test.ts`
+- [x] `form_open(action, attributes, hidden)` — 폼 시작 + CSRF 자동 삽입
+- [x] `form_close()` — 폼 종료
+- [x] `form_input(name, value, attributes)` — 텍스트 입력
+- [x] `form_password(name, value, attributes)`
+- [x] `form_email(name, value, attributes)`
+- [x] `form_textarea(name, value, attributes)`
+- [x] `form_hidden(name, value)`
+- [x] `form_checkbox(name, value, checked, attributes)`
+- [x] `form_radio(name, value, checked, attributes)`
+- [x] `form_dropdown(name, options, selected, attributes)` — 셀렉트 박스
+- [x] `form_multiselect(name, options, selected, attributes)`
+- [x] `form_upload(name, attributes)`
+- [x] `form_label(label, for, attributes)`
+- [x] `form_button(name, content, attributes)`
+- [x] `form_submit(name, value, attributes)`
+- [x] `form_reset(name, value, attributes)`
+- [x] `form_error(field, prefix, suffix)` — 검증 에러 표시
+- [x] `set_value(field, default)` — 재입력 값 유지
+- [x] `set_select(field, value, default)`
+- [x] `set_checkbox(field, value, default)`
+- [x] 파일: `system/helpers/form_helper.ts`
+- [x] 테스트: `tests/form_helper_test.ts`
 - [ ] 문서: `docs/user-guide/helpers.md` 업데이트
 - **이유**: CI3에서 가장 많이 사용하는 헬퍼. 폼 작성 필수
 - **참고**: CI3 `form_helper.php` 참조
@@ -415,49 +415,49 @@ CLI             ███████████████░░░░░░ 
 
 ### 🟡 Medium Priority (CI3 패리티)
 
-#### M-1. HTML 헬퍼
+#### M-1. HTML 헬퍼 ✅
 
-- [ ] `anchor(url, text, attributes)` — `<a>` 태그
-- [ ] `anchorPopup(url, text, attributes)`
-- [ ] `mailto(email, text, attributes)`
-- [ ] `img(src, attributes)` — `<img>` 태그
-- [ ] `heading(text, level, attributes)` — `<h1>`~`<h6>`
-- [ ] `ul(items, attributes)` — `<ul>` 목록
-- [ ] `ol(items, attributes)` — `<ol>` 목록
-- [ ] `br(count)` — `<br>`
-- [ ] `nbsp(count)` — `&nbsp;`
-- [ ] `meta(name, content, type)` — `<meta>` 태그
-- [ ] 파일: `system/helpers/html_helper.ts`
-- [ ] 테스트: `tests/html_helper_test.ts`
+- [x] `anchor(url, text, attributes)` — `<a>` 태그
+- [x] `anchorPopup(url, text, attributes)`
+- [x] `mailto(email, text, attributes)`
+- [x] `img(src, attributes)` — `<img>` 태그
+- [x] `heading(text, level, attributes)` — `<h1>`~`<h6>`
+- [x] `ul(items, attributes)` — `<ul>` 목록
+- [x] `ol(items, attributes)` — `<ol>` 목록
+- [x] `br(count)` — `<br>`
+- [x] `nbsp(count)` — `&nbsp;`
+- [x] `meta(name, content, type)` — `<meta>` 태그
+- [x] `style(href, attributes)` — `<link rel="stylesheet">`
+- [x] `script(src, attributes)` — `<script>`
+- [x] 파일: `system/helpers/html_helper.ts`
+- [x] 테스트: `tests/html_helper_test.ts`
 - **이유**: 뷰에서 자주 사용. 폼 헬퍼와 함께 필수
 
-#### M-2. Text 헬퍼
+#### M-2. Text 헬퍼 ✅
 
-- [ ] `wordLimiter(str, limit, suffix)` — 단어 수 제한
-- [ ] `characterLimiter(str, limit, suffix)` — 글자 수 제한
-- [ ] `asciiOnly(str)` — ASCII만 추출
-- [ ] `convertAccentedChars(str)` — 악센트 제거
-- [ ] `censoredWords(str, censored)` — 욕설 필터
-- [ ] `highlightCode(str)` — 코드 하이라이트
-- [ ] `highlightPhrase(str, phrase)` — 구문 하이라이트
-- [ ] `wordWrap(str, limit)` — 줄바꿈
-- [ ] `ellipsize(str, maxLength, position)` — 말줄임
-- [ ] `stripQuotes(str)` — 따옴표 제거
-- [ ] 파일: `system/helpers/text_helper.ts`
-- [ ] 테스트: `tests/text_helper_test.ts`
+- [x] `wordLimiter(str, limit, suffix)` — 단어 수 제한
+- [x] `characterLimiter(str, limit, suffix)` — 글자 수 제한
+- [x] `asciiOnly(str)` — ASCII만 추출
+- [x] `convertAccentedChars(str)` — 악센트 제거
+- [x] `wordCensor(str, censored)` — 욕설 필터
+- [x] `highlightPhrase(str, phrase)` — 구문 하이라이트
+- [x] `wordWrap(str, limit)` — 줄바꿈
+- [x] `ellipsize(str, maxLength, position)` — 말줄임
+- [x] `autoLink(str)` — URL/이메일 자동 링크
+- [x] `nl2br(str)` — 줄바꿈 → `<br>`
+- [x] 파일: `system/helpers/text_helper.ts`
+- [x] 테스트: `tests/text_helper_test.ts`
 - **이유**: 블로그/게시판 필수 (요약, 말줄임 등)
 
-#### M-3. Inflector 헬퍼
+#### M-3. Inflector 헬퍼 ✅
 
-- [ ] `singular(word)` — 복수→단수
-- [ ] `plural(word)` — 단수→복수
-- [ ] `camelize(word)`
-- [ ] `underscore(word)`
-- [ ] `humanize(word)`
-- [ ] `pascalize(word)`
-- [ ] `slugify(word)` (기존 slug 개선)
-- [ ] 파일: `system/helpers/inflector_helper.ts`
-- [ ] 테스트: `tests/inflector_helper_test.ts`
+- [x] `pluralize(word)` — 단수→복수 (불규칙 포함)
+- [x] `singularize(word)` — 복수→단수 (불규칙 포함)
+- [x] `classify(tableName)` — 테이블명→모델명
+- [x] `tableize(className)` — 모델명→테이블명
+- [x] `humanize(word)` — 사람이 읽기 쉬운 형태
+- [x] 파일: `system/helpers/inflector_helper.ts`
+- [x] 테스트: `tests/inflector_helper_test.ts`
 - **이유**: CLI 생성기 + 모델명 변환 (User ↔ users)
 
 #### M-4. QueryBuilder 서브쿼리
@@ -651,7 +651,7 @@ CLI             ███████████████░░░░░░ 
 
 ### High Priority (5개)
 
-- [ ] H-1. Form 헬퍼
+- [x] H-1. Form 헬퍼
 - [ ] H-2. E2E/통합 테스트 인프라
 - [ ] H-3. 마이그레이션 상태 추적
 - [ ] H-4. 404 커스텀 핸들러
@@ -659,9 +659,9 @@ CLI             ███████████████░░░░░░ 
 
 ### Medium Priority (12개)
 
-- [ ] M-1. HTML 헬퍼
-- [ ] M-2. Text 헬퍼
-- [ ] M-3. Inflector 헬퍼
+- [x] M-1. HTML 헬퍼
+- [x] M-2. Text 헬퍼
+- [x] M-3. Inflector 헬퍼
 - [ ] M-4. QueryBuilder 서브쿼리
 - [ ] M-5. 소프트 삭제 (Soft Deletes)
 - [ ] M-6. 파셜 디렉토리 및 컨벤션
@@ -670,7 +670,7 @@ CLI             ███████████████░░░░░░ 
 - [ ] M-9. HTTP 메서드 오버라이드
 - [ ] M-10. QueryBuilder 추가 WHERE 변형
 - [ ] M-11. 수동 트랜잭션 제어
-- [ ] M-12. Array 헬퍼
+- [x] M-12. Array 헬퍼
 
 ### Low Priority (10개)
 
@@ -696,6 +696,7 @@ CLI             ███████████████░░░░░░ 
 | 날짜 | 항목 | 커밋 | 비고 |
 |------|------|------|------|
 | 2026-07-05 | (시작) | e2da8d0 | 분석 완료, 로드맵 작성 |
+| 2026-07-05 | H-1, M-1, M-2, M-3, M-12 | - | 헬퍼 파일 분리 + Form/HTML/Text/Inflector/Array 헬퍼 구현 |
 
 ---
 
