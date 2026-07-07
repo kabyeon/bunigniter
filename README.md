@@ -1,5 +1,8 @@
 # 🔥 BunIgniter
 
+[![npm](https://img.shields.io/npm/v/bunigniter)](https://www.npmjs.com/package/bunigniter)
+[![CI](https://github.com/kabyeon/bunigniter/actions/workflows/ci.yml/badge.svg)](https://github.com/kabyeon/bunigniter/actions)
+
 **CodeIgniter 3-Style Full Stack MVC Framework for Bun**
 
 A full-stack MVC web framework built on Bun + Bun.serve + Bun SQL + a custom template engine.
