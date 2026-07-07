@@ -1,8 +1,8 @@
-# 🗄 모델
+# 🗄 Models
 
-`Model<T>` 제네릭 클래스를 상속받아 작성합니다.
+Extend the `Model<T>` generic class to create models.
 
-## 기본 구조
+## Basic Structure
 
 ```typescript
 import { Model } from "system/core/model.ts";
@@ -17,63 +17,63 @@ export interface UserInterface {
 }
 
 export class UserModel extends Model<UserInterface> {
-  override tableName = "users";  // 반드시 오버라이드
+  override tableName = "users";  // must override
 }
 
 export default new UserModel();
 ```
 
-## CRUD 메서드
+## CRUD Methods
 
-| 메서드 | 설명 | CI3 대응 |
-|--------|------|----------|
-| `findAll()` | 전체 조회 | `$this->db->get()->result()` |
-| `findById(id)` | ID로 조회 | `$this->db->where('id', $id)->get()->row()` |
-| `findWhere(conditions)` | 조건 조회 | `$this->db->where($conditions)->get()->result()` |
-| `findFirst(conditions)` | 조건 첫 번째 행 | `$this->db->where($conditions)->get()->row()` |
-| `create(data)` | 레코드 생성 | `$this->db->insert($data)` |
-| `update(id, data)` | 레코드 수정 | `$this->db->where('id', $id)->update($data)` |
-| `updateWhere(conds, data)` | 조건부 수정 | `$this->db->where($conds)->update($data)` |
-| `delete(id)` | 레코드 삭제 | `$this->db->where('id', $id)->delete()` |
-| `deleteWhere(conditions)` | 조건부 삭제 | `$this->db->where($conds)->delete()` |
-| `count(conditions?)` | 개수 조회 | `$this->db->count_all_results()` |
-| `exists(conditions)` | 존재 여부 | - |
-| `limit(limit, offset)` | LIMIT 조회 | `$this->db->limit()->get()->result()` |
-| `paginate(page, perPage)` | 페이지네이션 | - |
-| `transaction(callback)` | 트랜잭션 | `$this->db->trans_start()` |
+| Method | Description | CI3 Equivalent |
+|--------|-------------|----------------|
+| `findAll()` | Find all records | `$this->db->get()->result()` |
+| `findById(id)` | Find by ID | `$this->db->where('id', $id)->get()->row()` |
+| `findWhere(conditions)` | Find by conditions | `$this->db->where($conditions)->get()->result()` |
+| `findFirst(conditions)` | Find first matching row | `$this->db->where($conditions)->get()->row()` |
+| `create(data)` | Create record | `$this->db->insert($data)` |
+| `update(id, data)` | Update record | `$this->db->where('id', $id)->update($data)` |
+| `updateWhere(conds, data)` | Conditional update | `$this->db->where($conds)->update($data)` |
+| `delete(id)` | Delete record | `$this->db->where('id', $id)->delete()` |
+| `deleteWhere(conditions)` | Conditional delete | `$this->db->where($conds)->delete()` |
+| `count(conditions?)` | Count records | `$this->db->count_all_results()` |
+| `exists(conditions)` | Check existence | - |
+| `limit(limit, offset)` | Limit query | `$this->db->limit()->get()->result()` |
+| `paginate(page, perPage)` | Pagination | - |
+| `transaction(callback)` | Transaction | `$this->db->trans_start()` |
 
-## 기본 사용 예시
+## Basic Usage Examples
 
 ```typescript
 import userModel from "app/models/user_model.ts";
 
-// 조회
+// Query
 const users = await userModel.findAll();
 const user = await userModel.findById(1);
 const active = await userModel.findWhere({ email: "test@example.com" });
 const admin = await userModel.findFirst({ role: "admin" });
 
-// 생성
+// Create
 const newUser = await userModel.create({ name: "Alice", email: "alice@test.com" });
 
-// 수정
+// Update
 await userModel.update(1, { name: "Updated" });
-await userModel.updateWhere({ role: "guest" }, { age: 25 }); // 조건부 수정
+await userModel.updateWhere({ role: "guest" }, { age: 25 }); // conditional update
 
-// 삭제
+// Delete
 await userModel.delete(1);
-const deleted = await userModel.deleteWhere({ role: "temp" }); // 조건부 삭제
+const deleted = await userModel.deleteWhere({ role: "temp" }); // conditional delete
 
-// 개수 / 존재 여부
+// Count / Exists
 const total = await userModel.count();
 const adminCount = await userModel.count({ role: "admin" });
 const hasAdmin = await userModel.exists({ role: "admin" }); // true/false
 
-// 페이지네이션
+// Pagination
 const result = await userModel.paginate(2, 15);
 // { data: [...], total: 100, page: 2, perPage: 15, totalPages: 7, hasNext: true, hasPrev: true }
 
-// 트랜잭션
+// Transaction
 await userModel.transaction(async (tx) => {
   await tx`INSERT INTO users (name) VALUES (${"Alice"})`;
 });
@@ -81,17 +81,17 @@ await userModel.transaction(async (tx) => {
 
 ## Query Builder (Active Record)
 
-`qb()` 메서드로 CodeIgniter3 스타일의 쿼리 빌더를 사용할 수 있습니다:
+Use the `qb()` method for CodeIgniter 3-style query builder:
 
 ```typescript
-// 기본 — tableName 자동 설정
+// Basic — tableName auto-set
 const posts = await postModel.qb()
   .where("published", 1)
   .orderBy("created_at", "DESC")
   .limit(10)
   .get();
 
-// JOIN + 별칭
+// JOIN + aliases
 const posts = await postModel.qb()
   .select("p.id, p.title, u.name as author_name")
   .from("posts p")
@@ -100,14 +100,14 @@ const posts = await postModel.qb()
   .orderBy("p.created_at", "DESC")
   .get();
 
-// 검색
+// Search
 const results = await postModel.qb()
   .like("title", "BunIgniter")
   .orLike("content", "BunIgniter")
   .where("published", 1)
   .get();
 
-// 페이지네이션
+// Pagination
 const page = await postModel.qb()
   .where("published", 1)
   .orderBy("created_at", "DESC")
@@ -115,32 +115,32 @@ const page = await postModel.qb()
 // → { data, total, page, perPage, totalPages, hasNext, hasPrev }
 ```
 
-> 💡 Query Builder의 전체 기능은 [Query Builder 문서](./query-builder.md)를 참조하세요.
+> 💡 For the full Query Builder API, see the [Query Builder documentation](./query-builder.md).
 
-## 정적 Query Builder
+## Static Query Builder
 
-인스턴스 없이도 `query()` 정적 메서드를 사용할 수 있습니다:
+You can use the `query()` static method without an instance:
 
 ```typescript
 class UserModel extends Model<UserInterface> {
   override tableName = "users";
 }
 
-// 정적 호출
+// Static call
 const admins = await UserModel.query()
   .where("role", "admin")
   .get();
 ```
 
-## 직접 SQL
+## Direct SQL
 
 ```typescript
 import { getDB } from "system/core/database.ts";
 const sql = await getDB();
 
-// 태그드 템플릿 리터럴 (자동 이스케이프)
+// Tagged template literal (auto-escaped)
 const users = await sql`SELECT * FROM users WHERE age > ${20}`;
 
-// 객체 삽입
+// Object insert
 await sql`INSERT INTO users ${sql({ name: "Alice" })}`;
 ```

@@ -1,25 +1,25 @@
-# 🧰 헬퍼 함수
+# 🧰 Helper Functions
 
-9개 카테고리(82개 함수)로 분리된 헬퍼 함수를 제공합니다.
-각 카테고리는 개별 파일로 분리되어 있으며, `system/helpers/index.ts` 에서 전체 재export합니다.
-또는 필요한 파일만 직접 임포트할 수 있습니다.
+Provides helper functions organized into 9 categories (82 functions total).
+Each category is in its own file, with `system/helpers/index.ts` re-exporting everything.
+Alternatively, you can import individual files directly as needed.
 
 ---
 
-## URL 헬퍼 (`system/helpers/url_helper.ts`)
+## URL Helper (`system/helpers/url_helper.ts`)
 
 ```typescript
 import { siteUrl, baseUrl, redirect, currentUrl } from "system/helpers/url_helper.ts";
 
 siteUrl("posts/1");  // "http://localhost:3000/posts/1"
 baseUrl();           // "http://localhost:3000"
-currentUrl(request); // 현재 요청 URL
-redirect("/login");  // 302 리다이렉트 Response
+currentUrl(request); // current request URL
+redirect("/login");  // 302 redirect Response
 ```
 
 ---
 
-## 문자열 헬퍼 (`system/helpers/string_helper.ts`)
+## String Helper (`system/helpers/string_helper.ts`)
 
 ```typescript
 import { slug, truncate, escapeHtml, unescapeHtml, camelize, pascalize, snakeCase, kebabCase, ucwords, randomString, reduceMultiples, stripQuotes } from "system/helpers/string_helper.ts";
@@ -40,32 +40,32 @@ stripQuotes("'hello'");       // "hello"
 
 ---
 
-## 날짜 헬퍼 (`system/helpers/date_helper.ts`)
+## Date Helper (`system/helpers/date_helper.ts`)
 
 ```typescript
 import { formatDate, timeAgo, now, nowFormatted, daysBetween, isValidDate, isToday, isYesterday, fromTimestamp, toTimestamp } from "system/helpers/date_helper.ts";
 
 formatDate(new Date(), "Y-m-d H:i:s"); // "2025-07-05 23:30:00"
-timeAgo(new Date());                    // "방금 전", "5분 전", "2시간 전"
-now();                                  // 현재 Unix timestamp (초)
+timeAgo(new Date());                    // "just now", "5 minutes ago", "2 hours ago"
+now();                                  // current Unix timestamp (seconds)
 nowFormatted("Y-m-d");                  // "2025-07-05"
-daysBetween(date1, date2);              // 일수 차이
+daysBetween(date1, date2);              // number of days difference
 isValidDate(someDate);                  // true/false
 isToday(someDate);                      // true/false
 isYesterday(someDate);                  // true/false
-fromTimestamp(1700000000);              // Date 객체
-toTimestamp(someDate);                  // Unix timestamp (초)
+fromTimestamp(1700000000);              // Date object
+toTimestamp(someDate);                  // Unix timestamp (seconds)
 ```
 
 ---
 
-## 숫자 헬퍼 (`system/helpers/number_helper.ts`)
+## Number Helper (`system/helpers/number_helper.ts`)
 
 ```typescript
 import { formatNumber, formatCurrency, formatBytes, formatPercent, plural, clamp, toRoman } from "system/helpers/number_helper.ts";
 
 formatNumber(1234567);            // "1,234,567"
-formatCurrency(50000);            // "50,000원"
+formatCurrency(50000);            // "$50,000"
 formatBytes(1024);                // "1.0 KB"
 formatPercent(856, 1000);         // "85.6%"
 plural(1, "post");                // "post"
@@ -76,32 +76,32 @@ toRoman(2024);                    // "MMXXIV"
 
 ---
 
-## 배열 헬퍼 (`system/helpers/array_helper.ts`)
+## Array Helper (`system/helpers/array_helper.ts`)
 
 ```typescript
 import { element, elements, randomElement, groupBy, uniqueBy, chunk, flatten, toEntries, fromEntries, deepMerge } from "system/helpers/array_helper.ts";
 
-element("key", obj, "default");   // 안전한 접근
-elements(["a", "b"], obj);        // 복수 키 조회
-randomElement([1, 2, 3]);         // 랜덤 요소
-groupBy(items, "category");       // 카테고리별 그룹
-uniqueBy(items, "id");            // ID 기준 중복 제거
+element("key", obj, "default");   // safe access
+elements(["a", "b"], obj);        // multiple key lookup
+randomElement([1, 2, 3]);         // random element
+groupBy(items, "category");       // group by category
+uniqueBy(items, "id");            // deduplicate by ID
 chunk([1,2,3,4,5], 2);           // [[1,2],[3,4],[5]]
 flatten([[1,2],[3,4]]);          // [1,2,3,4]
 toEntries({ a: 1, b: 2 });       // [["a",1],["b",2]]
 fromEntries([["a",1],["b",2]]);  // { a: 1, b: 2 }
-deepMerge(obj1, obj2);           // 깊은 병합
+deepMerge(obj1, obj2);           // deep merge
 ```
 
 ---
 
-## 폼 헬퍼 (`system/helpers/form_helper.ts`)
+## Form Helper (`system/helpers/form_helper.ts`)
 
 ```typescript
 import { formOpen, formOpenMultipart, formClose, formInput, formPassword, formEmail, formNumber, formHidden, formTextarea, formUpload, formDropdown, formMultiselect, formCheckbox, formRadio, formLabel, formSubmit, formReset, formButton, formError, csrfField, methodField, setValue, setSelect, setCheckbox, setRadio } from "system/helpers/form_helper.ts";
 
 formOpen("/posts", { method: "POST" });           // <form action="..." method="POST">
-formOpenMultipart("/upload");                     // multipart 폼 태그
+formOpenMultipart("/upload");                     // multipart form tag
 formClose();                                       // </form>
 formInput("title", "Hello");                      // <input type="text" name="title">
 formPassword("pw");                                // <input type="password">
@@ -110,49 +110,49 @@ formNumber("age", "25");                           // <input type="number">
 formHidden("id", "1");                              // <input type="hidden">
 formTextarea("body", "Content");                   // <textarea name="body">
 formUpload("avatar");                               // <input type="file">
-formDropdown("status", { draft: "임시", pub: "공개" }, "pub");
+formDropdown("status", { draft: "Draft", pub: "Published" }, "pub");
 formMultiselect("tags", { ts: "TypeScript", js: "JavaScript" }, ["ts"]);
-formCheckbox("agree", "yes", true);                // 체크된 체크박스
-formRadio("gender", "male");                       // 라디오
-formLabel("이름", "name");                          // <label for="name">
-formSubmit("", "전송");                              // 제출 버튼
-formReset();                                        // 리셋 버튼
-formButton("btn", "클릭");                          // <button>
-formError("title", errors, "<p>", "</p>");         // 에러 메시지
+formCheckbox("agree", "yes", true);                // checked checkbox
+formRadio("gender", "male");                       // radio button
+formLabel("Name", "name");                          // <label for="name">
+formSubmit("", "Submit");                            // submit button
+formReset();                                        // reset button
+formButton("btn", "Click");                          // <button>
+formError("title", errors, "<p>", "</p>");         // error message
 csrfField(token);                                   // CSRF hidden input
 methodField("PUT");                                 // _method hidden input
-setValue("title", "기본값", oldInput);              // 이전값 복원
-setSelect("status", "pub", false, oldInput);        // select 복원
-setCheckbox("agree", "yes", false, oldInput);       // checkbox 복원
-setRadio("gender", "male", false, oldInput);        // radio 복원
+setValue("title", "default", oldInput);             // restore previous value
+setSelect("status", "pub", false, oldInput);        // restore select
+setCheckbox("agree", "yes", false, oldInput);       // restore checkbox
+setRadio("gender", "male", false, oldInput);        // restore radio
 ```
 
 ---
 
-## HTML 헬퍼 (`system/helpers/html_helper.ts`)
+## HTML Helper (`system/helpers/html_helper.ts`)
 
 ```typescript
 import { anchor, anchorPopup, mailto, img, heading, ul, ol, br, nbsp, meta, style, script } from "system/helpers/html_helper.ts";
 
-anchor("/posts/1", "보기");         // <a href="/posts/1">보기</a>
-anchor("/posts/1", "보기", { class: "btn" });
-anchorPopup("/link", "새창");       // target="_blank" + rel="noopener noreferrer"
+anchor("/posts/1", "View");         // <a href="/posts/1">View</a>
+anchor("/posts/1", "View", { class: "btn" });
+anchorPopup("/link", "New Window");       // target="_blank" + rel="noopener noreferrer"
 mailto("test@test.com");           // <a href="mailto:test@test.com">test@test.com</a>
 img("/images/logo.png");           // <img src="/images/logo.png" />
-heading("제목", 1);                // <h1>제목</h1>
-ul(["항목1", "항목2"]);            // <ul><li>항목1</li><li>항목2</li></ul>
+heading("Title", 1);                // <h1>Title</h1>
+ul(["Item 1", "Item 2"]);            // <ul><li>Item 1</li><li>Item 2</li></ul>
 ol(["1", "2"]);                    // <ol><li>1</li><li>2</li></ol>
 br(2);                             // <br /><br />
 nbsp(3);                           // &nbsp;&nbsp;&nbsp;
-meta("description", "설명");       // <meta name="description" content="설명">
-meta("og:title", "제목", "property"); // <meta property="og:title" content="제목">
+meta("description", "Description");       // <meta name="description" content="Description">
+meta("og:title", "Title", "property"); // <meta property="og:title" content="Title">
 style("/css/app.css");             // <link rel="stylesheet" href="/css/app.css" />
 script("/js/app.js");              // <script src="/js/app.js"></script>
 ```
 
 ---
 
-## 텍스트 헬퍼 (`system/helpers/text_helper.ts`)
+## Text Helper (`system/helpers/text_helper.ts`)
 
 ```typescript
 import { wordLimiter, characterLimiter, asciiOnly, convertAccentedChars, wordCensor, highlightPhrase, wordWrap, ellipsize, autoLink, nl2br } from "system/helpers/text_helper.ts";
@@ -163,23 +163,23 @@ asciiOnly("Café");                              // "Cafe"
 convertAccentedChars("Café");                   // "Cafe"
 wordCensor("bad word here", ["bad"]);           // "*** word here"
 highlightPhrase("Hello World", "World");        // "Hello <mark>World</mark>"
-wordWrap("Long text...", 10);                   // 줄바꿈
+wordWrap("Long text...", 10);                   // word wrap
 ellipsize("Very long text here", 10);           // "Very lo..."
-autoLink("Visit http://example.com");           // URL 자동 링크
+autoLink("Visit http://example.com");           // auto-link URL
 nl2br("Line1\nLine2");                          // "Line1<br />Line2"
 ```
 
 ---
 
-## 인플렉터 헬퍼 (`system/helpers/inflector_helper.ts`)
+## Inflector Helper (`system/helpers/inflector_helper.ts`)
 
 ```typescript
 import { pluralize, singularize, classify, tableize, humanize } from "system/helpers/inflector_helper.ts";
 
 pluralize("post");              // "posts"
-pluralize("person");            // "people" (불규칙)
+pluralize("person");            // "people" (irregular)
 singularize("posts");           // "post"
-singularize("children");        // "child" (불규칙)
+singularize("children");        // "child" (irregular)
 classify("post_comments");      // "PostComment"
 tableize("PostComment");        // "post_comments"
 humanize("post_comment");       // "Post comment"
@@ -187,24 +187,24 @@ humanize("post_comment");       // "Post comment"
 
 ---
 
-## Input 헬퍼 (Core)
+## Input Helper (Core)
 
 ```typescript
 import { Input } from "system/core/input.ts";
 
-Input.post(request, "name");       // POST 데이터
-Input.get(request, "page");        // GET 파라미터
-Input.header(request, "auth");     // 헤더
+Input.post(request, "name");       // POST data
+Input.get(request, "page");        // GET parameters
+Input.header(request, "auth");     // headers
 Input.method(request);             // "GET", "POST"
-Input.ip(request);                 // 클라이언트 IP
+Input.ip(request);                 // client IP
 Input.userAgent(request);          // User Agent
-Input.isAjax(request);             // AJAX 여부
-Input.isJson(request);             // JSON 요청 여부
+Input.isAjax(request);             // check if AJAX
+Input.isJson(request);             // check if JSON request
 ```
 
-## Autoload로 전역 접근
+## Global Access via Autoload
 
-`app/config/autoload.ts` 에 등록하면 매번 import하지 않아도 됩니다:
+Register helpers in `app/config/autoload.ts` and use them without importing each time:
 
 ```typescript
 // app/config/autoload.ts
@@ -213,9 +213,9 @@ const autoload = {
   // ...
 };
 
-// 컨트롤러에서
+// In a controller
 import { autoloadRegistry } from "system/core/autoload.ts";
 const { siteUrl } = autoloadRegistry.getHelper("url")!;
 ```
 
-[→ Autoload 가이드](autoload.md)
+[→ Autoload Guide](autoload.md)

@@ -1,17 +1,17 @@
-# 🌐 CORS 미들웨어
+# 🌐 CORS Middleware
 
-Cross-Origin Resource Sharing 미들웨어입니다.
+Cross-Origin Resource Sharing middleware.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { corsMiddleware } from "system/core/cors.ts";
 router.use(corsMiddleware);
 ```
 
-기본값: 모든 오리진 허용 (`*`), 모든 메서드 허용
+Default: allow all origins (`*`), allow all methods.
 
-## 커스텀 설정
+## Custom Configuration
 
 ```typescript
 import { createCorsMiddleware } from "system/core/cors.ts";
@@ -28,18 +28,18 @@ const customCors = createCorsMiddleware({
 router.use(customCors);
 ```
 
-## 설정 옵션
+## Configuration Options
 
-| 옵션 | 기본값 | 설명 |
-|------|--------|------|
-| `origin` | `"*"` | 허용 오리진 |
-| `methods` | GET,POST,PUT,DELETE,PATCH,OPTIONS | 허용 메서드 |
-| `allowedHeaders` | Content-Type,Authorization,X-CSRF-Token | 허용 헤더 |
-| `exposedHeaders` | 없음 | 노출할 응답 헤더 |
-| `credentials` | `false` | 쿠키/인증 허용 |
-| `maxAge` | 86400 | 프리플라이트 캐시 (초) |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `origin` | `"*"` | Allowed origins |
+| `methods` | GET,POST,PUT,DELETE,PATCH,OPTIONS | Allowed methods |
+| `allowedHeaders` | Content-Type,Authorization,X-CSRF-Token | Allowed headers |
+| `exposedHeaders` | none | Response headers to expose |
+| `credentials` | `false` | Allow cookies/credentials |
+| `maxAge` | 86400 | Preflight cache (seconds) |
 
-## 동작
+## Behavior
 
-- **OPTIONS**: Preflight 응답 (204) + CORS 헤더
-- **일반 요청**: 응답에 `Access-Control-Allow-Origin` 헤더 추가
+- **OPTIONS**: Preflight response (204) + CORS headers
+- **Normal requests**: Adds `Access-Control-Allow-Origin` header to the response

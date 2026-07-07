@@ -1,37 +1,37 @@
-# 📊 프로파일러
+# 📊 Profiler
 
-성능 분석 도구입니다. 벤치마크, 실행 쿼리, 메모리 사용량을 측정하고 개발 환경에서 HTML 오버레이로 표시합니다. CodeIgniter 3의 Profiler와 동일합니다.
+A performance analysis tool. Measures benchmarks, executed queries, and memory usage, displaying them as an HTML overlay in development environments. Equivalent to CodeIgniter 3's Profiler.
 
-## 활성화
+## Enabling
 
 ```typescript
 import { Profiler } from "system/core/profiler.ts";
 
-// 개발 환경에서만 활성화
+// Enable only in development
 if (appConfig.debug) {
   Profiler.enable(true);
 }
 ```
 
-CI3: `$this->output->enable_profiler(TRUE)` 와 동일합니다.
+Equivalent to CI3's `$this->output->enable_profiler(TRUE)`.
 
-## 벤치마크
+## Benchmarking
 
-### 포인트 측정
+### Point Measurement
 
 ```typescript
-// 시작/종료 포인트
+// Start/end points
 Profiler.start("db_query");
 const result = await db`SELECT * FROM users`;
 Profiler.end("db_query");
 
-// 콜백 방식 (자동 start/end)
+// Callback style (auto start/end)
 const users = await Profiler.benchmark("db_query", async () => {
   return await db`SELECT * FROM users`;
 });
 ```
 
-### 벤치마크 데이터
+### Benchmark Data
 
 ```typescript
 const data = Profiler.getData();
@@ -40,15 +40,15 @@ for (const bm of data.benchmarks) {
 }
 ```
 
-## 쿼리 로깅
+## Query Logging
 
-QueryBuilder나 Model에서 자동으로 쿼리를 로깅합니다. 수동 로깅도 가능:
+QueryBuilder and Model automatically log queries. Manual logging is also available:
 
 ```typescript
 Profiler.logQuery("SELECT * FROM users WHERE id = ?", [1], 5.2);
 ```
 
-### 쿼리 데이터
+### Query Data
 
 ```typescript
 const data = Profiler.getData();
@@ -57,45 +57,45 @@ for (const q of data.queries) {
 }
 ```
 
-## 메모리 사용량
+## Memory Usage
 
 ```typescript
 const data = Profiler.getData();
-console.log(`현재: ${formatBytes(data.memoryUsage.current)}`);
+console.log(`Current: ${formatBytes(data.memoryUsage.current)}`);
 console.log(`Peak: ${formatBytes(data.memoryUsage.peak)}`);
 ```
 
-## HTML 오버레이 렌더링
+## HTML Overlay Rendering
 
-개발 환경에서 페이지 하단에 프로파일러 바를 표시합니다:
+Displays a profiler bar at the bottom of the page in development:
 
 ```typescript
-// 컨트롤러/미들웨어에서
+// In controller/middleware
 const html = Profiler.render(request);
 
-// 응답 HTML에 추가
+// Append to response HTML
 return new Response(bodyHtml + html, {
   headers: { "Content-Type": "text/html; charset=utf-8" },
 });
 ```
 
-프로파일러 바에는:
+The profiler bar includes:
 
-- 📊 벤치마크 포인트 (시간 + 메모리)
-- 🗄️ 실행된 쿼리 목록 (SQL + 바인딩 + 시간)
-- 🌐 요청 정보
-- 메모리 사용량 (current / peak)
-- 로드된 파일 수
+- 📊 Benchmark points (time + memory)
+- 🗄️ Executed query list (SQL + bindings + time)
+- 🌐 Request information
+- Memory usage (current / peak)
+- Number of loaded files
 
-## 리셋
+## Reset
 
-요청이 끝난 후 데이터를 초기화:
+Clear data after a request completes:
 
 ```typescript
 Profiler.reset();
 ```
 
-## 전체 데이터
+## Full Data
 
 ```typescript
 interface ProfilerData {
@@ -108,14 +108,14 @@ interface ProfilerData {
 }
 ```
 
-## CI3 ↔ BunIgniter 대조표
+## CI3 ↔ BunIgniter Comparison
 
 | CodeIgniter 3 | BunIgniter |
-|---------------|-----------|
+|---------------|------------|
 | `$this->output->enable_profiler(TRUE)` | `Profiler.enable(true)` |
 | `$this->benchmark->mark('start')` | `Profiler.start("start")` |
 | `$this->benchmark->mark('end')` | `Profiler.end("end")` |
 | `$this->benchmark->elapsed_time('start', 'end')` | `Profiler.getData().benchmarks.find(...)` |
-| 자동 쿼리 로깅 | `Profiler.logQuery()` |
-| 프로파일러 바 (하단) | `Profiler.render()` |
+| Automatic query logging | `Profiler.logQuery()` |
+| Profiler bar (footer) | `Profiler.render()` |
 | `$this->benchmark->memory_usage()` | `Profiler.getData().memoryUsage` |

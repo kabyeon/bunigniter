@@ -1,8 +1,8 @@
-# ✅ 유효성 검사
+# ✅ Validation
 
-20개 이상의 검증 규칙을 제공합니다.
+Provides 20+ validation rules.
 
-## 빠른 검증
+## Quick Validation
 
 ```typescript
 import { validate } from "system/core/validator.ts";
@@ -17,42 +17,42 @@ const { valid, errors, firstErrors } = validate(data, {
 if (!valid) return this.json({ errors: firstErrors }, 422);
 ```
 
-## 지원 규칙
+## Supported Rules
 
-| 규칙 | 설명 | 예시 |
-|------|------|------|
-| `required` | 필수 | `required` |
-| `email` | 이메일 형식 | `email` |
-| `url` | URL 형식 | `url` |
-| `min:N` | 최소 길이 | `min:8` |
-| `max:N` | 최대 길이 | `max:255` |
-| `between:N,M` | 길이 범위 | `between:2,50` |
-| `minValue:N` | 최소값 | `minValue:0` |
-| `maxValue:N` | 최대값 | `maxValue:100` |
-| `numeric` | 숫자 | `numeric` |
-| `integer` | 정수 | `integer` |
-| `alpha` | 알파벳만 | `alpha` |
-| `alphaNumeric` | 알파벳+숫자 | `alphaNumeric` |
-| `slug` | 슬러그 형식 | `slug` |
-| `regex:패턴` | 정규식 | `regex:^[a-z]+$` |
-| `in:값1,값2` | 목록 포함 | `in:admin,user` |
-| `notIn:값1,값2` | 목록 제외 | `notIn:root,admin` |
-| `confirmed` | 확인 필드 일치 | `confirmed` |
-| `date` | 날짜 형식 | `date` |
-| `phone` | 전화번호 형식 | `phone` |
+| Rule | Description | Example |
+|------|-------------|---------|
+| `required` | Required | `required` |
+| `email` | Email format | `email` |
+| `url` | URL format | `url` |
+| `min:N` | Minimum length | `min:8` |
+| `max:N` | Maximum length | `max:255` |
+| `between:N,M` | Length range | `between:2,50` |
+| `minValue:N` | Minimum value | `minValue:0` |
+| `maxValue:N` | Maximum value | `maxValue:100` |
+| `numeric` | Numeric | `numeric` |
+| `integer` | Integer | `integer` |
+| `alpha` | Alpha only | `alpha` |
+| `alphaNumeric` | Alpha + numeric | `alphaNumeric` |
+| `slug` | Slug format | `slug` |
+| `regex:pattern` | Regular expression | `regex:^[a-z]+$` |
+| `in:val1,val2` | In list | `in:admin,user` |
+| `notIn:val1,val2` | Not in list | `notIn:root,admin` |
+| `confirmed` | Confirmation field match | `confirmed` |
+| `date` | Date format | `date` |
+| `phone` | Phone number format | `phone` |
 
-## 커스텀 메시지
+## Custom Messages
 
 ```typescript
 import { Validator } from "system/core/validator.ts";
 
 const result = Validator.check(data, { name: ["required", "min:2"] }, {
-  "name.required": "이름을 입력해주세요",
-  "name.min": "이름은 최소 2자 이상이어야 합니다",
+  "name.required": "Name is required",
+  "name.min": "Name must be at least 2 characters",
 });
 ```
 
-## 단일 값 검증
+## Single Value Validation
 
 ```typescript
 Validator.validate("alice@test.com", ["email"]); // true

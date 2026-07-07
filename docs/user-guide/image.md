@@ -1,89 +1,89 @@
-# 🖼 이미지 편집
+# 🖼 Image Editing
 
-Bun.Image 내장 기반 체인형 이미지 파이프라인.
+Chainable image pipeline built on Bun.Image.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { ImageEditor } from "system/core/image.ts";
 
-// 체인 API
+// Chain API
 await ImageEditor.fromFile("photo.jpg")
   .resize(400, 400, { fit: "inside" })
   .webp({ quality: 80 })
   .write("thumb.webp");
 ```
 
-## 입력 소스
+## Input Sources
 
 ```typescript
-// 파일 경로
+// File path
 ImageEditor.fromFile("photo.jpg");
 
 // BunFile
 ImageEditor.fromBunFile(Bun.file("photo.jpg"));
 
-// 바이트
+// Bytes
 ImageEditor.fromBytes(uint8Array);
 
 // Blob
 ImageEditor.fromBlob(blob);
 
-// 클립보드 (macOS/Windows)
+// Clipboard (macOS/Windows)
 const editor = ImageEditor.fromClipboard();
 ```
 
-## 변환 체인
+## Transform Chain
 
 ```typescript
 ImageEditor.fromFile("photo.jpg")
   .resize(800, 600, { fit: "inside", withoutEnlargement: true })
   .rotate(90)
-  .flip()              // 수직 뒤집기
-  .flop()              // 수평 뒤집기
-  .modulate({ brightness: 1.2, saturation: 0 })  // 밝기/채도
+  .flip()              // vertical flip
+  .flop()              // horizontal flip
+  .modulate({ brightness: 1.2, saturation: 0 })  // brightness/saturation
   .webp({ quality: 80 })
   .write("output.webp");
 ```
 
-## 리사이즈 옵션
+## Resize Options
 
-| fit | 설명 |
-|-----|------|
-| `"fill"` (기본) | 정확히 width × height로 늘림 |
-| `"inside"` | 비율 유지, 박스 안에 맞춤 |
+| fit | Description |
+|-----|-------------|
+| `"fill"` (default) | Stretch exactly to width × height |
+| `"inside"` | Preserve aspect ratio, fit inside box |
 
-필터: `"lanczos3"`(기본), `"lanczos2"`, `"mitchell"`, `"cubic"`, `"mks2013"`, `"mks2021"`, `"bilinear"`, `"box"`, `"nearest"`
+Filters: `"lanczos3"`(default), `"lanczos2"`, `"mitchell"`, `"cubic"`, `"mks2013"`, `"mks2021"`, `"bilinear"`, `"box"`, `"nearest"`
 
-## 출력 포맷
+## Output Formats
 
 ```typescript
 .jpeg({ quality: 85, progressive: true })
 .png({ compressionLevel: 6 })
-.png({ palette: true, colors: 64, dither: true })  // 인덱스 PNG
+.png({ palette: true, colors: 64, dither: true })  // indexed PNG
 .webp({ quality: 80 })
 .webp({ lossless: true })
-.heic({ quality: 80 })   // macOS/Windows만
-.avif({ quality: 60 })   // macOS/Windows만
+.heic({ quality: 80 })   // macOS/Windows only
+.avif({ quality: 60 })   // macOS/Windows only
 ```
 
-## 터미널 메서드
+## Terminal Methods
 
 ```typescript
 await editor.bytes();       // Uint8Array
 await editor.buffer();      // Buffer
-await editor.blob();        // Blob (MIME 포함)
-await editor.encodeToBase64();  // Base64 문자열
+await editor.blob();        // Blob (with MIME)
+await editor.encodeToBase64();  // Base64 string
 await editor.dataurl();     // "data:image/webp;base64,..."
-await editor.write("out.webp"); // 파일 저장
-await editor.placeholder(); // ThumbHash 블러 data URL
-await editor.response();    // Response 객체
+await editor.write("out.webp"); // Save to file
+await editor.placeholder(); // ThumbHash blur data URL
+await editor.response();    // Response object
 ```
 
-## 정적 유틸리티
+## Static Utilities
 
 ```typescript
-// 한 번에 편집
+// Edit in one call
 const result = await ImageEditor.edit({
   input: "photo.jpg",
   resize: { width: 800, height: 600, fit: "inside" },
@@ -92,24 +92,24 @@ const result = await ImageEditor.edit({
 });
 await result.write("thumb.webp");
 
-// 썸네일 생성
+// Generate thumbnail
 await ImageEditor.thumbnail("photo.jpg", 200, "thumb.webp", "webp", 80);
 
-// 메타데이터만 조회
+// Query metadata only
 const info = await ImageEditor.info("photo.jpg");
 // { width: 1920, height: 1080, format: "jpeg" }
 
-// 포맷 변환
+// Format conversion
 await ImageEditor.convert("photo.jpg", "photo.webp", "webp", { quality: 80 });
 
-// Base64 인코딩
+// Base64 encoding
 const base64 = await ImageEditor.toBase64("photo.jpg", "webp");
 
 // Data URL
 const dataurl = await ImageEditor.toDataURL("photo.jpg", "webp");
 ```
 
-## Bun.serve 통합
+## Bun.serve Integration
 
 ```typescript
 Bun.serve({

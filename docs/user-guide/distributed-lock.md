@@ -1,36 +1,36 @@
-# 🔒 분산 잠금
+# 🔒 Distributed Lock
 
-Redis 기반 분산 잠금으로 다중 서버/프로세스 환경에서 동시 실행을 방지합니다。
+Prevents concurrent execution across multiple servers/processes using Redis-based distributed locking.
 
-Bun 내장 `RedisClient` 활용.
+Uses Bun's built-in `RedisClient`.
 
-## 설정
+## Configuration
 
 ```typescript
 import { DistributedLock } from "system/core/distributed_lock.ts";
 
-// 메모리 드라이버 (개발/테스트)
+// Memory driver (development/test)
 DistributedLock.configure({ driver: "memory" });
 
-// Redis 드라이버 (운영)
+// Redis driver (production)
 DistributedLock.configure({
   driver: "redis",
   redisUrl: "redis://localhost:6379",
 });
 ```
 
-환경변수:
+Environment variables:
 
-- `LOCK_DRIVER` — "memory" | "redis" (기본 "memory")
-- `REDIS_URL` — Redis 연결 URL
-- `LOCK_DEFAULT_TTL` — 기본 잠금 TTL ms (기본 60000)
-- `LOCK_RETRY_INTERVAL` — 재시도 간격 ms (기본 200)
-- `LOCK_MAX_RETRIES` — 최대 재시도 (기본 50)
+- `LOCK_DRIVER` — "memory" | "redis" (default "memory")
+- `REDIS_URL` — Redis connection URL
+- `LOCK_DEFAULT_TTL` — default lock TTL in ms (default 60000)
+- `LOCK_RETRY_INTERVAL` — retry interval in ms (default 200)
+- `LOCK_MAX_RETRIES` — maximum retries (default 50)
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
-// 잠금 획득
+// Acquire lock
 const lock = await DistributedLock.acquire("my-resource");
 if (lock.acquired) {
   try {
@@ -40,34 +40,34 @@ if (lock.acquired) {
   }
 }
 
-// 래퍼 패턴 (권장)
+// Wrapper pattern (recommended)
 await DistributedLock.run("my-resource", async () => {
   await doWork();
 });
-// 잠금은 자동으로 해제됨
+// Lock is automatically released
 
-// 재시도와 함께 잠금 획득
+// Acquire lock with retry
 const lock = await DistributedLock.acquireWithRetry("my-resource", 30000, {
   retryInterval: 500,
   maxRetries: 20,
 });
 ```
 
-## 스케줄드 잡 분산 잠금
+## Distributed Lock for Scheduled Jobs
 
 ```typescript
 import { Scheduler } from "system/core/scheduler.ts";
 
-// 분산 잠금 활성화
+// Enable distributed locking
 Scheduler.enableDistributedLock("redis");
 
 Scheduler.add("cleanup", "0 * * * *", async () => {
-  // 여러 서버 중 하나만 실행
+  // Only one server executes this
   await cleanupTempFiles();
 });
 ```
 
-또는 수동으로:
+Or manually:
 
 ```typescript
 Scheduler.add("cleanup", "0 * * * *", async () => {
@@ -77,39 +77,39 @@ Scheduler.add("cleanup", "0 * * * *", async () => {
 });
 ```
 
-## 잠금 연장 (장시간 실행)
+## Lock Renewal (Long-Running Tasks)
 
 ```typescript
 await DistributedLock.run("long-task", async () => {
-  // autoRenew가 활성화되면 TTL의 1/3 간격으로 자동 연장
+  // When autoRenew is enabled, the lock is automatically renewed at 1/3 of TTL intervals
   await longRunningTask();
 }, { autoRenew: true, ttlMs: 300000 });
 ```
 
-## 드라이버
+## Drivers
 
-### MemoryLockDriver (개발/테스트)
+### MemoryLockDriver (Development/Test)
 
-- 단일 프로세스에서만 동작
-- 별도 의존성 없음
+- Single process only
+- No external dependencies
 
-### RedisLockDriver (운영)
+### RedisLockDriver (Production)
 
-- 다중 서버/프로세스 지원
-- `SET NX EX` 원자적 잠금 획득
-- Lua 스크립트로 원자적 잠금 해제/연장
-- Bun 내장 `RedisClient.send("EVAL", ...)` 사용
+- Multi-server/process support
+- `SET NX EX` atomic lock acquisition
+- Lua script for atomic lock release/renewal
+- Uses Bun's built-in `RedisClient.send("EVAL", ...)`
 
 ## API
 
-| 메서드 | 설명 |
-|--------|------|
-| `acquire(key, ttl?)` | 잠금 획득 |
-| `release(lock)` | 잠금 해제 |
-| `renew(lock, ttl?)` | 잠금 연장 |
-| `isLocked(key)` | 잠금 상태 조회 |
-| `getTtl(key)` | 잠금 TTL 조회 |
-| `acquireWithRetry(key, ttl?, options?)` | 재시도와 함께 잠금 획득 |
-| `run(key, callback, options?)` | 래퍼 패턴 (자동 획득/해제) |
-| `runScheduled(jobName, callback, options?)` | 크론 잡용 래퍼 |
-| `releaseAll(prefix?)` | 모든 잠금 해제 |
+| Method | Description |
+|--------|-------------|
+| `acquire(key, ttl?)` | Acquire lock |
+| `release(lock)` | Release lock |
+| `renew(lock, ttl?)` | Renew lock |
+| `isLocked(key)` | Check lock status |
+| `getTtl(key)` | Get lock TTL |
+| `acquireWithRetry(key, ttl?, options?)` | Acquire lock with retry |
+| `run(key, callback, options?)` | Wrapper pattern (auto acquire/release) |
+| `runScheduled(jobName, callback, options?)` | Wrapper for cron jobs |
+| `releaseAll(prefix?)` | Release all locks |

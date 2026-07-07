@@ -1,6 +1,6 @@
 # 🔌 WebSocket
 
-Bun 내장 WebSocket을 지원합니다. `Bun.serve`의 `websocket` 옵션으로 네이티브 Pub/Sub을 사용합니다.
+Supports Bun's built-in WebSocket. Uses the `websocket` option of `Bun.serve` for native Pub/Sub.
 
 ## WebSocketManager (Pub/Sub)
 
@@ -8,21 +8,21 @@ Bun 내장 WebSocket을 지원합니다. `Bun.serve`의 `websocket` 옵션으로
 import { WebSocketManager } from "system/core/websocket.ts";
 const ws = new WebSocketManager();
 
-ws.addClient(clientSocket);         // 클라이언트 등록
-ws.removeClient(clientSocket);      // 클라이언트 제거
+ws.addClient(clientSocket);         // register a client
+ws.removeClient(clientSocket);      // remove a client
 
-ws.subscribe("chat", clientSocket); // 채널 구독
-ws.unsubscribe("chat", clientSocket); // 채널 해제
+ws.subscribe("chat", clientSocket); // subscribe to a channel
+ws.unsubscribe("chat", clientSocket); // unsubscribe from a channel
 
-ws.publish("chat", { text: "Hello!" }); // 채널 브로드캐스트
-ws.broadcast({ announcement: "공지" }); // 전체 브로드캐스트
+ws.publish("chat", { text: "Hello!" }); // broadcast to a channel
+ws.broadcast({ announcement: "Notice" }); // broadcast to all
 
-ws.channelCount("chat");  // 구독자 수
-ws.clientCount();         // 전체 연결 수
-ws.getChannels();         // 채널 목록
+ws.channelCount("chat");  // number of subscribers
+ws.clientCount();         // total connections
+ws.getChannels();         // list of channels
 ```
 
-## Bun.serve WebSocket 설정
+## Bun.serve WebSocket Configuration
 
 ```typescript
 import { createWebSocketConfig, wsManager } from "system/core/websocket.ts";
@@ -42,7 +42,7 @@ const wsConfig = createWebSocketConfig({
   },
 });
 
-// Bun.serve에 websocket 옵션으로 전달
+// Pass as the websocket option to Bun.serve
 const server = Bun.serve({
   fetch(req, server) {
     if (req.headers.get("upgrade") === "websocket") {
@@ -54,7 +54,7 @@ const server = Bun.serve({
 });
 ```
 
-## 클라이언트 예시
+## Client Example
 
 ```javascript
 const ws = new WebSocket("ws://localhost:3000/ws");

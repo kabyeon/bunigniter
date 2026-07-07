@@ -1,8 +1,8 @@
-# ⏳ 큐 / 잡 시스템
+# ⏳ Queue / Job System
 
-백그라운드 작업 큐 시스템입니다. 메모리 + Redis 드라이버를 지원합니다.
+Background job queue system. Supports memory + Redis drivers.
 
-## 설정
+## Configuration
 
 ```typescript
 // app/config/queue.ts
@@ -25,7 +25,7 @@ QUEUE_MAX_RETRIES=3
 QUEUE_TIMEOUT=60000
 ```
 
-## 잡 핸들러 등록
+## Registering Job Handlers
 
 ```typescript
 import { Queue } from "system/core/queue.ts";
@@ -40,85 +40,85 @@ Queue.register("SendEmailJob", async (data) => {
   });
 });
 
-// 일괄 등록
+// Batch registration
 Queue.registerMany({
   ProcessVideoJob: async (data) => { /* ... */ },
   GenerateReportJob: async (data) => { /* ... */ },
 });
 ```
 
-## 잡 디스패치
+## Dispatching Jobs
 
 ```typescript
-// 즉시 실행
+// Immediate execution
 await Queue.push("SendEmailJob", {
   to: "user@test.com",
-  subject: "환영합니다",
+  subject: "Welcome",
   html: "<h1>Hello!</h1>",
 });
 
-// 지연 실행 (60초 후)
+// Delayed execution (60 seconds later)
 await Queue.later(60, "SendEmailJob", { to: "user@test.com" });
 
-// 특정 시각에 실행
+// Schedule at a specific time
 await Queue.scheduleAt(new Date("2025-12-25T09:00:00"), "SendReportJob", {});
 
-// 특정 큐에 푸시
+// Push to a specific queue
 await Queue.push("ProcessVideoJob", { videoId: 123 }, "videos");
 ```
 
-## 워커 실행
+## Running the Worker
 
 ```typescript
-// 기본 큐 워커 시작
+// Start the default queue worker
 Queue.work("default");
 
-// 워커 정지
+// Stop the worker
 Queue.stop();
 
-// 실행 중 확인
+// Check if running
 Queue.isRunning(); // boolean
 ```
 
-워커는 `pollInterval` 간격으로 큐를 폴링하여 `batchSize`만큼 잡을 꺼내 처리합니다.
+The worker polls the queue at `pollInterval` intervals, fetching up to `batchSize` jobs at a time.
 
-## 모니터링
+## Monitoring
 
 ```typescript
-// 큐 크기
+// Queue size
 await Queue.size("default");
 
-// 실패 잡 조회
+// Fetch failed jobs
 await Queue.failed("default", 10);
 
-// 실패 큐 크기
+// Failed queue size
 await Queue.failedSize("default");
 
-// 실패 잡 전체 삭제
+// Clear all failed jobs
 await Queue.flushFailed("default");
 
-// 타임아웃 잡 복구
+// Recover timed-out jobs
 await Queue.recoverTimeout("default");
 ```
 
-## 재시도 메커니즘
+## Retry Mechanism
 
-- 잡 실패 시 자동 재시도 (최대 `defaultMaxRetries`회)
-- 지수 백오프: 5초 → 25초 → 125초 (최대 5분)
-- 최대 재시도 초과 시 실패 큐로 이동
-- 타임아웃 잡 자동 복구 (`recoverTimeout`)
+- Failed jobs auto-retry (up to `defaultMaxRetries` times)
+- Exponential backoff: 5s → 25s → 125s (max 5 minutes)
+- Jobs exceeding max retries move to the failed queue
+- Timed-out jobs auto-recover via `recoverTimeout`
 
-## 드라이버
+## Drivers
 
-### MemoryQueueDriver (기본)
+### MemoryQueueDriver (default)
 
 ```typescript
 import { MemoryQueueDriver } from "system/core/queue.ts";
 const driver = new MemoryQueueDriver();
 ```
 
-- 인메모리, 서버 재시작 시 초기화
-- 개발/단일 서버 환경에 적합
+- In-memory, resets on server restart
+- Suitable for development / single-server environments
 
 ### RedisQueueDriver
 
@@ -129,10 +129,10 @@ const driver = new RedisQueueDriver({
 });
 ```
 
-- 분산 환경에서 다중 워커 가능
-- Sorted Set으로 availableAt 기준 정렬
-- 예약 잡은 Hash로 관리
-- 실패 잡은 List로 관리
+- Multi-worker support in distributed environments
+- Sorted Set for availableAt ordering
+- Reserved jobs managed via Hash
+- Failed jobs managed via List
 
 ```env
 QUEUE_DRIVER=redis

@@ -1,10 +1,10 @@
-# 📡 Redis Pub/Sub 브로드캐스트 큐
+# 📡 Redis Pub/Sub Broadcast Queue
 
-다중 프로세스/서버 환경에서 큐 이벤트를 브로드캐스트합니다.
+Broadcasts queue events across multiple processes/servers.
 
-`Bun` 내장 `RedisClient.subscribe/publish`를 사용합니다.
+Uses Bun's built-in `RedisClient.subscribe/publish`.
 
-## 설정
+## Setup
 
 ```typescript
 import { BroadcastQueue } from "system/core/broadcast_queue.ts";
@@ -18,33 +18,33 @@ const bq = new BroadcastQueue({
 await bq.connect();
 ```
 
-## 잡 브로드캐스트
+## Broadcasting Jobs
 
 ```typescript
-// 모든 워커에 새 잡 알림
+// Notify all workers of a new job
 await bq.broadcastJob("default", {
   type: "SendEmailJob",
   data: { to: "user@test.com", subject: "Hello" },
 });
 ```
 
-## 명령 브로드캐스트
+## Broadcasting Commands
 
 ```typescript
-// 모든 워커에 정지 명령
+// Stop command to all workers
 await bq.broadcastCommand("worker:stop", { queue: "default" });
 
-// 모든 워커에 시작 명령
+// Start command to all workers
 await bq.broadcastCommand("worker:start", { queue: "emails" });
 
-// 실패 잡 삭제
+// Flush failed jobs
 await bq.broadcastCommand("flush:failed", { queue: "default" });
 ```
 
-## 이벤트 브로드캐스트
+## Broadcasting Events
 
 ```typescript
-// 잡 완료/실패 이벤트
+// Job completed/failed events
 await bq.broadcastEvent("job.completed", {
   jobId: "abc-123",
   type: "SendEmailJob",
@@ -52,15 +52,15 @@ await bq.broadcastEvent("job.completed", {
 });
 ```
 
-## 이벤트 수신
+## Receiving Events
 
 ```typescript
-// 모든 이벤트 수신
+// Receive all events
 bq.onEvent((msg) => {
   console.log(msg.type, msg.payload);
 });
 
-// 특정 타입만 수신
+// Receive specific types only
 bq.on("job", (msg) => {
   console.log("New job:", msg.payload);
 });
@@ -70,21 +70,21 @@ bq.on("command", (msg) => {
 });
 ```
 
-## 메시지 구조
+## Message Structure
 
 ```typescript
 interface BroadcastMessage {
   type: "job" | "command" | "event";
   payload: any;
-  senderId: string;      // 발신자 식별자
-  timestamp: number;     // 밀리초 타임스탬프
+  senderId: string;      // sender identifier
+  timestamp: number;     // millisecond timestamp
 }
 ```
 
-## Bun 내장 Redis Pub/Sub
+## Bun Built-in Redis Pub/Sub
 
-이 모듈은 Bun의 `RedisClient.subscribe/publish` 내장 API를 사용합니다:
+This module uses Bun's built-in `RedisClient.subscribe/publish` APIs:
 
-- `client.subscribe(channel, callback)` → 채널 구독
-- `client.publish(channel, message)` → 채널에 메시지 발행
-- `client.unsubscribe(channel)` → 구독 해지
+- `client.subscribe(channel, callback)` → subscribe to a channel
+- `client.publish(channel, message)` → publish a message to a channel
+- `client.unsubscribe(channel)` → unsubscribe from a channel

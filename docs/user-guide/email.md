@@ -1,8 +1,8 @@
-# 📧 이메일
+# 📧 Email
 
-SMTP / sendmail / log 드라이버 지원. sendmail은 `Bun.spawn` stdin pipe + `Bun.$` 셸 지원.
+Supports SMTP / sendmail / log drivers. sendmail uses `Bun.spawn` stdin pipe + `Bun.$` shell support.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { Email } from "system/core/email.ts";
@@ -11,49 +11,49 @@ const mailer = new Email({ driver: "log" });
 
 const result = await mailer.send({
   to: "user@example.com",
-  subject: "환영합니다",
-  html: "<h1>환영합니다!</h1>",
+  subject: "Welcome",
+  html: "<h1>Welcome!</h1>",
 });
 ```
 
-## Sendmail 드라이버
+## Sendmail Driver
 
-### Bun.spawn stdin pipe (기본)
+### Bun.spawn stdin pipe (default)
 
 ```typescript
 const mailer = new Email({
   driver: "sendmail",
-  sendmailPath: "/usr/sbin/sendmail",  // 기본: "sendmail"
-  sendmailArgs: ["-t", "-i"],          // 기본: ["-t", "-i"]
+  sendmailPath: "/usr/sbin/sendmail",  // default: "sendmail"
+  sendmailArgs: ["-t", "-i"],          // default: ["-t", "-i"]
 });
 
-// stdin: "pipe" → FileSink로 빠른 쓰기
+// stdin: "pipe" → fast FileSink writes
 // proc.stdin.write(content) → flush → end
 const result = await mailer.send({
   to: "user@example.com",
-  subject: "테스트",
+  subject: "Test",
   text: "Hello from BunIgniter!",
 });
 ```
 
-### Bun.$ 셸 모드
+### Bun.$ Shell Mode
 
 ```typescript
 const mailer = new Email({
   driver: "sendmail",
-  useBunShell: true,  // Bun.$ 템플릿 리터럴 사용
+  useBunShell: true,  // Uses Bun.$ template literal
 });
 
-// Bun.$로 안전한 명령어 실행 (자동 이스케이프)
-// 임시 파일로 stdin 파이핑
+// Safe command execution with Bun.$ (auto-escape)
+// Pipes stdin through temp file
 const result = await mailer.send({
   to: "user@example.com",
-  subject: "테스트",
+  subject: "Test",
   html: "<p>Hello!</p>",
 });
 ```
 
-## SMTP 드라이버
+## SMTP Driver
 
 ```typescript
 const mailer = new Email({
@@ -72,52 +72,52 @@ const mailer = new Email({
 });
 ```
 
-## Log 드라이버 (개발)
+## Log Driver (Development)
 
 ```typescript
 const mailer = new Email({
   driver: "log",
-  logDir: "./storage/logs",  // 기본
+  logDir: "./storage/logs",  // default
 });
-// emails.log에 기록
+// Logs to emails.log
 ```
 
-## 간편 메서드
+## Convenience Methods
 
 ```typescript
-// 간편 발송
-await mailer.sendSimple("user@example.com", "제목", "<h1>본문</h1>");
+// Quick send
+await mailer.sendSimple("user@example.com", "Subject", "<h1>Body</h1>");
 
-// 템플릿 발송
-await mailer.sendTemplate("user@example.com", "제목", "emails/welcome", { name: "Kim" });
+// Template send
+await mailer.sendTemplate("user@example.com", "Subject", "emails/welcome", { name: "Kim" });
 ```
 
-## 전체 옵션
+## Full Options
 
 ```typescript
 await mailer.send({
   to: "a@example.com",             // string | string[]
-  cc: "cc@example.com",            // 선택
-  bcc: ["bcc1@example.com"],      // 선택
-  subject: "제목",
-  html: "<h1>HTML 본문</h1>",      // html 또는 text 필수
-  text: "텍스트 본문",              // html과 동시 지정 시 multipart/alternative
-  from: { email: "custom@example.com", name: "커스텀" },
+  cc: "cc@example.com",            // optional
+  bcc: ["bcc1@example.com"],      // optional
+  subject: "Subject",
+  html: "<h1>HTML body</h1>",      // html or text required
+  text: "Text body",                // combined with html = multipart/alternative
+  from: { email: "custom@example.com", name: "Custom" },
   replyTo: "reply@example.com",
   headers: { "X-Priority": "1" },
 });
 ```
 
-## 설정 옵션
+## Configuration Options
 
-| 옵션 | 설명 | 기본값 |
-|------|------|--------|
-| `driver` | 전송 방식 | `"log"` |
-| `sendmailPath` | sendmail 실행 파일 | `"sendmail"` |
-| `sendmailArgs` | sendmail 인수 | `["-t", "-i"]` |
-| `useBunShell` | Bun.$ 셸 사용 | `false` |
-| `smtp.host` | SMTP 서버 | `"localhost"` |
-| `smtp.port` | SMTP 포트 | `587` |
-| `smtp.secure` | TLS 사용 | `false` |
-| `from.email` | 기본 발신자 이메일 | `"noreply@bunigniter.dev"` |
-| `logDir` | 로그 디렉토리 | `"./storage/logs"` |
+| Option | Description | Default |
+|--------|------|--------|
+| `driver` | Transport method | `"log"` |
+| `sendmailPath` | sendmail executable | `"sendmail"` |
+| `sendmailArgs` | sendmail arguments | `["-t", "-i"]` |
+| `useBunShell` | Use Bun.$ shell | `false` |
+| `smtp.host` | SMTP server | `"localhost"` |
+| `smtp.port` | SMTP port | `587` |
+| `smtp.secure` | Use TLS | `false` |
+| `from.email` | Default sender email | `"noreply@bunigniter.dev"` |
+| `logDir` | Log directory | `"./storage/logs"` |

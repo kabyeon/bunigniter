@@ -1,44 +1,44 @@
-# ⚡ 워커 풀
+# ⚡ Worker Pool
 
-`Bun.Worker` 기반 병렬 잡 처리 시스템입니다。
+A parallel job processing system built on `Bun.Worker`.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { WorkerPool } from "system/core/worker_pool.ts";
 
-// 워커 풀 생성
+// Create worker pool
 const pool = new WorkerPool({
-  concurrency: 4,               // 워커 수 (기본: CPU 코어 - 1)
-  handlerScript: "./app/jobs/handlers.ts",  // 핸들러 스크립트
-  jobTimeout: 30000,             // 잡 타임아웃 (ms)
-  smol: false,                   // 메모리 절약 모드
+  concurrency: 4,               // number of workers (default: CPU cores - 1)
+  handlerScript: "./app/jobs/handlers.ts",  // handler script
+  jobTimeout: 30000,             // job timeout (ms)
+  smol: false,                   // memory saving mode
 });
 
-// 이벤트 리스너
+// Event listeners
 pool.on("jobCompleted", (jobId, workerId, duration) => {
   console.log(`Job ${jobId} done by worker ${workerId} in ${duration}ms`);
 });
 
-// 워커 풀 시작
+// Start worker pool
 await pool.start();
 
-// 잡 디스패치
+// Dispatch a job
 pool.dispatch({
   id: "job-1",
   queue: "default",
   type: "SendEmailJob",
   data: { to: "user@test.com" },
-  // ... JobPayload 필드
+  // ... JobPayload fields
 });
 
-// 정지
+// Stop
 await pool.stop();
 ```
 
-## 핸들러 스크립트 모드
+## Handler Script Mode
 
-워커에서 실행할 핸들러 스크립트를 작성합니다:
+Write a handler script to be executed in workers:
 
 ```typescript
 // app/jobs/handlers.ts
@@ -46,10 +46,10 @@ declare var self: Worker;
 
 const handlers: Record<string, (data: any) => Promise<void>> = {
   SendEmailJob: async (data) => {
-    // 이메일 발송 로직
+    // Email sending logic
   },
   ProcessVideoJob: async (data) => {
-    // 비디오 처리 로직
+    // Video processing logic
   },
 };
 
@@ -71,32 +71,32 @@ self.onmessage = async (event) => {
 postMessage({ type: "ready", workerId: 0 });
 ```
 
-## 인라인 핸들러 모드
+## Inline Handler Mode
 
-`handlerScript` 없이 생성하면 blob URL로 인라인 워커가 생성됩니다:
+Without `handlerScript`, an inline worker is created via blob URL:
 
 ```typescript
 const pool = new WorkerPool({ concurrency: 2 });
 
-// 핸들러 스크립트 경로 등록
+// Register handler script paths
 pool.registerHandler("./app/jobs/email_handler.ts");
 pool.registerHandler("./app/jobs/video_handler.ts");
 
 await pool.start();
 ```
 
-## Bun.Worker 내장 사용
+## Using Bun.Worker Natively
 
-이 모듈은 Bun의 `Worker` 내장 API를 활용합니다:
+This module leverages Bun's built-in `Worker` API:
 
-- `new Worker(url, { smol })` → 워커 생성
-- `worker.postMessage(msg)` → 메시지 전송 (빠른 경로 최적화)
-- `worker.onmessage` → 메시지 수신
-- `worker.terminate()` → 워커 종료
-- `worker.unref()` → 프로세스 생존 분리
-- Blob URL → 인라인 워커 생성
+- `new Worker(url, { smol })` → create worker
+- `worker.postMessage(msg)` → send message (fast path optimized)
+- `worker.onmessage` → receive message
+- `worker.terminate()` → terminate worker
+- `worker.unref()` → detach from process lifetime
+- Blob URL → create inline worker
 
-## 상태 조회
+## Status
 
 ```typescript
 const status = pool.status();
@@ -109,7 +109,7 @@ const health = await pool.healthCheck();
 // { healthy, workers: [{ id, alive }] }
 ```
 
-## 워커 풀 + 큐 연동
+## Worker Pool + Queue Integration
 
 ```typescript
 import { Queue, WorkerPool } from "system/core/queue.ts";
@@ -117,13 +117,13 @@ import { Queue, WorkerPool } from "system/core/queue.ts";
 const pool = new WorkerPool({ concurrency: 4 });
 
 Queue.register("SendEmailJob", async (data) => {
-  // 핸들러 로직
+  // Handler logic
 });
 
-// 큐 워커 대신 워커 풀 사용
-Queue.work("default"); // 기본 워커
+// Use worker pool instead of queue workers
+Queue.work("default"); // default worker
 
-// 또는 워커 풀로 직접 디스패치
+// Or dispatch directly with worker pool
 const job = await Queue.getDriver().pop("default");
 if (job) pool.dispatch(job);
 ```

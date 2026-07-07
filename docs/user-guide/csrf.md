@@ -1,78 +1,78 @@
-# 🔐 CSRF 보호
+# 🔐 CSRF Protection
 
-Bun 내장 `Bun.CSRF.generate()` / `Bun.CSRF.verify()` 기반 Double Submit Cookie 방식.
+Double Submit Cookie method based on Bun's built-in `Bun.CSRF.generate()` / `Bun.CSRF.verify()`.
 
-## 작동 방식
+## How It Works
 
-1. **GET 요청**: `Bun.CSRF.generate()`로 HMAC 서명 토큰을 생성하여 쿠키에 설정
-   - 쿠키는 `HttpOnly=false` (JavaScript에서 읽을 수 있음)
-   - 토큰에 nonce + 타임스탬프 + HMAC 서명 포함
+1. **GET request**: Generates an HMAC-signed token via `Bun.CSRF.generate()` and sets it as a cookie
+   - Cookie is `HttpOnly=false` (readable from JavaScript)
+   - Token includes nonce + timestamp + HMAC signature
 
-2. **POST/PUT/PATCH/DELETE**: `Bun.CSRF.verify()`로 서명 + 만료 검증 후 Double Submit Cookie 검증
+2. **POST/PUT/PATCH/DELETE**: Validates signature and expiration via `Bun.CSRF.verify()`, then performs Double Submit Cookie verification
 
-## 설정
+## Configuration
 
 ```typescript
 import { csrfMiddleware, generateCsrfToken, verifyCsrfToken } from "system/core/csrf.ts";
 
 const config = {
-  secret: process.env.CSRF_SECRET || "your-secret-key",  // 필수
-  expiresIn: 86400000,    // 토큰 만료 (ms), 기본 24시간
-  maxAge: 86400000,       // 검증 최대 수명 (ms)
+  secret: process.env.CSRF_SECRET || "your-secret-key",  // required
+  expiresIn: 86400000,    // Token expiration (ms), default 24 hours
+  maxAge: 86400000,       // Max verification lifetime (ms)
   algorithm: "sha256",    // HMAC: sha256, sha384, sha512, sha512-256, blake2b256, blake2b512
-  encoding: "base64url",  // 인코딩: base64, base64url, hex
-  sessionId: "user-123",  // 세션 바인딩 (선택)
+  encoding: "base64url",  // Encoding: base64, base64url, hex
+  sessionId: "user-123",  // Session binding (optional)
   cookieName: "csrf_token",
   tokenName: "csrf_token",
   sameSite: "Lax",        // Strict, Lax, None
-  secure: false,          // HTTPS에서만
+  secure: false,          // HTTPS only
 };
 ```
 
-## 미들웨어 사용
+## Middleware Usage
 
 ```typescript
 import { csrfMiddleware } from "system/core/csrf.ts";
 
-// 라우트에 적용
+// Apply to route
 router.post("/form", controller, "store", [csrfMiddleware]);
 
-// 커스텀 설정
+// Custom configuration
 router.post("/api/data", controller, "store", [
   async (ctx) => csrfMiddleware({ ...ctx, config: { secret: "my-secret" } }),
 ]);
 ```
 
-## 토큰 수동 생성/검증
+## Manual Token Generate/Verify
 
 ```typescript
 import { generateCsrfToken, verifyCsrfToken, verifyCsrfTokenSafe } from "system/core/csrf.ts";
 
-// 생성
+// Generate
 const token = generateCsrfToken({ secret: "my-secret", sessionId: "user-123" });
 
-// 검증 (빈 문자열 시 throw)
+// Verify (throws on empty string)
 const valid = verifyCsrfToken(token, { secret: "my-secret", sessionId: "user-123" });
 
-// 안전한 검증 (빈 문자열/null/undefined 시 false)
+// Safe verify (returns false on empty/null/undefined)
 const safe = verifyCsrfTokenSafe(token, { secret: "my-secret" });
 ```
 
-## 뷰에서 사용
+## Usage in Views
 
 ```html
-<!-- 폼 hidden input -->
+<!-- Form hidden input -->
 <form method="POST">
   <?= csrfField(csrfToken) ?>
   ...
 </form>
 
-<!-- AJAX 메타 태그 -->
+<!-- AJAX meta tag -->
 <head>
   <?= csrfMeta(csrfToken) ?>
 </head>
 
-<!-- JavaScript에서 쿠키 읽기 -->
+<!-- JavaScript reading cookie -->
 <script>
   const token = document.cookie
     .split('; ')
@@ -90,24 +90,24 @@ const safe = verifyCsrfTokenSafe(token, { secret: "my-secret" });
 </script>
 ```
 
-## Bun.CSRF 내장 기능
+## Bun.CSRF Built-in Features
 
-| 기능 | 설명 |
-|------|------|
-| HMAC 서명 | 비밀 키로 서명 → 변조 불가 |
-| 만료 타임스탬프 | `expiresIn`/`maxAge`로 토큰 수명 제한 |
-| 세션 바인딩 | `sessionId`로 특정 사용자에게 토큰 바인딩 |
-| 다중 알고리즘 | SHA-256/384/512, BLAKE2b-256/512 |
-| 다중 인코딩 | base64, base64url, hex |
+| Feature | Description |
+|---------|-------------|
+| HMAC signing | Signed with secret key → tamper-proof |
+| Expiration timestamp | `expiresIn`/`maxAge` limits token lifetime |
+| Session binding | `sessionId` binds token to specific user |
+| Multiple algorithms | SHA-256/384/512, BLAKE2b-256/512 |
+| Multiple encodings | base64, base64url, hex |
 
 ## API
 
-| 함수 | 설명 |
-|------|------|
-| `generateCsrfToken(config?)` | `Bun.CSRF.generate()` 래퍼 |
-| `verifyCsrfToken(token, config?)` | `Bun.CSRF.verify()` 래퍼 |
-| `verifyCsrfTokenSafe(token, config?)` | 에러 시 false 반환 안전 래퍼 |
-| `getCsrfToken(request, config?)` | Double Submit Cookie 토큰 처리 |
-| `csrfMiddleware(ctx)` | 라우트 미들웨어 |
-| `csrfField(token)` | `<input type="hidden">` 생성 |
-| `csrfMeta(token)` | `<meta name="csrf-token">` 생성 |
+| Function | Description |
+|----------|-------------|
+| `generateCsrfToken(config?)` | Wrapper for `Bun.CSRF.generate()` |
+| `verifyCsrfToken(token, config?)` | Wrapper for `Bun.CSRF.verify()` |
+| `verifyCsrfTokenSafe(token, config?)` | Safe wrapper returning false on error |
+| `getCsrfToken(request, config?)` | Double Submit Cookie token handling |
+| `csrfMiddleware(ctx)` | Route middleware |
+| `csrfField(token)` | Generates `<input type="hidden">` |
+| `csrfMeta(token)` | Generates `<meta name="csrf-token">` |

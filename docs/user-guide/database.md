@@ -1,10 +1,10 @@
-# 🗃 데이터베이스 & 마이그레이션
+# 🗃 Database & Migrations
 
-## 데이터베이스 설정
+## Database Configuration
 
-`app/config/database.ts` 에서 설정합니다.
+Configured in `app/config/database.ts`.
 
-### SQLite (기본)
+### SQLite (default)
 
 ```typescript
 const config = {
@@ -27,27 +27,27 @@ default: { adapter: "postgres", url: "postgres://user:pass@localhost:5432/mydb" 
 default: { adapter: "mysql", url: "mysql://user:pass@localhost:3306/mydb" }
 ```
 
-### 다중 연결
+### Multiple Connections
 
 ```typescript
-const sql = await getDB();            // 기본
-const analyticsDB = await getDB("analytics");  // 특정 그룹
+const sql = await getDB();            // default
+const analyticsDB = await getDB("analytics");  // specific group
 ```
 
-### 어댑터 타입 조회
+### Get Adapter Type
 
-QueryBuilder에서 SQL 방언 분기에 사용:
+Used for SQL dialect branching in QueryBuilder:
 
 ```typescript
 import { getDBAdapter } from "system/core/database.ts";
 
 const adapter = getDBAdapter();           // "sqlite" | "postgres" | "mysql"
-const adapter = getDBAdapter("analytics"); // 특정 그룹
+const adapter = getDBAdapter("analytics"); // specific group
 ```
 
-### 테스트용 DB 주입
+### Test DB Injection
 
-테스트 환경에서 메모리 DB를 직접 주입할 수 있습니다:
+You can inject an in-memory DB directly in test environments:
 
 ```typescript
 import { SQL } from "bun";
@@ -56,53 +56,53 @@ import { setDB, resetDB } from "system/core/database.ts";
 const sql = new SQL({ adapter: "sqlite", filename: ":memory:", create: true });
 setDB(sql, "default", "sqlite");
 
-// 테스트 종료 후
+// After tests
 resetDB();
 await sql.close();
 ```
 
-## 멀티 어댑터 SQL 방언
+## Multi-Adapter SQL Dialects
 
-QueryBuilder는 DB 어댑터에 따라 자동으로 SQL 문법을 분기합니다:
+QueryBuilder automatically branches SQL syntax based on the DB adapter:
 
-### 식별자 이스케이프
+### Identifier Escaping
 
-| 어댑터 | 이스케이프 | 예시 |
-|--------|-----------|------|
-| SQLite | 쌍따옴표 | `"column"` |
-| PostgreSQL | 쌍따옴표 | `"column"` |
-| MySQL | 백틱 | `` `column` `` |
+| Adapter | Escape | Example |
+|---------|--------|---------|
+| SQLite | Double quotes | `"column"` |
+| PostgreSQL | Double quotes | `"column"` |
+| MySQL | Backticks | `` `column` `` |
 
 ### LIMIT / OFFSET
 
-| 어댑터 | 문법 | 예시 |
-|--------|------|------|
-| SQLite | 표준 | `LIMIT ? OFFSET ?` |
-| PostgreSQL | 표준 | `LIMIT ? OFFSET ?` |
-| MySQL | 레거시 | `LIMIT offset, count` |
+| Adapter | Syntax | Example |
+|---------|--------|---------|
+| SQLite | Standard | `LIMIT ? OFFSET ?` |
+| PostgreSQL | Standard | `LIMIT ? OFFSET ?` |
+| MySQL | Legacy | `LIMIT offset, count` |
 
-### RETURNING * (INSERT/UPDATE 후 행 반환)
+### RETURNING * (return rows after INSERT/UPDATE)
 
-| 어댑터 | 지원 | 대체 방식 |
-|--------|------|----------|
-| SQLite | ✅ | `RETURNING *` 직접 사용 |
-| PostgreSQL | ✅ | `RETURNING *` 직접 사용 |
-| MySQL | ❌ | INSERT 후 `lastInsertId` → SELECT 재조회 |
+| Adapter | Support | Alternative |
+|---------|---------|-------------|
+| SQLite | ✅ | Direct `RETURNING *` |
+| PostgreSQL | ✅ | Direct `RETURNING *` |
+| MySQL | ❌ | INSERT with `lastInsertId` → SELECT re-query |
 
 ```typescript
-// insertReturning / updateReturning은 어댑터에 관계없이 동일하게 사용
+// insertReturning / updateReturning work the same regardless of adapter
 const post = await qb.insertReturning("posts", { title: "Hello" });
 const updated = await qb.where("id", 1).updateReturning("posts", { title: "Updated" });
 ```
 
 ## Query Builder (Active Record)
 
-CodeIgniter3의 Active Record 패턴을 구현한 쿼리 빌더입니다.
+Implements CodeIgniter 3's Active Record pattern.
 
 ```typescript
 import { createQueryBuilder } from "system/core/query_builder.ts";
 
-// 독립 사용
+// Standalone usage
 const posts = await createQueryBuilder()
   .select("id, title")
   .from("posts")
@@ -111,7 +111,7 @@ const posts = await createQueryBuilder()
   .limit(10)
   .get();
 
-// Model과 함께 사용
+// With Model
 const posts = await postModel.qb()
   .where("published", 1)
   .like("title", "Bun")
@@ -119,35 +119,34 @@ const posts = await postModel.qb()
   .paginate(1, 10);
 ```
 
-> 💡 Query Builder의 전체 API는 [Query Builder 문서](./query-builder.md)를 참조하세요.
+> 💡 For the full Query Builder API, see the [Query Builder documentation](./query-builder.md).
 
-## Raw Query (원시 쿼리)
+## Raw Queries
 
-QueryBuilder로 표현하기 어려운 복잡한 쿼리는 Bun SQL의 원시 쿼리 API를 직접 사용할 수 있습니다.
-CodeIgniter3의 `$this->db->query()` 와 동일합니다.
+For complex queries that are difficult to express with QueryBuilder, you can use Bun SQL's raw query API directly. Same as CI3's `$this->db->query()`.
 
-### `sql\`...\` — 태그드 템플릿 리터럴 (권장)
+### `sql\`...\`` — Tagged Template Literal (recommended)
 
-Bun SQL의 태그드 템플릿 리터럴은 **자동 파라미터 바인딩**을 수행합니다.
-`${}` 로 전달한 값은 항상 파라미터로 처리되어 **SQL 인젝션이 불가능**합니다.
+Bun SQL's tagged template literals perform **automatic parameter binding**.
+Values passed via `${}` are always treated as parameters, making **SQL injection impossible**.
 
 ```typescript
 import { getDB } from "system/core/database.ts";
 
 const sql = await getDB();
 
-// ✅ 안전 — 값은 자동 파라미터 바인딩
+// ✅ Safe — values are auto-bound as parameters
 const posts = await sql`SELECT * FROM posts WHERE published = ${1} ORDER BY created_at DESC`;
 
-// ✅ 안전 — 여러 값 바인딩
+// ✅ Safe — multiple value bindings
 const post = await sql`SELECT * FROM posts WHERE id = ${postId} AND author_id = ${userId}`;
 
-// ✅ 안전 — INSERT/UPDATE/DELETE
+// ✅ Safe — INSERT/UPDATE/DELETE
 await sql`INSERT INTO posts (title, content) VALUES (${title}, ${content})`;
 await sql`UPDATE posts SET title = ${title} WHERE id = ${id}`;
 await sql`DELETE FROM posts WHERE id = ${id}`;
 
-// ✅ 안전 — JOIN + 서브쿼리 (구조는 문자열, 값은 바인딩)
+// ✅ Safe — JOIN + subquery (structure is literal, values are bound)
 const results = await sql`
   SELECT p.*, u.name as author_name,
     (SELECT COUNT(*) FROM comments WHERE post_id = p.id) as comment_count
@@ -159,36 +158,35 @@ const results = await sql`
 `;
 ```
 
-> 💡 **핵심 규칙**: 테이블명, 컬럼명 등 **구조(식별자)**는 템플릿 리터럴 안에 하드코딩하고,
-> **값(데이터)**만 `${}` 로 전달하세요.
+> 💡 **Key rule**: Hardcode **structure (identifiers)** like table names and column names inside the template literal.
+> Only pass **values (data)** via `${}`.
 
-### `sql.unsafe()` — 수동 바인딩
+### `sql.unsafe()` — Manual Binding
 
-`sql.unsafe(query, bindings)` 는 `?` 플레이스홀더와 바인딩 배열을 수동으로 관리합니다.
-QueryBuilder 내부에서 사용하는 방식입니다.
+`sql.unsafe(query, bindings)` manually manages `?` placeholders and a bindings array. Used internally by QueryBuilder.
 
 ```typescript
-// ✅ 안전 — ? 플레이스홀더 + 바인딩 배열
+// ✅ Safe — ? placeholders + bindings array
 const rows = await sql.unsafe(
   "SELECT * FROM posts WHERE published = ? AND author_id = ? ORDER BY created_at DESC",
   [1, userId]
 );
 
-// ✅ 안전 — INSERT
+// ✅ Safe — INSERT
 await sql.unsafe(
   "INSERT INTO posts (title, content, author_id) VALUES (?, ?, ?)",
   [title, content, authorId]
 );
 
-// ❌ 위험 — 문자열 결합으로 값 직접 삽입 (SQL 인젝션 가능!)
+// ❌ Dangerous — string concatenation for values (SQL injection possible!)
 await sql.unsafe(
-  `SELECT * FROM posts WHERE title = '${userInput}'`  // 절대 금지!
+  `SELECT * FROM posts WHERE title = '${userInput}'`  // never do this!
 );
 ```
 
-### 동적 쿼리 작성 패턴
+### Dynamic Query Patterns
 
-#### WHERE 조건 동적 추가
+#### Dynamic WHERE Conditions
 
 ```typescript
 const conditions: string[] = [];
@@ -210,10 +208,10 @@ const rows = await sql.unsafe(
 );
 ```
 
-#### ORDER BY 컬럼 동적 선택
+#### Dynamic ORDER BY Column
 
 ```typescript
-// ✅ 화이트리스트로 허용된 컬럼만
+// ✅ Only allow columns from a whitelist
 const allowedSort = { date: "created_at", title: "title", author: "name" } as const;
 const sortCol = allowedSort[userSort as keyof typeof allowedSort] ?? "created_at";
 
@@ -223,49 +221,49 @@ const rows = await sql.unsafe(
 );
 ```
 
-#### 테이블명 동적 선택
+#### Dynamic Table Name
 
 ```typescript
-// ✅ 화이트리스트로 허용된 테이블만
+// ✅ Only allow tables from a whitelist
 const allowedTables = ["posts", "users", "comments"] as const;
 const table = allowedTables.includes(userTable as any) ? userTable : "posts";
 
 const rows = await sql.unsafe(`SELECT * FROM ${table} LIMIT ?`, [limit]);
 ```
 
-### 태그드 템플릿 vs `sql.unsafe()` 비교
+### Tagged Template vs `sql.unsafe()` Comparison
 
-| | `sql\`...\`` | `sql.unsafe()` |
-|---|---|---|
-| **파라미터 바인딩** | 자동 (`${}`) | 수동 (`?` + 배열) |
-| **SQL 인젝션 방어** | ✅ 구조와 값 분리 | ⚠️ 올바른 사용 시에만 |
-| **동적 쿼리** | ❌ 구조가 고정 | ✅ 조건부 WHERE 등 |
-| **사용 사례** | 정적 쿼리, 간단한 CRUD | QueryBuilder, 동적 조건 |
-| **CI3 동등** | `$this->db->query($sql, $binds)` | 동일 |
+| Feature | `sql\`...\`` | `sql.unsafe()` |
+|---------|--------------|----------------|
+| **Parameter binding** | Auto (`${}`) | Manual (`?` + array) |
+| **SQL injection defense** | ✅ Structure/value separation | ⚠️ Only with correct usage |
+| **Dynamic queries** | ❌ Structure is fixed | ✅ Conditional WHERE etc. |
+| **Use cases** | Static queries, simple CRUD | QueryBuilder, dynamic conditions |
+| **CI3 equivalent** | `$this->db->query($sql, $binds)` | Same |
 
-### ⚠️ 주의사항
+### ⚠️ Important Notes
 
-1. **태그드 템플릿에 식별자(테이블명/컬럼명)를 `${}` 로 전달하지 마세요**
-   - Bun SQL은 `${}` 값을 **문자열 리터럴**로 쿼리에 포함합니다
-   - 즉, `` sql`SELECT * FROM ${tableName}` `` 는 `SELECT * FROM 'posts'` 가 되어 에러 발생
-   - 테이블명/컬럼명은 화이트리스트 검증 후 문자열에 직접 포함
+1. **Do not pass identifiers (table/column names) with `${}` in tagged templates**
+   - Bun SQL treats `${}` values as **string literals** in the query
+   - So `` sql`SELECT * FROM ${tableName}` `` becomes `SELECT * FROM 'posts'` and causes an error
+   - Use whitelist validation then include identifiers directly in the string
 
-2. **`sql.unsafe()` 에서 절대 문자열 결합으로 값을 넣지 마세요**
-   - 항상 `?` 플레이스홀더 + 바인딩 배열 사용
+2. **Never use string concatenation for values in `sql.unsafe()`**
+   - Always use `?` placeholders + bindings array
 
-3. **동적 식별자는 항상 화이트리스트로 검증하세요**
-   - 사용자 입력을 테이블명/컬럼명/ORDER BY에 직접 사용 금지
-   - 허용 목록 매핑 또는 정규식 검증 사용
+3. **Always validate dynamic identifiers with a whitelist**
+   - Never use user input directly for table names, column names, or ORDER BY
+   - Use an allowed-list mapping or regex validation
 
-4. **복잡한 쿼리는 QueryBuilder를 우선 고려하세요**
-   - QueryBuilder는 모든 식별자에 `validateColumnName()` 을 자동 적용
-   - Raw Query는 QueryBuilder로 불가능한 경우에만 사용
+4. **Prefer QueryBuilder for complex queries**
+   - QueryBuilder auto-applies `validateColumnName()` on all identifiers
+   - Raw queries should only be used when QueryBuilder cannot express the query
 
 ---
 
-## 마이그레이션
+## Migrations
 
-### 파일 구조
+### File Structure
 
 ```typescript
 import { SQL } from "bun";
@@ -284,17 +282,17 @@ export async function down(sql: SQL): Promise<void> {
 }
 ```
 
-### 명령어
+### Commands
 
 ```bash
 bun run bi make:migration create_users_table --fields=name:string,email:string
-bun run bi migrate                    # 실행
-bun run bi migrate:rollback           # 1개 롤백
-bun run bi migrate:rollback --steps=3 # N개 롤백
-bun run bi migrate:rollback --all     # 전체 롤백
+bun run bi migrate                    # Run
+bun run bi migrate:rollback           # Rollback 1
+bun run bi migrate:rollback --steps=3 # Rollback N
+bun run bi migrate:rollback --all     # Rollback all
 ```
 
-## 시드
+## Seeds
 
 ```typescript
 // database/seeds/user_seeder.ts

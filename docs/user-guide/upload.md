@@ -1,6 +1,6 @@
-# 📤 파일 업로드
+# 📤 File Upload
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { Upload } from "system/core/upload.ts";
@@ -19,7 +19,7 @@ if (result.success) {
 }
 ```
 
-## 다중 업로드
+## Multiple Upload
 
 ```typescript
 const multiResult = await Upload.saveMany(request, "photos", {
@@ -27,7 +27,7 @@ const multiResult = await Upload.saveMany(request, "photos", {
 });
 ```
 
-## 유틸리티
+## Utilities
 
 ```typescript
 Upload.delete("/uploads/old-file.jpg");
@@ -35,13 +35,13 @@ Upload.formatFileSize(5 * 1024 * 1024); // "5.0 MB"
 Upload.isImage("image/jpeg");            // true
 ```
 
-## 옵션
+## Options
 
-| 옵션 | 기본값 | 설명 |
-|------|--------|------|
-| `allowedMimeTypes` | 없음 | 허용 MIME 타입 |
-| `allowedExtensions` | 없음 | 허용 확장자 |
-| `maxSize` | 10MB | 최대 파일 크기 |
-| `uploadDir` | `public/uploads` | 저장 디렉토리 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `allowedMimeTypes` | none | Allowed MIME types |
+| `allowedExtensions` | none | Allowed file extensions |
+| `maxSize` | 10MB | Maximum file size |
+| `uploadDir` | `public/uploads` | Upload directory |
 | `naming` | `uuid` | `"original"` / `"uuid"` / `"timestamp"` / `"hash"` |
-| `overwrite` | `false` | 덮어쓰기 |
+| `overwrite` | `false` | Overwrite existing files |

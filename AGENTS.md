@@ -1,233 +1,233 @@
-# AGENTS.md - BunIgniter 기여자 가이드
+# AGENTS.md - BunIgniter Contributor Guide
 
-이 파일은 AI 에이전트와 인간 개발자 모두가 BunIgniter 프레임워크를 이해하고 기여할 수 있도록 작성되었습니다.
-
----
-
-## 프로젝트 개요
-
-BunIgniter는 CodeIgniter 3의 MVC 패턴을 Bun 런타임 환경에서 재구현한 풀스택 웹 프레임워크입니다.
-
-### 핵심 설계 원칙
-
-1. **CodeIgniter 3 호환성**: CI3 개발자가 직관적으로 이해할 수 있는 API 구조
-2. **Bun 네이티브**: Bun SQL, Bun.file, Bun.password 등 Bun 런타임 기능을 최우선으로 활용
-3. **Bun.serve 네이티브**: HTTP 레이어는 Bun.serve 내장 라우터를 사용하여 SIMD 가속 라우팅/미들웨어 처리
-4. **자체 템플릿 엔진**: PHP/CI3 친화적 `{{ }}`, `<?= ?>`, `<? ?>`, include(), 슬롯 시스템
-5. **CLI 스캐폴딩**: AdonisJS Ace 스타일로 MVC 보일러플레이트 자동 생성
-6. **소문자 파일명**: 모든 TypeScript 파일은 `snake_case` 소문자 규칙 사용
-7. **드라이버 추상화**: 세션/캐시 등은 인터페이스 기반으로 드라이버 교체 가능
+This file is written to help both AI agents and human developers understand and contribute to the BunIgniter framework.
 
 ---
 
-## 아키텍처
+## Project Overview
 
-### 레이어 구조
+BunIgniter is a full-stack web framework that reimplements CodeIgniter 3's MVC pattern in the Bun runtime environment.
+
+### Core Design Principles
+
+1. **CodeIgniter 3 Compatibility**: API structure that CI3 developers can intuitively understand
+2. **Bun Native**: Prioritizes Bun runtime features such as Bun SQL, Bun.file, Bun.password
+3. **Bun.serve Native**: HTTP layer uses Bun.serve's built-in router for SIMD-accelerated routing/middleware processing
+4. **Custom Template Engine**: PHP/CI3-friendly `{{ }}`, `<?= ?>`, `<? ?>`, include(), slot system
+5. **CLI Scaffolding**: Auto-generates MVC boilerplate in AdonisJS Ace style
+6. **Lowercase File Names**: All TypeScript files use `snake_case` lowercase convention
+7. **Driver Abstraction**: Session/cache and others use interface-based swappable drivers
+
+---
+
+## Architecture
+
+### Layer Structure
 
 ```
-요청 → Bun.serve (HTTP) → Router → [글로벌 미들웨어] → [라우트 미들웨어] → Controller → Model → Bun SQL
+Request → Bun.serve (HTTP) → Router → [Global Middleware] → [Route Middleware] → Controller → Model → Bun SQL
                                                                                    ↓
-                                                                                View (Template Engine) → HTML 응답
+                                                                                View (Template Engine) → HTML Response
                                                                                     ↓
-                                                                              JSON 응답 (API)
+                                                                              JSON Response (API)
 ```
 
-### 미들웨어 파이프라인
+### Middleware Pipeline
 
 ```
-요청 → 글로벌 미들웨어 (router.use) → 라우트 미들웨어 (router.resource 3번째 인자)
-           ↓ next()                     ↓ next()
-         통과/차단                     통과/차단
-                                          ↓
-                                     Controller 핸들러
+Request → Global Middleware (router.use) → Route Middleware (router.resource 3rd argument)
+           ↓ next()                        ↓ next()
+         Pass/Block                      Pass/Block
+                                           ↓
+                                      Controller Handler
 ```
 
-- `next()` 를 호출하면 다음 미들웨어로 진행
-- `next()` 를 호출하지 않고 `Response` 를 반환하면 파이프라인 중단 (요청 차단)
-- `runMiddlewarePipeline()` 이 파이프라인을 실행
+- Calling `next()` proceeds to the next middleware
+- Returning a `Response` without calling `next()` stops the pipeline (blocks the request)
+- `runMiddlewarePipeline()` executes the pipeline
 
-### 핵심 흐름
+### Core Flow
 
-1. **Bootstrap** (`system/core/bootstrap.ts`): Bun.serve 서버 생성, 정적 파일 서비스, 에러 핸들링, 라우트 등록, 로거 초기화, 서버 시작
-2. **Router** (`system/core/router.ts`): 사용자 정의 라우트를 Bun.serve routes로 변환(`toBunServe()`). 글로벌+라우트 미들웨어 파이프라인 실행, 라우트 모델 바인딩 해석 후 `controller.method(ctx)` 호출
-3. **Controller** (`system/core/controller.ts`): `Context` 객체를 받아 비즈니스 로직 처리. `this.view()`, `this.json()`, `this.redirect()` 로 응답
-4. **Model** (`system/core/model.ts`): Bun SQL tagged template literal 기반 CRUD. 제네릭 타입으로 타입 안전성 제공
-5. **View** (`system/core/view.ts` + `system/core/template.ts`): 자체 템플릿 엔진 + 레이아웃/슬롯 시스템. `<!-- layout:name -->` 주석으로 자동 레이아웃 결합, `<!-- slot:name -->` 슬롯, `include()` 파셜 포함
+1. **Bootstrap** (`system/core/bootstrap.ts`): Creates Bun.serve server, serves static files, error handling, route registration, logger initialization, server start
+2. **Router** (`system/core/router.ts`): Converts user-defined routes to Bun.serve routes (`toBunServe()`). Executes global + route middleware pipeline, resolves route model bindings, then calls `controller.method(ctx)`
+3. **Controller** (`system/core/controller.ts`): Receives `Context` object and processes business logic. Responds with `this.view()`, `this.json()`, `this.redirect()`
+4. **Model** (`system/core/model.ts`): CRUD based on Bun SQL tagged template literals. Provides type safety with generic types
+5. **View** (`system/core/view.ts` + `system/core/template.ts`): Custom template engine + layout/slot system. Auto-layout binding via `<!-- layout:name -->` comments, `<!-- slot:name -->` slots, `include()` partials
 
 ---
 
-## 디렉토리 책임
+## Directory Responsibilities
 
-### `system/` - 프레임워크 코어 (사용자 수정 금지)
+### `system/` - Framework Core (Do Not Modify)
 
-| 파일 | 책임 | 외부 의존성 |
-|------|------|------------|
-| `core/bootstrap.ts` | 서버 시작, Bun.serve 설정, 에러 핸들링, 로거 연동 | config.ts, database.ts, logger.ts |
-| `core/config.ts` | `app/config/` 에서 설정 파일 로드, 캐싱 | 없음 |
-| `core/controller.ts` | 기본 컨트롤러 클래스, `view()`/`json()`/`redirect()` | view.ts |
-| `core/database.ts` | Bun SQL 연결 관리, 다중 그룹 지원 | bun (SQL), config.ts |
-| `core/model.ts` | 기본 모델 클래스, CRUD/페이지네이션/트랜잭션 | database.ts |
-| `core/router.ts` | 라우트 정의 → Bun.serve routes 변환(`toBunServe()`), `resource()`/`group()`, 오토 라우트(`autoRoute()`), 미들웨어 파이프라인, 라우트 모델 바인딩 | controller.ts, middleware.ts, route_model_binding.ts, auto_router.ts |
-| `core/view.ts` | 뷰 렌더링 진입점 | template.ts |
-| `core/template.ts` | 자체 템플릿 엔진, 컴파일, 슬롯, include() | — |
-| `core/middleware.ts` | 미들웨어 파이프라인 (`runMiddlewarePipeline`), `MiddlewareContext` 타입 | 없음 |
-| `core/session.ts` | 인메모리 쿠키 기반 세션, Flash 데이터 | 없음 |
-| `core/session_driver.ts` | `SessionDriver` 인터페이스 + `SessionConfig` 타입 | 없음 |
-| `core/memory_session.ts` | `MemorySession` (인메모리, `SessionDriver` 구현) | 없음 |
-| `core/file_session.ts` | `FileSession` (파일 기반, `SessionDriver` 구현), GC, Flash 데이터 | 없음 |
-| `core/session_manager.ts` | `createSession()` 팩토리 (비동기), 설정 기반 드라이버 자동 선택 | session_driver.ts, memory_session.ts, file_session.ts, redis_session.ts |
-| `core/redis_session.ts` | `RedisSession` (Bun RedisClient, `SessionDriver` 구현), 비동기 load/save/destroy | bun (RedisClient) |
-| `core/input.ts` | 요청 입력 헬퍼 (POST/GET/헤더/IP) | 없음 |
-| `core/csrf.ts` | CSRF Double Submit Cookie, `csrfMiddleware`, `csrfField`, `csrfMeta` | 없음 |
-| `core/validator.ts` | `Validator.check`, `validate` 함수, 20+ 검증 규칙 | 없음 |
-| `core/auth.ts` | `Auth` 클래스 (bcrypt), `authGuard`/`guestGuard` 미들웨어 | session_manager.ts, database.ts |
-| `core/upload.ts` | `Upload.save`/`saveMany`/`delete`, MIME/확장자/크기 검증 | 없음 |
-| `core/pagination.ts` | `paginationHtml`/`Info`/`Meta`, HTML 네비게이션 생성 | 없음 |
-| `core/logger.ts` | `Logger` 클래스, 파일+콘솔 출력, 레벨 필터링, 로그 회전 | 없음 |
-| `core/email.ts` | `Email` 클래스, SMTP/sendmail/log 드라이버, `sendTemplate()` | — |
-| `core/cache.ts` | `Cache` 매니저, `CacheDriver` 인터페이스 (비동기), `MemoryCacheDriver`/`FileCacheDriver` | 없음 |
-| `core/redis_cache.ts` | `RedisCacheDriver` (Bun RedisClient, `CacheDriver` 구현) | bun (RedisClient) |
-| `core/websocket.ts` | `WebSocketManager` 클래스, Pub/Sub 채널, Bun.serve websocket 설정 | 없음 |
-| `core/cors.ts` | `corsMiddleware`, `createCorsMiddleware(config)`, 프리플라이트 | 없음 |
-| `core/rate_limit.ts` | `rateLimitMiddleware`, 슬라이딩 윈도우, IP 기반, `X-RateLimit-*` | 없음 |
-| `core/route_model_binding.ts` | `RouteModelBinding.bind()/resolve()`, 자동 DB 조회 + 404 | 없음 |
-| `core/openapi.ts` | `OpenApiGenerator`, Router → OpenAPI 3.0 스펙, Swagger UI | 없음 |
-| `core/integration_test.ts` | `IntegrationTestClient`, `startTestServer`/`stopTestServer` | 없음 |
-| `core/queue.ts` | `Queue` 매니저, `QueueDriver` 인터페이스, `MemoryQueueDriver`/`RedisQueueDriver`, 지연 실행, 재시도 | bun (RedisClient) |
-| `core/scheduler.ts` | `Scheduler` 매니저, `Bun.cron()` 인프로세스 + OS-레벨 크론, `Bun.cron.parse()` | bun (Bun.cron) |
-| `core/dashboard.ts` | 큐 모니터링 대시보드 (HTML + JSON API), `createDashboardRoutes()` | queue.ts, scheduler.ts |
-| `core/broadcast_queue.ts` | `BroadcastQueue`, Redis Pub/Sub 브로드캐스트, `RedisClient.subscribe/publish` | bun (RedisClient) |
-| `core/cookie.ts` | 쿠키 헬퍼, `Bun.Cookie`/`Bun.CookieMap` 내장 | bun (Bun.Cookie) |
-| `core/archive.ts` | 아카이브 유틸리티, `Bun.Archive` 내장 (tar/gzip) | bun (Bun.Archive) |
-| `core/shell.ts` | 셸 헬퍼, `Bun.spawn`/`Bun.$` 내장 | bun (Bun.spawn) |
-| `core/worker_pool.ts` | `WorkerPool`, Bun.Worker 병렬 잡 처리, IPC 메시지, 워커 재시작 | bun (Worker) |
-| `core/distributed_lock.ts` | `DistributedLock`, Redis/Memory 분산 잠금, Lua 스크립트, `runScheduled()` | bun (RedisClient) |
-| `core/audit_log_ui.ts` | 감사 로그 웹 UI, HTML 대시보드, SSE 실시간, API 엔드포인트 | audit_log.ts |
-| `core/sse.ts` | `SSEManager`, Server-Sent Events 매니저, 채널, 히스토리, 브로드캐스트 | ReadableStream |
-| `core/image.ts` | `ImageEditor`, Bun.Image 체인형 파이프라인, 리사이즈/회전/변환 | bun (Bun.Image) |
-| `core/crypto.ts` | `Crypto`, Bun.CryptoHasher/Bun.hash/Bun.password, HMAC, UUID, 토큰 | bun (Crypto) |
-| `core/audit_log.ts` | 감사 로그 매니저, 모델 이벤트 추적, `AuditLogModel` | model.ts, logger.ts |
+| File | Responsibility | External Dependencies |
+|------|---------------|----------------------|
+| `core/bootstrap.ts` | Server start, Bun.serve config, error handling, logger integration | config.ts, database.ts, logger.ts |
+| `core/config.ts` | Load config files from `app/config/`, caching | None |
+| `core/controller.ts` | Base controller class, `view()`/`json()`/`redirect()` | view.ts |
+| `core/database.ts` | Bun SQL connection management, multi-group support | bun (SQL), config.ts |
+| `core/model.ts` | Base model class, CRUD/pagination/transactions | database.ts |
+| `core/router.ts` | Route definition → Bun.serve routes conversion (`toBunServe()`), `resource()`/`group()`, auto-route (`autoRoute()`), middleware pipeline, route model binding | controller.ts, middleware.ts, route_model_binding.ts, auto_router.ts |
+| `core/view.ts` | View rendering entry point | template.ts |
+| `core/template.ts` | Custom template engine, compilation, slots, include() | — |
+| `core/middleware.ts` | Middleware pipeline (`runMiddlewarePipeline`), `MiddlewareContext` type | None |
+| `core/session.ts` | In-memory cookie-based sessions, flash data | None |
+| `core/session_driver.ts` | `SessionDriver` interface + `SessionConfig` type | None |
+| `core/memory_session.ts` | `MemorySession` (in-memory, implements `SessionDriver`) | None |
+| `core/file_session.ts` | `FileSession` (file-based, implements `SessionDriver`), GC, flash data | None |
+| `core/session_manager.ts` | `createSession()` factory (async), auto-selects driver based on config | session_driver.ts, memory_session.ts, file_session.ts, redis_session.ts |
+| `core/redis_session.ts` | `RedisSession` (Bun RedisClient, implements `SessionDriver`), async load/save/destroy | bun (RedisClient) |
+| `core/input.ts` | Request input helpers (POST/GET/headers/IP) | None |
+| `core/csrf.ts` | CSRF Double Submit Cookie, `csrfMiddleware`, `csrfField`, `csrfMeta` | None |
+| `core/validator.ts` | `Validator.check`, `validate` function, 20+ validation rules | None |
+| `core/auth.ts` | `Auth` class (bcrypt), `authGuard`/`guestGuard` middleware | session_manager.ts, database.ts |
+| `core/upload.ts` | `Upload.save`/`saveMany`/`delete`, MIME/extension/size validation | None |
+| `core/pagination.ts` | `paginationHtml`/`Info`/`Meta`, HTML navigation generation | None |
+| `core/logger.ts` | `Logger` class, file + console output, level filtering, log rotation | None |
+| `core/email.ts` | `Email` class, SMTP/sendmail/log drivers, `sendTemplate()` | — |
+| `core/cache.ts` | `Cache` manager, `CacheDriver` interface (async), `MemoryCacheDriver`/`FileCacheDriver` | None |
+| `core/redis_cache.ts` | `RedisCacheDriver` (Bun RedisClient, implements `CacheDriver`) | bun (RedisClient) |
+| `core/websocket.ts` | `WebSocketManager` class, Pub/Sub channels, Bun.serve websocket configuration | None |
+| `core/cors.ts` | `corsMiddleware`, `createCorsMiddleware(config)`, preflight | None |
+| `core/rate_limit.ts` | `rateLimitMiddleware`, sliding window, IP-based, `X-RateLimit-*` | None |
+| `core/route_model_binding.ts` | `RouteModelBinding.bind()/resolve()`, auto DB lookup + 404 | None |
+| `core/openapi.ts` | `OpenApiGenerator`, Router → OpenAPI 3.0 spec, Swagger UI | None |
+| `core/integration_test.ts` | `IntegrationTestClient`, `startTestServer`/`stopTestServer` | None |
+| `core/queue.ts` | `Queue` manager, `QueueDriver` interface, `MemoryQueueDriver`/`RedisQueueDriver`, delayed execution, retries | bun (RedisClient) |
+| `core/scheduler.ts` | `Scheduler` manager, `Bun.cron()` in-process + OS-level cron, `Bun.cron.parse()` | bun (Bun.cron) |
+| `core/dashboard.ts` | Queue monitoring dashboard (HTML + JSON API), `createDashboardRoutes()` | queue.ts, scheduler.ts |
+| `core/broadcast_queue.ts` | `BroadcastQueue`, Redis Pub/Sub broadcast, `RedisClient.subscribe/publish` | bun (RedisClient) |
+| `core/cookie.ts` | Cookie helpers, `Bun.Cookie`/`Bun.CookieMap` built-in | bun (Bun.Cookie) |
+| `core/archive.ts` | Archive utilities, `Bun.Archive` built-in (tar/gzip) | bun (Bun.Archive) |
+| `core/shell.ts` | Shell helpers, `Bun.spawn`/`Bun.$` built-in | bun (Bun.spawn) |
+| `core/worker_pool.ts` | `WorkerPool`, Bun.Worker parallel job processing, IPC messages, worker restart | bun (Worker) |
+| `core/distributed_lock.ts` | `DistributedLock`, Redis/Memory distributed lock, Lua scripts, `runScheduled()` | bun (RedisClient) |
+| `core/audit_log_ui.ts` | Audit log web UI, HTML dashboard, SSE real-time, API endpoints | audit_log.ts |
+| `core/sse.ts` | `SSEManager`, Server-Sent Events manager, channels, history, broadcast | ReadableStream |
+| `core/image.ts` | `ImageEditor`, Bun.Image chainable pipeline, resize/rotate/convert | bun (Bun.Image) |
+| `core/crypto.ts` | `Crypto`, Bun.CryptoHasher/Bun.hash/Bun.password, HMAC, UUID, tokens | bun (Crypto) |
+| `core/audit_log.ts` | Audit log manager, model event tracking, `AuditLogModel` | model.ts, logger.ts |
 | `core/test_helper.ts` | `createTestDB`, `testRequest`, `parseJsonResponse` | bun:test |
-| `core/e2e_test.ts` | `httpTest(router)` E2E 테스트, 어설션 헬퍼 | 없음 |
-| `core/auto_router.ts` | `AutoRouter` 클래스, URL → Controller/Method 자동 매핑, CI3 Auto Routing | logger.ts |
-| `core/security_headers.ts` | `securityHeadersMiddleware`, `createSecurityHeadersMiddleware(config)`, OWASP 보안 헤더 | 없음 |
-| `core/user_agent.ts` | `UserAgent` 클래스, 브라우저/OS/모바일/봇/태블릿 감지 | 없음 |
-| `core/autoload.ts` | `autoloadRegistry`, `autoload(config)`, 헬퍼/라이브러리/모델 전역 로드 | 없음 |
-| `core/profiler.ts` | `Profiler` 클래스, 벤치마크/쿼리/메모리 측정, HTML 오버레이 | logger.ts |
-| `helpers/index.ts` | 전역 헬퍼 barrel re-export (9개 카테고리) | 없음 |
+| `core/e2e_test.ts` | `httpTest(router)` E2E testing, assertion helpers | None |
+| `core/auto_router.ts` | `AutoRouter` class, URL → Controller/Method auto-mapping, CI3 Auto Routing | logger.ts |
+| `core/security_headers.ts` | `securityHeadersMiddleware`, `createSecurityHeadersMiddleware(config)`, OWASP security headers | None |
+| `core/user_agent.ts` | `UserAgent` class, browser/OS/mobile/bot/tablet detection | None |
+| `core/autoload.ts` | `autoloadRegistry`, `autoload(config)`, global loading of helpers/libraries/models | None |
+| `core/profiler.ts` | `Profiler` class, benchmark/query/memory measurement, HTML overlay | logger.ts |
+| `helpers/index.ts` | Global helpers barrel re-export (9 categories) | None |
 
-### `app/` - 사용자 애플리케이션
+### `app/` - User Application
 
-| 디렉토리 | 책임 |
-|---------|------|
-| `config/` | 앱/DB/라우트/이메일/캐시/큐 설정 |
-| `controllers/` | HTTP 요청 처리 |
-| `models/` | 데이터베이스 조작 |
-| `views/` | HTML 템플릿 ({{ }}, <?= ?>, <? ?>) |
-| `views/layout/` | 레이아웃 템플릿 |
-| `middleware/` | 미들웨어 |
-| `helpers/` | 커스텀 헬퍼 함수 |
-| `libraries/` | 커스텀 라이브러리 클래스 |
+| Directory | Responsibility |
+|-----------|---------------|
+| `config/` | App/DB/route/email/cache/queue configuration |
+| `controllers/` | HTTP request handling |
+| `models/` | Database operations |
+| `views/` | HTML templates ({{ }}, <?= ?>, <? ?>) |
+| `views/layout/` | Layout templates |
+| `middleware/` | Middleware |
+| `helpers/` | Custom helper functions |
+| `libraries/` | Custom library classes |
 
-### `cli/` - CLI 스캐폴딩 시스템
+### `cli/` - CLI Scaffolding System
 
-| 파일 | 책임 |
-|------|------|
-| `index.ts` | CLI 진입점, 명령어 분기 |
-| `registry.ts` | 명령어 등록/조회, 도움말 출력 |
-| `utils.ts` | 이름 변환 (PascalCase/snake_case/복수형), 파일 생성, 인자 파싱 |
-| `commands/makescaffold.ts` | 핵심: Controller + Model + View + Migration 동시 생성. `--api` 플래그, 라우트 자동 등록 |
-| `commands/makecontroller.ts` | 컨트롤러 생성, `--resource` 시 CRUD 메서드 포함 |
-| `commands/makemodel.ts` | 모델 생성, `--fields` 로 인터페이스 자동 생성 |
-| `commands/makeview.ts` | 뷰 템플릿 생성, `--resource` 시 index/show/create/edit 생성 |
-| `commands/makemigration.ts` | 마이그레이션 파일 생성, `create_`/`add_` 접두사 자동 감지 |
-| `commands/makemiddleware.ts` | 미들웨어 함수 생성 |
-| `commands/makehelper.ts` | 헬퍼 파일 생성 |
-| `commands/makelibrary.ts` | 라이브러리 클래스 생성 |
-| `commands/routegen.ts` | 라우트 코드 생성 + `routes.ts` 자동 등록 (중복 감지) |
-| `commands/migrate.ts` | `migrate` — 마이그레이션 실행, 미실행 up()만 실행, 추적 테이블 관리 |
-| `commands/serve.ts` | `serve` — 개발 서버 실행 (`Bun.spawn` + `--hot`), `--port`/`--host` 옵션 |
-| `commands/listroutes.ts` | `list:routes` — routes.ts 파싱, HTTP 메서드별 컬러 출력, 리소스 확장 |
-| `commands/dbseed.ts` | `make:seed` (시더 생성) + `db:seed` (시더 실행) |
-| `commands/repl.ts` | `repl` (인터랙티브 REPL 셸, AdonisJS Ace 스타일) |
-| `commands/migraterollback.ts` | `migrate:rollback` (마이그레이션 롤백, `--steps`/`--all`) |
+| File | Responsibility |
+|------|---------------|
+| `index.ts` | CLI entry point, command routing |
+| `registry.ts` | Command registration/lookup, help output |
+| `utils.ts` | Name conversion (PascalCase/snake_case/pluralization), file creation, argument parsing |
+| `commands/makescaffold.ts` | Core: Concurrent Controller + Model + View + Migration generation. `--api` flag, auto route registration |
+| `commands/makecontroller.ts` | Controller generation, includes CRUD methods with `--resource` |
+| `commands/makemodel.ts` | Model generation, auto-generates interface with `--fields` |
+| `commands/makeview.ts` | View template generation, creates index/show/create/edit with `--resource` |
+| `commands/makemigration.ts` | Migration file generation, auto-detects `create_`/`add_` prefixes |
+| `commands/makemiddleware.ts` | Middleware function generation |
+| `commands/makehelper.ts` | Helper file generation |
+| `commands/makelibrary.ts` | Library class generation |
+| `commands/routegen.ts` | Route code generation + auto-registration in `routes.ts` (duplicate detection) |
+| `commands/migrate.ts` | `migrate` — Run migrations, execute only unrun up(), manage tracking table |
+| `commands/serve.ts` | `serve` — Start dev server (`Bun.spawn` + `--hot`), `--port`/`--host` options |
+| `commands/listroutes.ts` | `list:routes` — Parse routes.ts, color-coded output by HTTP method, resource expansion |
+| `commands/dbseed.ts` | `make:seed` (seeder creation) + `db:seed` (seeder execution) |
+| `commands/repl.ts` | `repl` (interactive REPL shell, AdonisJS Ace style) |
+| `commands/migraterollback.ts` | `migrate:rollback` (migration rollback, `--steps`/`--all`) |
 
-### `database/` - 마이그레이션 & 시드
+### `database/` - Migrations & Seeds
 
-| 파일/디렉토리 | 책임 |
-|--------------|------|
-| `migrate.ts` | 마이그레이션 실행기. `migrations` 테이블로 실행 추적 |
-| `migrations/*.ts` | 개별 마이그레이션. `up()`/`down()` export |
-| `seeds/*.ts` | 시드 파일. `run()` export |
+| File/Directory | Responsibility |
+|---------------|---------------|
+| `migrate.ts` | Migration runner. Tracks execution via `migrations` table |
+| `migrations/*.ts` | Individual migrations. Exports `up()`/`down()` |
+| `seeds/*.ts` | Seed files. Exports `run()` |
 
-### `storage/` - 런타임 저장소
+### `storage/` - Runtime Storage
 
-| 디렉토리 | 책임 |
-|---------|------|
-| `logs/` | 로그 파일 (`app-YYYY-MM-DD.log`) |
-| `sessions/` | 파일 기반 세션 (`sess_<uuid>`) |
-| `cache/` | 파일 캐시 (해시 키 파일) |
+| Directory | Responsibility |
+|-----------|---------------|
+| `logs/` | Log files (`app-YYYY-MM-DD.log`) |
+| `sessions/` | File-based sessions (`sess_<uuid>`) |
+| `cache/` | File cache (hash key files) |
 
-### `docs/user-guide/` - 기능별 상세 가이드
+### `docs/user-guide/` - Feature-Specific Guides
 
-42개 마크다운 파일 (getting-started, cli, routing, controllers, models, views, database, middleware, auth, validation, csrf, session, upload, pagination, email, cache, websocket, cors, rate-limit, route-model-binding, openapi, logging, testing, helpers, queue, scheduler, dashboard, broadcast-queue, cookies, archive, shell, audit-log, worker-pool, distributed-lock, sse, image, crypto, security-headers, user-agent, autoload, profiler, query-builder, repl)
+42 markdown files (getting-started, cli, routing, controllers, models, views, database, middleware, auth, validation, csrf, session, upload, pagination, email, cache, websocket, cors, rate-limit, route-model-binding, openapi, logging, testing, helpers, queue, scheduler, dashboard, broadcast-queue, cookies, archive, shell, audit-log, worker-pool, distributed-lock, sse, image, crypto, security-headers, user-agent, autoload, profiler, query-builder, repl)
 
-### `tests/` - 테스트
+### `tests/` - Tests
 
-| 파일 | 대상 | 테스트 수 |
-|------|------|----------|
-| `validator_test.ts` | Validator / validate 함수 | 14 |
-| `helpers_test.ts` | slug, truncate, escapeHtml, formatDate, timeAgo 등 | 53 |
+| File | Target | Test Count |
+|------|--------|------------|
+| `validator_test.ts` | Validator / validate function | 14 |
+| `helpers_test.ts` | slug, truncate, escapeHtml, formatDate, timeAgo, etc. | 53 |
 | `pagination_test.ts` | paginationHtml / Info / Meta | 8 |
 | `upload_test.ts` | Upload.formatFileSize / isImage | 6 |
 | `cache_test.ts` | Cache, MemoryCacheDriver, FileCacheDriver | 14 |
-| `middleware_test.ts` | CORS / Rate Limit 미들웨어 | 7 |
+| `middleware_test.ts` | CORS / Rate Limit middleware | 7 |
 | `route_binding_test.ts` | RouteModelBinding | 6 |
 | `openapi_test.ts` | OpenApiGenerator | 8 |
 | `queue_test.ts` | Queue, MemoryQueueDriver | 15 |
-| `redis_test.ts` | RedisSession, RedisCacheDriver 구조 검증 | 15 |
-| `scheduler_test.ts` | Scheduler, Bun.cron 파싱 | 16 |
+| `redis_test.ts` | RedisSession, RedisCacheDriver structure validation | 15 |
+| `scheduler_test.ts` | Scheduler, Bun.cron parsing | 16 |
 | `feature_test.ts` | Cookie, Archive, Shell, AuditLog | 30 |
 | `feature2_test.ts` | WorkerPool, DistributedLock, AuditLogUI | 43 |
 | `feature3_test.ts` | SSE, ImageEditor, Crypto | 61 |
 | `feature4_test.ts` | CSRF (Bun.CSRF), Email, CLI | 56 |
-| `query_builder_test.ts` | QueryBuilder CRUD/인젝션/Model 통합 | 56 |
-| `query_builder_dialect_test.ts` | QueryBuilder 방언 (SQLite/MySQL/PostgreSQL) | 16 |
-| `security_test.ts` | CSRF XSS, Upload 경로 순회, Model SQL 인젝션, CORS 보안, Rate Limit IP 스푸핑, Session Fixation, Crypto | 30 |
+| `query_builder_test.ts` | QueryBuilder CRUD/Injection/Model integration | 56 |
+| `query_builder_dialect_test.ts` | QueryBuilder dialects (SQLite/MySQL/PostgreSQL) | 16 |
+| `security_test.ts` | CSRF XSS, Upload path traversal, Model SQL injection, CORS security, Rate Limit IP spoofing, Session Fixation, Crypto | 30 |
 | `form_helper_test.ts` | Form Helper | 28 |
 | `html_helper_test.ts` | HTML Helper | 16 |
 | `text_helper_test.ts` | Text Helper | 18 |
 | `inflector_helper_test.ts` | Inflector Helper | 19 |
-| `e2e_test.ts` | E2E 테스트 | 14 |
-| `autoload_test.ts` | Autoload 시스템 | 7 |
+| `e2e_test.ts` | E2E tests | 14 |
+| `autoload_test.ts` | Autoload system | 7 |
 | `auto_router_test.ts` | AutoRouter | 19 |
 | `security_profiler_test.ts` | Security Headers, User Agent, Profiler | 24 |
 
 ---
 
-## 코딩 규칙
+## Coding Conventions
 
-### 파일명
+### File Names
 
-- **모든 TypeScript 파일은 소문자 snake_case**: `user_model.ts`, `auth_middleware.ts`
-- **뷰 템플릿은 소문자**: `index.html`, `show.html`
-- **마이그레이션은 타임스탬프 접두사**: `1783262870269_create_posts_table.ts`
-- **시더는 소문자**: `user_seeder.ts`
+- **All TypeScript files are lowercase snake_case**: `user_model.ts`, `auth_middleware.ts`
+- **View templates are lowercase**: `index.html`, `show.html`
+- **Migrations use timestamp prefix**: `1783262870269_create_posts_table.ts`
+- **Seeders are lowercase**: `user_seeder.ts`
 
-### 클래스/인터페이스 명명
+### Class/Interface Naming
 
-| 타입 | 명명 규칙 | 예시 |
-|------|----------|------|
-| Controller 클래스 | `{Name}Controller` | `PostController` |
-| Model 클래스 | `{Name}Model` | `PostModel` |
+| Type | Naming Convention | Example |
+|------|-------------------|---------|
+| Controller class | `{Name}Controller` | `PostController` |
+| Model class | `{Name}Model` | `PostModel` |
 | Interface | `{Name}Interface` | `PostInterface` |
-| Middleware 함수 | `{name}Middleware` | `authMiddleware` |
-| Library 클래스 | `{Name}Library` | `EmailLibrary` |
+| Middleware function | `{name}Middleware` | `authMiddleware` |
+| Library class | `{Name}Library` | `EmailLibrary` |
 
-### 임포트 경로
+### Import Paths
 
 ```typescript
-// 시스템 모듈 - .ts 확장자 포함
+// System modules - include .ts extension
 import { Controller } from "system/core/controller.ts";
 import { Model } from "system/core/model.ts";
 import { Router } from "system/core/router.ts";
@@ -252,12 +252,12 @@ import { autoloadRegistry, autoload } from "system/core/autoload.ts";
 import { Profiler } from "system/core/profiler.ts";
 import { httpTest } from "system/core/e2e_test.ts";
 
-// 앱 모듈 - .ts 확장자 포함
+// App modules - include .ts extension
 import userModel from "app/models/user_model.ts";
 import authMiddleware from "app/middleware/auth_middleware.ts";
 ```
 
-### 컨트롤러 패턴
+### Controller Pattern
 
 ```typescript
 import { Controller } from "system/core/controller.ts";
@@ -265,68 +265,68 @@ import type { Context } from "system/core/controller.ts";
 import resourceModel from "app/models/resource_model.ts";
 
 export class ResourceController extends Controller {
-  async index({ request, response }: Context) { /* 목록 */ }
-  async show({ request, params, response }: Context) { /* 상세 */ }
-  async create({ request, response }: Context) { /* 생성 폼 */ }
-  async store({ request, response }: Context) { /* 저장 */ }
-  async edit({ request, params, response }: Context) { /* 수정 폼 */ }
-  async update({ request, params, response }: Context) { /* 수정 */ }
-  async delete({ request, params, response }: Context) { /* 삭제 */ }
+  async index({ request, response }: Context) { /* List */ }
+  async show({ request, params, response }: Context) { /* Detail */ }
+  async create({ request, response }: Context) { /* Create form */ }
+  async store({ request, response }: Context) { /* Save */ }
+  async edit({ request, params, response }: Context) { /* Edit form */ }
+  async update({ request, params, response }: Context) { /* Update */ }
+  async delete({ request, params, response }: Context) { /* Delete */ }
 }
 
-// default export = 싱글톤 인스턴스
+// default export = singleton instance
 export default new ResourceController();
 ```
 
-### 모델 패턴
+### Model Pattern
 
 ```typescript
 import { Model } from "system/core/model.ts";
 
 export interface ResourceInterface {
   id?: number;
-  // 필드...
+  // fields...
   created_at?: string;
   updated_at?: string;
 }
 
 export class ResourceModel extends Model<ResourceInterface> {
-  override tableName = "resources";  // 반드시 오버라이드
+  override tableName = "resources";  // Must override
 }
 
 export default new ResourceModel();
 ```
 
-### 뷰 패턴
+### View Pattern
 
 ```html
-<!-- layout:default -->              <!-- 레이아웃 지정 (필수 아님) -->
+<!-- layout:default -->              <!-- Layout specification (optional) -->
 
-<h1>{{ title }}</h1>                <!-- 이스케이프 출력 -->
+<h1>{{ title }}</h1>                <!-- Escaped output -->
 
-<? for (const item of items) { ?>   <!-- 반�복문 -->
+<? for (const item of items) { ?>   <!-- Loop -->
   <li>{{ item.name }}</li>
 <? } ?>
 
-<? if (condition) { ?>              <!-- 조건문 -->
-  <p>참</p>
+<? if (condition) { ?>              <!-- Condition -->
+  <p>True</p>
 <? } ?>
 ```
 
 ---
 
-## 기여 시 주의사항
+## Contribution Guidelines
 
-### `system/` 수정 시
+### When Modifying `system/`
 
-- `system/` 은 모든 애플리케이션이 공유하는 코어입니다. 기존 API를 깨는 변경은 피하세요
-- 새로운 코어 모듈을 추가할 때는 `system/core/index.ts` 에 export를 추가하세요
-- `Model` 클래스에 새 메서드를 추가할 때는 하위 호환성을 유지하세요
+- `system/` is the core shared by all applications. Avoid breaking changes to existing APIs
+- When adding new core modules, add exports to `system/core/index.ts`
+- When adding new methods to the `Model` class, maintain backward compatibility
 
-### CLI 명령어 추가 시
+### When Adding CLI Commands
 
-1. `cli/commands/` 에 새 파일을 생성합니다 (소문자로)
-2. `Command` 인터페이스를 구현합니다:
+1. Create a new file in `cli/commands/` (lowercase)
+2. Implement the `Command` interface:
 
 ```typescript
 import type { Command } from "../registry.ts";
@@ -334,132 +334,132 @@ import { createFile, parseArgs } from "../utils.ts";
 
 export const makeSomething: Command = {
   name: "make:something",
-  description: "설명",
+  description: "Description",
   usage: "bun run bi make:something <name>",
   options: [
-    { flag: "--option", description: "옵션 설명" },
+    { flag: "--option", description: "Option description" },
   ],
   async run(args: string[]): Promise<void> {
-    // 구현
+    // Implementation
   },
 };
 ```
 
-1. `cli/index.ts` 에 등록합니다:
+1. Register it in `cli/index.ts`:
 
 ```typescript
 import { makeSomething } from "./commands/makesomething.ts";
 registry.register("make:something", makeSomething);
 ```
 
-### 뷰 템플릿 수정 시
+### When Modifying View Templates
 
-- `<!-- layout:name -->` 주석은 반드시 첫 번째 줄에 위치해야 합니다
-- 레이아웃의 `{{{ content }}}` 마커는 정규식 `/\{\{\{\s*content\s*\}\}\}/` 으로 매칭됩니다
-- 개발 환경에서는 템플릿이 매 요청마다 다시 컴파일됩니다 (캐시 안함)
+- The `<!-- layout:name -->` comment must be on the first line
+- The `{{{ content }}}` marker in layouts is matched by the regex `/\{\{\{\s*content\s*\}\}\}/`
+- In development, templates are recompiled on every request (no caching)
 
-### 데이터베이스 관련
+### Database-Related
 
-- `Model` 클래스의 `findWhere()` 는 내부적으로 `sql.unsafe()` 를 사용합니다. SQL Injection 방지를 위해 사용자 입력을 직접 넣지 마세요
-- `create()`, `update()` 는 Bun SQL의 `sql(object)` 헬퍼를 사용하여 안전하게 파라미터 바인딩합니다
-- SQLite는 동기 실행되지만 API는 `Promise`를 반환합니다. PostgreSQL/MySQL은 비동기입니다
+- The `findWhere()` method in the `Model` class internally uses `sql.unsafe()`. Do not pass user input directly to prevent SQL injection
+- `create()` and `update()` safely bind parameters using Bun SQL's `sql(object)` helper
+- SQLite runs synchronously but the API returns `Promise`. PostgreSQL/MySQL are async
 
-### 마이그레이션 관련
+### Migration-Related
 
-- 마이그레이션 파일명은 반드시 타임스탬프로 시작해야 실행 순서가 보장됩니다
-- `up()` 과 `down()` 을 반드시 export하세요
-- `migrate.ts` 실행기와 `migraterollback.ts` 은 각각 별도 SQLite 연결을 생성합니다
-- 시더는 `run()` 을 export하세요
+- Migration file names must start with a timestamp to guarantee execution order
+- Always export `up()` and `down()`
+- `migrate.ts` runner and `migraterollback.ts` each create separate SQLite connections
+- Seeders must export `run()`
 
-### 인증 관련
+### Authentication-Related
 
-- `Auth` 클래스는 `SessionManager` 팩토리(`createSession()`)를 사용합니다. 설정의 `session.driver` 에 따라 드라이버가 자동 선택됩니다
-- 비밀번호 해싱은 Bun 내장 `Bun.password.hash()`/`verify()` 를 사용합니다 (bcrypt)
-- `authGuard` 는 로그인하지 않은 사용자를 `/login` 으로 리다이렉트합니다
+- The `Auth` class uses the `SessionManager` factory (`createSession()`). The driver is auto-selected based on `session.driver` in config
+- Password hashing uses Bun's built-in `Bun.password.hash()`/`verify()` (bcrypt)
+- `authGuard` redirects unauthenticated users to `/login`
 
-### CSRF 관련
+### CSRF-Related
 
-- CSRF 토큰은 쿠키(`csrf_token`)에 저장됩니다. **쿠키는 HttpOnly가 아닙니다** (JavaScript에서 읽을 수 있음)
-- 클라이언트는 폼 hidden 필드, 헤더(`X-CSRF-Token`), 쿼리 파라미터 중 하나로 토큰을 전송합니다
-- GET/HEAD/OPTIONS 요청은 검증에서 제외됩니다
-- Double Submit Cookie: 쿠키 토큰 == 요청 토큰 일치 확인
+- The CSRF token is stored in a cookie (`csrf_token`). **The cookie is NOT HttpOnly** (readable by JavaScript)
+- Clients send the token via a form hidden field, header (`X-CSRF-Token`), or query parameter
+- GET/HEAD/OPTIONS requests are excluded from validation
+- Double Submit Cookie: verifies cookie token == request token match
 
-### 세션 드라이버 관련
+### Session Driver Related
 
-- `SessionDriver` 인터페이스: `set`, `get`, `has`, `remove`, `all`, `flash`, `getFlash`, `save`, `destroy`, `getId`, `getCookieHeader`
-- `createSession(request, config?)` 팩토리로 세션 생성. `config.driver` 로 드라이버 선택
-- `createSession` 은 비동기 함수입니다 (`await createSession(...)`)
-- `RedisSession` 은 `await session.load()` 호출 필요
-- 새 드라이버 추가 시: `SessionDriver` 인터페이스 구현 → `session_manager.ts` 에 등록
+- `SessionDriver` interface: `set`, `get`, `has`, `remove`, `all`, `flash`, `getFlash`, `save`, `destroy`, `getId`, `getCookieHeader`
+- Create sessions via `createSession(request, config?)` factory. Select driver with `config.driver`
+- `createSession` is an async function (`await createSession(...)`)
+- `RedisSession` requires `await session.load()` call
+- To add a new driver: implement the `SessionDriver` interface → register in `session_manager.ts`
 
-### 캐시 드라이버 관련
+### Cache Driver Related
 
-- `CacheDriver` 인터페이스: `set`, `get`, `has`, `forget`, `pull`, `flush`, `gc` (모두 비동기 호환)
-- `Cache` 정적 매니저로 접근. `Cache.configure()` 로 드라이버/설정 변경
-- `RedisCacheDriver` 는 Bun 내장 RedisClient 사용. `SET ... EX` 로 TTL 자동 관리
-- `FileCacheDriver` 는 해시 키 기반 파일 저장. `storage/cache/` 에 저장
-- `Cache.getDriver()` 에서 redis 드라이버는 lazy import (require) 로 로드
+- `CacheDriver` interface: `set`, `get`, `has`, `forget`, `pull`, `flush`, `gc` (all async-compatible)
+- Access via `Cache` static manager. Change driver/settings with `Cache.configure()`
+- `RedisCacheDriver` uses Bun's built-in RedisClient. Auto-manages TTL with `SET ... EX`
+- `FileCacheDriver` stores files based on hash keys. Saves to `storage/cache/`
+- The redis driver in `Cache.getDriver()` is loaded via lazy import (require)
 
-### 이메일 관련
+### Email-Related
 
-- SMTP 드라이버는 `Bun.connect()` 로 raw TCP 소켓 사용. SMTP 프로토콜 핸드셰이크 직접 구현
-- `sendTemplate()` 은 자체 템플릿 엔진으로 렌더링 후 이메일 본문으로 사용
-- 개발 환경에서는 `log` 드라이버 사용 권장 (`storage/logs/emails.log`)
+- The SMTP driver uses `Bun.connect()` for raw TCP sockets. Implements SMTP protocol handshake directly
+- `sendTemplate()` renders with the custom template engine and uses it as the email body
+- In development, using the `log` driver is recommended (`storage/logs/emails.log`)
 
-### Rate Limiting 관련
+### Rate Limiting Related
 
-- 인메모리 Map 기반 슬라이딩 윈도우. 서버 재시작 시 초기화됨
-- 5분마다 자동 GC 실행. `cleanupRateLimitStore()` 로 수동 정리 가능
-- `keyGenerator` 커스텀 시 Redis 등 외부 저장소 연동 가능
+- In-memory Map-based sliding window. Resets on server restart
+- Auto GC runs every 5 minutes. Manual cleanup via `cleanupRateLimitStore()`
+- Custom `keyGenerator` allows integration with external stores like Redis
 
-### 로깅 관련
+### Logging Related
 
-- 로그 파일은 `storage/logs/app-YYYY-MM-DD.log` 에 저장됩니다
-- 개발 환경: debug 이상 출력, 프로덕션: info 이상 출력
-- 10MB 초과 시 로그 회전, 최대 30개 파일 유지
+- Log files are stored at `storage/logs/app-YYYY-MM-DD.log`
+- Development: outputs debug and above, Production: outputs info and above
+- Log rotation occurs when exceeding 10MB, keeping up to 30 files
 
 ---
 
-## 테스트
+## Testing
 
-### 실행
+### Running
 
 ```bash
-# 전체 테스트
+# Run all tests
 bun test
 
-# 워치 모드
+# Watch mode
 bun test --watch
 
-# 특정 파일
+# Specific file
 bun test tests/validator_test.ts
 ```
 
-### 테스트 작성 패턴
+### Test Writing Pattern
 
 ```typescript
 import { describe, test, expect } from "bun:test";
 
-describe("기능 이름", () => {
-  test("세부 동작", () => {
-    expect(실제값).toBe(기대값);
+describe("Feature name", () => {
+  test("specific behavior", () => {
+    expect(actualValue).toBe(expectedValue);
   });
 });
 ```
 
-### 테스트 헬퍼 활용
+### Using Test Helpers
 
 ```typescript
 import { createTestDB, testRequest, parseJsonResponse } from "../system/core/test_helper.ts";
 
-// 인메모리 DB로 DB 관련 테스트
+// DB-related tests with in-memory DB
 const db = await createTestDB();
 await db`CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)`;
 const result = await db`SELECT * FROM users`;
 await db.close();
 ```
 
-### 통합 테스트
+### Integration Tests
 
 ```typescript
 import { createIntegrationTestClient } from "../system/core/integration_test.ts";
@@ -470,10 +470,10 @@ const res = await client.get("/users");
 await client.assertStatus("/users", 200);
 const json = await client.getJson("/api/posts");
 
-close(); // 반드시 종료
+close(); // Must close
 ```
 
-### E2E 테스트 (서버 미실행)
+### E2E Tests (No Server Required)
 
 ```typescript
 import { httpTest } from "../system/core/e2e_test.ts";
@@ -485,56 +485,56 @@ test.assertJson(res, { success: true });
 test.assertRedirect(await test.get("/old-path"), "/new-path");
 ```
 
-### 테스트 가이드라인
+### Testing Guidelines
 
-- `tests/` 디렉토리에 `*_test.ts` 형식으로 파일을 생성합니다
-- 외부 서비스 의존성이 없는 단위 테스트를 우선합니다
-- DB가 필요한 테스트는 `createTestDB()` 를 사용하세요 (인메모리 SQLite)
-- 통합 테스트는 `createIntegrationTestClient()` 를 사용하세요
-- 현재: **620 pass, 0 fail, 1121 expect() calls across 28 files**
+- Create test files in `tests/` directory using `*_test.ts` format
+- Prioritize unit tests without external service dependencies
+- Use `createTestDB()` for DB-required tests (in-memory SQLite)
+- Use `createIntegrationTestClient()` for integration tests
+- Current: **620 pass, 0 fail, 1121 expect() calls across 28 files**
 
 ---
 
-## 개발 로드맵
+## Development Roadmap
 
-완료된 기능:
+Completed features:
 
-- [x] 세션 드라이버 추상화 (SessionDriver 인터페이스, Memory/File/Redis)
+- [x] Session driver abstraction (SessionDriver interface, Memory/File/Redis)
 - [x] CSRF Double Submit Cookie (JS-readable)
-- [x] 이메일 발송 라이브러리 (SMTP/sendmail/log)
-- [x] 캐시 라이브러리 (Memory + File + Redis 드라이버)
-- [x] WebSocket 지원 (Pub/Sub + Bun.serve websocket)
-- [x] `make:scaffold` `--api` 시 API 라우트 자동 등록
-- [x] 라우트 모델 바인딩
-- [x] CORS 미들웨어
-- [x] Rate Limiting 미들웨어
-- [x] OpenAPI / Swagger 자동 생성
-- [x] 통합 테스트 헬퍼
-- [x] Redis 세션 드라이버 (Bun 내장 RedisClient)
-- [x] 이메일 설정 파일 (`app/config/email.ts`)
-- [x] 캐시 설정 파일 (`app/config/cache.ts`)
-- [x] 큐/잡 시스템 (Memory + Redis 드라이버)
-- [x] Redis 캐시 드라이버 (Bun 내장 RedisClient)
-- [x] 큐 모니터링 대시보드 (HTML + JSON API)
-- [x] 스케줄드 잡 / Cron (Bun.cron 내장)
-- [x] Redis Pub/Sub 브로드캐스트 큐 (Bun 내장 RedisClient)
-- [x] 쿠키 헬퍼 (Bun.Cookie / CookieMap 내장)
-- [x] 아카이브 유틸리티 (Bun.Archive 내장, CI3 Zip 대체)
-- [x] 셸 헬퍼 (Bun.spawn / Bun.$ 내장, CI3 exec 대체)
-- [x] 감사 로그 (모델 이벤트 추적 + 로깅 통합, CI3 DB 추적 대체)
-- [x] E2E 테스트 인프라 (`httpTest(router)` 어설션 헬퍼)
-- [x] 마이그레이션 상태 추적 (`migrate:status` 명령, 배치 단위 롤백)
-- [x] 404 커스텀 핸들러 (`Router.notFound()`)
-- [x] Security 헤더 미들웨어 (OWASP 권장, HSTS/CSP 지원)
-- [x] 파셜 디렉토리 및 컨벤션 (`app/views/partials/`)
-- [x] User Agent 라이브러리 (브라우저/OS/모바일/봇/태블릿 감지)
-- [x] Autoload 시스템 (CI3 autoload.php 호환)
-- [x] 프로파일러 (벤치마크/쿼리/메모리, HTML 오버레이)
+- [x] Email sending library (SMTP/sendmail/log)
+- [x] Cache library (Memory + File + Redis drivers)
+- [x] WebSocket support (Pub/Sub + Bun.serve websocket)
+- [x] Auto-register API routes with `make:scaffold --api`
+- [x] Route model binding
+- [x] CORS middleware
+- [x] Rate Limiting middleware
+- [x] OpenAPI / Swagger auto-generation
+- [x] Integration test helper
+- [x] Redis session driver (Bun built-in RedisClient)
+- [x] Email config file (`app/config/email.ts`)
+- [x] Cache config file (`app/config/cache.ts`)
+- [x] Queue/Job system (Memory + Redis drivers)
+- [x] Redis cache driver (Bun built-in RedisClient)
+- [x] Queue monitoring dashboard (HTML + JSON API)
+- [x] Scheduled jobs / Cron (Bun.cron built-in)
+- [x] Redis Pub/Sub broadcast queue (Bun built-in RedisClient)
+- [x] Cookie helpers (Bun.Cookie / CookieMap built-in)
+- [x] Archive utilities (Bun.Archive built-in, replaces CI3 Zip)
+- [x] Shell helpers (Bun.spawn / Bun.$ built-in, replaces CI3 exec)
+- [x] Audit log (model event tracking + logging integration, replaces CI3 DB tracking)
+- [x] E2E test infrastructure (`httpTest(router)` assertion helpers)
+- [x] Migration status tracking (`migrate:status` command, batch rollback)
+- [x] 404 custom handler (`Router.notFound()`)
+- [x] Security headers middleware (OWASP recommended, HSTS/CSP support)
+- [x] Partials directory and conventions (`app/views/partials/`)
+- [x] User Agent library (browser/OS/mobile/bot/tablet detection)
+- [x] Autoload system (CI3 autoload.php compatible)
+- [x] Profiler (benchmark/query/memory, HTML overlay)
 
-기여 환영 영역:
+Open for contributions:
 
-- [ ] Docker 지원
-- [ ] CI/CD 파이프라인
-- [x] 큐 워커 Bun.Worker 기반 병렬 처리
-- [x] 스케줄드 잡 분산 잠금 (Redis)
-- [x] 감사 로그 웹 UI
+- [ ] Docker support
+- [ ] CI/CD pipeline
+- [x] Queue worker with Bun.Worker-based parallel processing
+- [x] Scheduled job distributed locking (Redis)
+- [x] Audit log web UI

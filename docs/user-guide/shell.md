@@ -1,38 +1,38 @@
-# 🐚 셸 헬퍼
+# 🐚 Shell Helper
 
-`Bun.spawn()` / `Bun.$` 내장 기능을 활용한 프로세스 실행 유틸리티입니다.
+Process execution utilities built on `Bun.spawn()` / `Bun.$`.
 
-## 명령어 실행
+## Running Commands
 
 ```typescript
 import { Shell } from "system/core/shell.ts";
 
-// 비동기 실행
+// Async execution
 const result = await Shell.run("git status --porcelain");
 console.log(result.stdout);
 console.log(result.exitCode);
 console.log(result.success);
 
-// 동기 실행 (CLI에 적합)
+// Sync execution (suited for CLI)
 const syncResult = Shell.runSync("echo hello");
 
-// 배열 명령어 (안전한 인자 전달)
+// Array command (safe argument passing)
 const result = await Shell.exec("git", ["log", "--oneline", "-10"]);
 
-// 표준 출력만
+// stdout only
 const output = await Shell.output("git rev-parse HEAD");
 
-// 성공 여부만
+// Success check only
 const ok = await Shell.success("which bun");
 
-// 종료 코드만
+// Exit code only
 const code = await Shell.quiet("true");
 ```
 
-## 백그라운드 프로세스
+## Background Processes
 
 ```typescript
-// 백그라운드 워커 시작
+// Start a background worker
 const proc = Shell.spawn(["bun", "run", "worker.ts"], {
   onExit(proc, exitCode) {
     console.log("Worker exited:", exitCode);
@@ -42,30 +42,30 @@ const proc = Shell.spawn(["bun", "run", "worker.ts"], {
   },
 });
 
-// 종료 대기
+// Wait for exit
 await proc.exited;
 
-// 프로세스 종료
+// Kill process
 proc.kill();
 ```
 
-## Bun.$ 템플릿 리터럴
+## Bun.$ Template Literal
 
 ```typescript
 const $ = Shell.$;
 
-// 기본 실행
+// Basic execution
 await $`echo hello world`;
 
-// 출력 읽기
+// Read output
 const text = await $`git status`.text();
 const lines = await $`ls -la`.lines();
 
-// 환경 변수
+// Environment variables
 await $`FOO=bar bun -e 'console.log(process.env.FOO)'`;
 ```
 
-## 파이프라인
+## Pipeline
 
 ```typescript
 const result = await Shell.pipe([
@@ -75,7 +75,7 @@ const result = await Shell.pipe([
 console.log(result.stdout.trim()); // "2"
 ```
 
-## 결과 구조
+## Result Structure
 
 ```typescript
 interface ShellResult {
@@ -86,10 +86,10 @@ interface ShellResult {
 }
 ```
 
-## Bun.spawn / Bun.$ 내장 사용
+## Using Bun.spawn / Bun.$ Natively
 
-이 모듈은 Bun의 내장 프로세스 실행 API를 래핑합니다:
+This module wraps Bun's built-in process execution APIs:
 
-- `Bun.spawn(cmd, options)` → 비동기 프로세스
-- `Bun.spawnSync(cmd, options)` → 동기 프로세스
-- `Bun.$\`command\`` → 템플릿 리터럴 셸
+- `Bun.spawn(cmd, options)` → async process
+- `Bun.spawnSync(cmd, options)` → sync process
+- `Bun.$\`command\`` → template literal shell

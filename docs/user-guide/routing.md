@@ -1,8 +1,8 @@
-# 🛤 라우팅
+# 🛤 Routing
 
-`app/config/routes.ts` 에서 라우트를 정의합니다. 명시적 라우트와 오토 라우트(CI3 호환)를 모두 지원합니다.
+Routes are defined in `app/config/routes.ts`. Supports both explicit routes and auto routing (CI3 compatible).
 
-## 기본 라우트
+## Basic Routes
 
 ```typescript
 import { Router } from "system/core/router.ts";
@@ -17,68 +17,68 @@ router.delete("/users/:id", userController, "delete");
 router.patch("/users/:id", userController, "partialUpdate");
 ```
 
-## 리소스 라우트
+## Resource Routes
 
 ```typescript
 router.resource("users", userController);
 ```
 
-한 번에 7개 CRUD 라우트 생성:
+Creates 7 CRUD routes at once:
 
-| Method | Path | Method | 설명 |
-|--------|------|--------|------|
-| GET | `/users` | `index` | 목록 |
-| GET | `/users/create` | `create` | 생성 폼 |
-| POST | `/users` | `store` | 저장 |
-| GET | `/users/:id` | `show` | 상세 |
-| GET | `/users/:id/edit` | `edit` | 수정 폼 |
-| PUT | `/users/:id` | `update` | 수정 |
-| DELETE | `/users/:id` | `delete` | 삭제 |
+| Method | Path | Handler | Description |
+|--------|------|---------|-------------|
+| GET | `/users` | `index` | List |
+| GET | `/users/create` | `create` | Create form |
+| POST | `/users` | `store` | Store |
+| GET | `/users/:id` | `show` | Show |
+| GET | `/users/:id/edit` | `edit` | Edit form |
+| PUT | `/users/:id` | `update` | Update |
+| DELETE | `/users/:id` | `delete` | Delete |
 
-## 오토 라우트 (CI3 호환)
+## Auto Routing (CI3 Compatible)
 
-CodeIgniter 3의 Auto Routing과 동일합니다. URL만으로 자동으로 컨트롤러/메서드를 매핑합니다.
+Same as CodeIgniter 3's Auto Routing. Automatically maps URLs to controllers/methods.
 
-### 활성화
+### Enabling
 
 ```typescript
-// 기본 활성화 (기본값: enabled=true, defaultController="welcome")
+// Enabled by default (defaults: enabled=true, defaultController="welcome")
 router.autoRoute();
 
-// 커스텀 설정
+// Custom configuration
 router.autoRoute({
   enabled: true,
   defaultController: "home",    // CI3: $route['default_controller']
-  defaultMethod: "index",       // 기본 메서드
-  exclude: ["api/auth"],        // 제외할 경로
-  middleware: [csrfMiddleware], // 오토 라우트에 적용할 미들웨어
+  defaultMethod: "index",       // Default method
+  exclude: ["api/auth"],        // Paths to exclude
+  middleware: [csrfMiddleware], // Middleware to apply to auto-routed requests
 });
 
-// 비활성화
+// Disable
 router.autoRoute({ enabled: false });
 ```
 
-### 동작 방식
+### How It Works
 
-| URL | 매핑 | 설명 |
-|-----|------|------|
-| `/` | `WelcomeController::index()` | 기본 컨트롤러 |
-| `/posts` | `PostController::index()` | 기본 메서드 |
-| `/posts/show` | `PostController::show()` | 메서드 지정 |
-| `/posts/show/5` | `PostController::show(5)` | 메서드 + 파라미터 |
-| `/posts/edit/5/draft` | `PostController::edit(5, "draft")` | 다중 파라미터 |
-| `/admin/users` | `admin/user_controller.ts` → `UserController::index()` | 서브디렉토리 |
+| URL | Mapping | Description |
+|-----|---------|-------------|
+| `/` | `WelcomeController::index()` | Default controller |
+| `/posts` | `PostController::index()` | Default method |
+| `/posts/show` | `PostController::show()` | Method specified |
+| `/posts/show/5` | `PostController::show(5)` | Method + parameter |
+| `/posts/edit/5/draft` | `PostController::edit(5, "draft")` | Multiple parameters |
+| `/admin/users` | `admin/user_controller.ts` → `UserController::index()` | Subdirectory |
 
-### 파라미터 접근
+### Parameter Access
 
-오토 라우트로 전달된 URL 파라미터는 컨트롤러 메서드에서 두 가지 방식으로 접근할 수 있습니다:
+URL parameters passed via auto route can be accessed in two ways:
 
-1. **`params.arg0`, `params.arg1` ...** — `Context.params` 객체를 통한 접근
-2. **추가 인자** — 컨트롤러 메서드의 두 번째 인자부터 순서대로 전달
+1. **`params.arg0`, `params.arg1` ...** — Access via `Context.params` object
+2. **Additional arguments** — Passed sequentially starting from the second argument of the controller method
 
 ```typescript
 // /posts/show/5/draft
-async show(ctx: Context, id: string, status: string) {
+async show(ctx: Context, id: string, status: string = "draft") {
   // ctx.params.arg0 === "5"
   // ctx.params.arg1 === "draft"
   // id === "5"
@@ -86,68 +86,68 @@ async show(ctx: Context, id: string, status: string) {
 }
 ```
 
-> ⚠️ 명시적 라우트(`router.get("/posts/:id", ...)`)에서는 `params.id`로 접근하지만, 오토 라우트에서는 `params.arg0` 방식만 사용합니다.
+> ⚠️ In explicit routes (`router.get("/posts/:id", ...)`) you access via `params.id`, but in auto routes only `params.arg0` style is available.
 
-### 파일명 매핑 규칙
+### File Naming Rules
 
-URL의 컨트롤러 이름은 snake_case 파일명으로 자동 변환됩니다:
+Controller names from URLs are automatically converted to snake_case filenames:
 
-| URL 컨트롤러 | 파일명 | 클래스명 |
-|-------------|--------|---------|
+| URL Controller | Filename | Class Name |
+|---------------|----------|------------|
 | `posts` | `post_controller.ts` | `PostController` |
 | `users` | `user_controller.ts` | `UserController` |
 | `post-categories` | `post_category_controller.ts` | `PostCategoryController` |
 | `products` | `product_controller.ts` | `ProductController` |
 
-규칙:
+Rules:
 
-1. URL 이름 → 단수형 변환 (posts → post)
+1. URL name → singular form (posts → post)
 2. kebab-case → snake_case (post-categories → post_category)
-3. 파일명: `{단수형_snake_case}_controller.ts`
-4. 클래스명: `{PascalCase}Controller`
+3. Filename: `{singular_snake_case}_controller.ts`
+4. Class name: `{PascalCase}Controller`
 
-### 명시적 라우트가 우선
+### Explicit Routes Take Priority
 
-오토 라우트와 명시적 라우트를 함께 사용할 수 있습니다. **명시적 라우트가 항상 우선**입니다:
+Auto routing and explicit routes can be used together. **Explicit routes always take priority**:
 
 ```typescript
 const router = new Router();
 
-// 오토 라우트 활성화
+// Enable auto routing
 router.autoRoute();
 
-// 명시적 라우트 → 오토 라우트보다 우선
-router.resource("posts", postController);  // /posts/* 는 리소스 라우트 사용
-router.get("/about", welcomeController, "about");  // /about 은 명시적 라우트
+// Explicit routes → take priority over auto routes
+router.resource("posts", postController);  // /posts/* uses resource routes
+router.get("/about", welcomeController, "about");  // /about uses explicit route
 
-// /products, /orders 등 명시적 라우트가 없으면 오토 라우트 사용
+// /products, /orders etc. without explicit routes use auto routing
 ```
 
-### 오토 라우트 제외
+### Excluding Paths from Auto Route
 
-특정 경로를 오토 라우트에서 제외할 수 있습니다:
+You can exclude specific paths from auto routing:
 
 ```typescript
 router.autoRoute({
   enabled: true,
-  exclude: ["api/auth", "admin/settings"],  // 이 경로는 오토 라우트 제외
+  exclude: ["api/auth", "admin/settings"],  // These paths are excluded from auto routing
 });
 ```
 
-### 오토 라우트 미들웨어
+### Auto Route Middleware
 
-오토 라우트에만 적용할 미들웨어를 설정할 수 있습니다:
+You can set middleware that applies only to auto-routed requests:
 
 ```typescript
 router.autoRoute({
   enabled: true,
-  middleware: [csrfMiddleware],  // 오토 라우트된 요청에만 CSRF 적용
+  middleware: [csrfMiddleware],  // Apply CSRF only to auto-routed requests
 });
 ```
 
-### 서브디렉토리 지원
+### Subdirectory Support
 
-`app/controllers/` 하위 디렉토리의 컨트롤러도 자동 매핑됩니다:
+Controllers in subdirectories under `app/controllers/` are also automatically mapped:
 
 ```
 app/controllers/
@@ -160,68 +160,70 @@ app/controllers/
     └── auth_controller.ts     → /api/auth
 ```
 
-### CI3 ↔ BunIgniter 대조표
+### CI3 ↔ BunIgniter Comparison
 
 | CodeIgniter 3 | BunIgniter |
-|---------------|-----------|
-| 기본 활성화 | `router.autoRoute()` |
+|---------------|------------|
+| Enabled by default | `router.autoRoute()` |
 | `$config['enable_query_strings']` | `router.autoRoute({ enabled: false })` |
 | `$route['default_controller'] = 'welcome'` | `router.autoRoute({ defaultController: "welcome" })` |
 | `/posts/show/5` → `Posts::show(5)` | `/posts/show/5` → `PostController::show(5)` |
 | `application/controllers/admin/Users.php` | `app/controllers/admin/user_controller.ts` |
-| 명시적 라우트 우선 | 명시적 라우트 우선 (동일) |
+| Explicit routes take priority | Explicit routes take priority (same) |
 
 ---
 
-## 미들웨어 적용
+## Applying Middleware
 
 ```typescript
 import { authGuard } from "system/core/auth.ts";
 
-// 리소스에 미들웨어
+// Middleware on resource routes
 router.resource("admin", adminController, [authGuard]);
 
-// 라우트 그룹 (미들웨어 일괄 적용)
+// Route groups (batch middleware)
 router.group("/api", [authMiddleware], (router) => {
   router.resource("posts", postController);
 });
 
-// 글로벌 미들웨어
+// Global middleware
 router.use(corsMiddleware);
 ```
 
-## 라우트 모델 바인딩
+## Route Model Binding
 
-라우트 파라미터를 자동으로 모델 인스턴스로 변환합니다:
+Automatically resolves route parameters to model instances:
 
 ```typescript
 import { RouteModelBinding } from "system/core/route_model_binding.ts";
 import userModel from "app/models/user_model.ts";
 
-// 바인딩 등록
+// Register binding
 RouteModelBinding.bind("user", userModel);
-RouteModelBinding.bind("post", postModel, "slug"); // slug 필드로 조회
+RouteModelBinding.bind("post", postModel, "slug"); // resolve by slug field
 
-// 라우트 정의
+// Define route
 router.get("/users/:user", userController, "show");
 
-// 컨트롤러에서 params.user 가 이미 DB 조회된 객체
+// In controller, params.user is already a DB-resolved object
 async show({ params }: Context) {
-  const user = params.user; // 자동 조회됨, 없으면 404
+  const user = params.user; // Auto-resolved, returns 404 if not found
 }
 ```
 
-## 404 커스텀 핸들러
+## Custom 404 Handler
 
-CI3의 `$route['404_override']` 와 동일합니다:
+Same as CI3's `$route['404_override']`:
 
 ```typescript
 router.notFound(async ({ request, params }) => {
   return new Response(
-    "<!DOCTYPE html><html><body><h1>404 - 페이지를 찾을 수 없습니다</h1></body></html>",
+    "<!DOCTYPE html><html><body><h1>404 - Page Not Found</h1></body></html>",
     { status: 404, headers: { "Content-Type": "text/html; charset=utf-8" } }
   );
 });
 ```
 
+```typescript
 export default router;
+```

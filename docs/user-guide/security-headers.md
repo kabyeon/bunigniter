@@ -1,34 +1,34 @@
-# 🛡 보안 헤더 미들웨어
+# 🛡 Security Headers Middleware
 
-OWASP 권장 보안 헤더를 일괄 적용하여 XSS, 클릭재킹, MIME 스니핑, 정보 유출을 방지합니다.
+Applies OWASP-recommended security headers to prevent XSS, clickjacking, MIME sniffing, and information leakage.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { securityHeadersMiddleware } from "system/core/security_headers.ts";
 
-// 글로벌 미들웨어로 적용
+// Apply as global middleware
 router.use(securityHeadersMiddleware);
 ```
 
-모든 응답에 다음 헤더가 자동 추가됩니다:
+The following headers are automatically added to every response:
 
-| 헤더 | 기본값 | 설명 |
-|------|--------|------|
-| `X-Content-Type-Options` | `nosniff` | MIME 스니핑 방지 |
-| `X-Frame-Options` | `SAMEORIGIN` | 클릭재킹 방지 |
-| `X-XSS-Protection` | `1; mode=block` | 레거시 브라우저 XSS 필터 |
-| `Referrer-Policy` | `strict-origin-when-cross-origin` | 리퍼러 정보 제한 |
-| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | 브라우저 기능 제한 |
+| Header | Default | Description |
+|--------|---------|-------------|
+| `X-Content-Type-Options` | `nosniff` | Prevents MIME sniffing |
+| `X-Frame-Options` | `SAMEORIGIN` | Prevents clickjacking |
+| `X-XSS-Protection` | `1; mode=block` | Legacy browser XSS filter |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` | Limits referrer information |
+| `Permissions-Policy` | `camera=(), microphone=(), geolocation=()` | Restricts browser features |
 
-또한 `X-Powered-By`, `Server` 헤더를 자동 제거하여 서버 정보 유출을 방지합니다.
+Additionally, `X-Powered-By` and `Server` headers are automatically removed to prevent server information leakage.
 
-## 커스텀 설정
+## Custom Configuration
 
 ```typescript
 import { createSecurityHeadersMiddleware } from "system/core/security_headers.ts";
 
-// HSTS (HTTPS 환경)
+// HSTS (HTTPS environment)
 router.use(createSecurityHeadersMiddleware({
   hsts: "max-age=31536000; includeSubDomains; preload",
 }));
@@ -38,7 +38,7 @@ router.use(createSecurityHeadersMiddleware({
   csp: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self'",
 }));
 
-// 모든 보안 헤더 + HSTS + CSP
+// All security headers + HSTS + CSP
 router.use(createSecurityHeadersMiddleware({
   frameOptions: "DENY",
   hsts: "max-age=31536000; includeSubDomains",
@@ -47,35 +47,35 @@ router.use(createSecurityHeadersMiddleware({
 }));
 ```
 
-## 설정 옵션
+## Configuration Options
 
-| 옵션 | 기본값 | 설명 |
-|------|--------|------|
-| `contentTypeOptions` | `"nosniff"` | `false` → 비활성화 |
-| `frameOptions` | `"SAMEORIGIN"` | `"DENY"` 또는 `false` |
-| `xssProtection` | `"1; mode=block"` | 레거시 브라우저용 |
-| `referrerPolicy` | `"strict-origin-when-cross-origin"` | 리퍼러 제한 |
-| `permissionsPolicy` | `"camera=(), microphone=(), geolocation=()"` | 기능 제한 |
-| `hsts` | `false` (비활성화) | HTTPS에서만 활성화 |
-| `csp` | `false` (비활성화) | 콘텐츠 소스 제한 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `contentTypeOptions` | `"nosniff"` | `false` → disable |
+| `frameOptions` | `"SAMEORIGIN"` | `"DENY"` or `false` |
+| `xssProtection` | `"1; mode=block"` | For legacy browsers |
+| `referrerPolicy` | `"strict-origin-when-cross-origin"` | Referrer restriction |
+| `permissionsPolicy` | `"camera=(), microphone=(), geolocation=()"` | Feature restriction |
+| `hsts` | `false` (disabled) | Enable only over HTTPS |
+| `csp` | `false` (disabled) | Content source restriction |
 | `coop` | `false` | Cross-Origin-Opener-Policy |
 | `coep` | `false` | Cross-Origin-Embedder-Policy |
 | `corp` | `false` | Cross-Origin-Resource-Policy |
 
-## 개별 헤더 비활성화
+## Disabling Individual Headers
 
 ```typescript
-// X-Frame-Options, X-XSS-Protection 비활성화
+// Disable X-Frame-Options and X-XSS-Protection
 router.use(createSecurityHeadersMiddleware({
   frameOptions: false,
   xssProtection: false,
 }));
 ```
 
-## CI3 ↔ BunIgniter 대조표
+## CI3 ↔ BunIgniter Comparison
 
 | CodeIgniter 3 | BunIgniter |
-|---------------|-----------|
+|---------------|------------|
 | `$this->output->set_header('X-Frame-Options: DENY')` | `createSecurityHeadersMiddleware({ frameOptions: "DENY" })` |
-| 수동 헤더 설정 | 미들웨어 일괄 적용 |
-| N/A | CSP, HSTS, Permissions-Policy 자동 지원 |
+| Manual header setting | Middleware batch application |
+| N/A | Automatic CSP, HSTS, Permissions-Policy support |

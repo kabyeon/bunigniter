@@ -1,34 +1,34 @@
-# 🍪 쿠키 헬퍼
+# 🍪 Cookie Helper
 
-`Bun.Cookie` / `Bun.CookieMap` 내장 기능을 활용한 쿠키 유틸리티입니다.
+Cookie utilities built on `Bun.Cookie` / `Bun.CookieMap`.
 
-CI3의 `$this->input->cookie()` / `$this->input->set_cookie()` 대체.
+Replaces CI3's `$this->input->cookie()` / `$this->input->set_cookie()`.
 
-## 쿠키 읽기
+## Reading Cookies
 
 ```typescript
 import { getCookie, getCookies, hasCookie } from "system/core/cookie.ts";
 
-// 단일 쿠키
+// Single cookie
 const theme = getCookie(request, "theme");  // "dark" | null
 
-// 전체 쿠키
+// All cookies
 const all = getCookies(request);            // { theme: "dark", lang: "ko" }
 
-// 존재 여부
+// Check existence
 if (hasCookie(request, "session")) { ... }
 ```
 
-## 쿠키 설정
+## Setting Cookies
 
 ```typescript
 import { setCookie, deleteCookie, setCookies } from "system/core/cookie.ts";
 
-// 기본
+// Basic
 const header = setCookie("theme", "dark");
 // → "theme=dark; Path=/; SameSite=lax"
 
-// 전체 옵션
+// Full options
 const header = setCookie("session", "abc123", {
   httpOnly: true,
   secure: true,
@@ -38,35 +38,35 @@ const header = setCookie("session", "abc123", {
   path: "/admin",
 });
 
-// 응답에 적용
+// Apply to response
 return new Response(body, {
   headers: { "Set-Cookie": header },
 });
 
-// 삭제
+// Delete
 const deleteHeader = deleteCookie("session");
 
-// 여러 쿠키
+// Multiple cookies
 const headers = setCookies([
   { name: "a", value: "1" },
   { name: "b", value: "2", options: { maxAge: 3600 } },
 ]);
 ```
 
-## 쿠키 옵션
+## Cookie Options
 
-| 옵션 | 기본값 | 설명 |
-|------|--------|------|
-| `domain` | - | 도메인 |
-| `path` | `/` | 경로 |
-| `expires` | - | 만료 시각 |
-| `maxAge` | - | 최대 수명 (초) |
-| `secure` | `false` | HTTPS에서만 |
-| `httpOnly` | `false` | JS 접근 불가 |
-| `sameSite` | `"lax"` | SameSite 정책 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `domain` | - | Domain |
+| `path` | `/` | Path |
+| `expires` | - | Expiration time |
+| `maxAge` | - | Maximum age (seconds) |
+| `secure` | `false` | HTTPS only |
+| `httpOnly` | `false` | JS inaccessible |
+| `sameSite` | `"lax"` | SameSite policy |
 | `partitioned` | `false` | CHIPS |
 
-## 쿠키 파싱
+## Parsing Cookies
 
 ```typescript
 import { parseCookie, isCookieExpired } from "system/core/cookie.ts";
@@ -77,6 +77,6 @@ const parsed = parseCookie("session=abc; Path=/; HttpOnly");
 const expired = isCookieExpired("name=val; Max-Age=0");
 ```
 
-## Bun.Cookie 내장 사용
+## Using Bun.Cookie Natively
 
-이 모듈은 Bun의 `Bun.Cookie`, `Bun.CookieMap` 내장 API를 래핑합니다.
+This module wraps Bun's built-in `Bun.Cookie` and `Bun.CookieMap` APIs.

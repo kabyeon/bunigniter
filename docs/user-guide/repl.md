@@ -1,28 +1,28 @@
 # 🖥 REPL
 
-AdonisJS Ace REPL 스타일 인터랙티브 셸. 프레임워크 컨텍스트가 주입된 대화형 환경.
+AdonisJS Ace REPL-style interactive shell. A conversational environment with framework context injected.
 
-## 시작
+## Starting
 
 ```bash
 bun run bi repl
 ```
 
-## 기본 명령어
+## Basic Commands
 
-| 명령어 | 설명 |
-|--------|------|
-| `.ls` | 컨텍스트 프로퍼티/메서드 목록 |
-| `.models` | 사용 가능한 모델 목록 |
-| `.routes` | 등록된 라우트 목록 |
-| `.config` | 애플리케이션 설정 표시 |
-| `.load <path>` | 모듈 로드 |
-| `.help` | 도움말 |
-| `.exit` | REPL 종료 |
+| Command | Description |
+|---------|-------------|
+| `.ls` | List context properties/methods |
+| `.models` | List available models |
+| `.routes` | List registered routes |
+| `.config` | Display application configuration |
+| `.load <path>` | Load a module |
+| `.help` | Show help |
+| `.exit` | Exit REPL |
 
-## 프레임워크 컨텍스트
+## Framework Context
 
-REPL 시작 시 다음 모듈이 자동 주입됩니다:
+The following modules are auto-injected when REPL starts:
 
 - `Controller`, `Model`, `Router`
 - `Validator`, `validate`
@@ -31,12 +31,12 @@ REPL 시작 시 다음 모듈이 자동 주입됩니다:
 - `AuditLog`, `DistributedLock`
 - `Archive`, `Shell`
 - `getCookie`, `setCookie`, `paginationHtml`
-- `config` - 애플리케이션 설정
-- `env` - 환경변수
-- `app` - 런타임 정보 (name, version, pid)
-- `db` - 데이터베이스 연결 함수
+- `config` — application configuration
+- `env` — environment variables
+- `app` — runtime info (name, version, pid)
+- `db` — database connection function
 
-## 사용 예시
+## Usage Examples
 
 ```bash
 bun run bi repl
@@ -57,9 +57,9 @@ Loaded: post_model
 { name: "BunIgniter", ... }
 ```
 
-## 커스텀 메서드
+## Custom Methods
 
-REPL 내에서 사용 가능한 전역 메서드:
+Global methods available within the REPL:
 
-- `clear <name>` - 컨텍스트 프로퍼티 제거
-- `p <function>` - 콜백 함수를 Promise로 변환
+- `clear <name>` — remove a context property
+- `p <function>` — convert a callback function to a Promise

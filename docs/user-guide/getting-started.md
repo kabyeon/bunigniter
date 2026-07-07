@@ -1,8 +1,8 @@
-# 🚀 빠른 시작
+# 🚀 Quick Start
 
-## 설치 방법
+## Installation
 
-### 1. bunx create (권장)
+### 1. bunx create (recommended)
 
 ```bash
 bunx create-bunigniter@latest my-app
@@ -10,7 +10,7 @@ cd my-app
 bun run dev
 ```
 
-### 2. bun init + bunigniter 설치
+### 2. bun init + bunigniter install
 
 ```bash
 mkdir my-app && cd my-app
@@ -29,103 +29,103 @@ bun install
 bun run dev
 ```
 
-## 서버 실행
+## Running the Server
 
 ```bash
-# 개발 서버 (핫리로드)
+# Development server (hot reload)
 bun run dev
 
-# 프로덕션
+# Production
 bun run start
 ```
 
-브라우저에서 `http://localhost:3000` 접속 → 🔥 환영 페이지
+Visit `http://localhost:3000` in your browser → 🔥 Welcome page
 
-## 환경 변수
+## Environment Variables
 
-`.env` 파일에서 설정합니다:
+Configured in `.env`:
 
-| 변수 | 기본값 | 설명 |
-|------|--------|------|
-| `APP_NAME` | BunIgniter | 애플리케이션 이름 |
-| `BASE_URL` | <http://localhost:3000> | 기본 URL |
-| `NODE_ENV` | development | 환경 (development/production/testing) |
-| `APP_DEBUG` | true | 디버그 모드 |
-| `PORT` | 3000 | 서버 포트 |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `APP_NAME` | BunIgniter | Application name |
+| `BASE_URL` | http://localhost:3000 | Base URL |
+| `NODE_ENV` | development | Environment (development/production/testing) |
+| `APP_DEBUG` | true | Debug mode |
+| `PORT` | 3000 | Server port |
 
-## 기술 스택
+## Tech Stack
 
-| 구성요소 | 기술 | 버전 |
-|---------|------|------|
-| 런타임 | [Bun](https://bun.sh) | 최신 |
-| HTTP 서버 | [Bun.serve](https://bun.sh/docs/runtime/http) | 내장 (SIMD 가속 라우팅) |
-| 데이터베이스 | [Bun SQL](https://bun.sh/docs/runtime/sql) | 내장 (SQLite/PostgreSQL/MySQL) |
-| 템플릿 엔진 | 자체 내장 | 외부 의존성 없음 |
-| 린트/포맷 | [Biome](https://biomejs.dev/) | ^2.5.2 |
-| 테스트 | [bun:test](https://bun.sh/docs/cli/test) | 내장 |
+| Component | Technology | Version |
+|-----------|-----------|---------|
+| Runtime | [Bun](https://bun.sh) | Latest |
+| HTTP Server | [Bun.serve](https://bun.sh/docs/runtime/http) | Built-in (SIMD accelerated routing) |
+| Database | [Bun SQL](https://bun.sh/docs/runtime/sql) | Built-in (SQLite/PostgreSQL/MySQL) |
+| Template Engine | Custom built-in | No external dependencies |
+| Lint/Format | [Biome](https://biomejs.dev/) | ^2.5.2 |
+| Testing | [bun:test](https://bun.sh/docs/cli/test) | Built-in |
 
-## 프로젝트 구조
+## Project Structure
 
-### npm 패키지 모드 (bunx create / bun add bunigniter)
+### npm Package Mode (bunx create / bun add bunigniter)
 
 ```
 my-app/
 ├── app/
-│   ├── config/           # 설정 파일
-│   ├── controllers/      # 컨트롤러
-│   ├── models/           # 모델
-│   ├── views/            # 뷰 템플릿
-│   ├── middleware/        # 미들웨어
-│   ├── helpers/          # 커스텀 헬퍼
-│   └── libraries/        # 커스텀 라이브러리
+│   ├── config/           # Configuration files
+│   ├── controllers/      # Controllers
+│   ├── models/           # Models
+│   ├── views/            # View templates
+│   ├── middleware/        # Middleware
+│   ├── helpers/          # Custom helpers
+│   └── libraries/        # Custom libraries
 ├── database/
-│   ├── migrations/       # 마이그레이션
-│   └── seeds/            # 시더
-├── public/               # 정적 파일
-├── storage/              # 런타임 저장소
+│   ├── migrations/       # Migrations
+│   └── seeds/            # Seeders
+├── public/               # Static files
+├── storage/              # Runtime storage
 ├── node_modules/
-│   └── bunigniter/       # 프레임워크 코어
-│       ├── system/core/  # 시스템 코어
-│       ├── system/helpers/ # 시스템 헬퍼
-│       └── cli/          # CLI 도구
+│   └── bunigniter/       # Framework core
+│       ├── system/core/  # System core
+│       ├── system/helpers/ # System helpers
+│       └── cli/          # CLI tools
 ├── package.json
 └── tsconfig.json
 ```
 
-### Clone 모드 (git clone)
+### Clone Mode (git clone)
 
 ```
 bunigniter/
-├── system/core/          # 프레임워크 코어 (수정 금지)
-│   ├── bootstrap.ts      # 서버 진입점
-│   ├── router.ts         # 라우터
-│   ├── controller.ts     # 기본 컨트롤러
-│   ├── model.ts          # 기본 모델
-│   ├── view.ts           # 뷰 렌더링
+├── system/core/          # Framework core (do not modify)
+│   ├── bootstrap.ts      # Server entry point
+│   ├── router.ts         # Router
+│   ├── controller.ts     # Base controller
+│   ├── model.ts          # Base model
+│   ├── view.ts           # View rendering
 │   └── ...
-├── system/helpers/       # 시스템 헬퍼
-├── app/                  # 사용자 애플리케이션
-│   ├── config/           # 설정
-│   ├── controllers/      # 컨트롤러
-│   ├── models/           # 모델
-│   ├── views/            # 뷰
-│   ├── middleware/       # 미들웨어
-│   ├── helpers/          # 헬퍼
-│   └── libraries/        # 라이브러리
-├── cli/                  # CLI 스캐폴딩
-├── database/             # 마이그레이션 & 시드
-├── public/               # 정적 파일
-├── storage/              # 런타임 저장소
-└── tests/                # 테스트
+├── system/helpers/       # System helpers
+├── app/                  # User application
+│   ├── config/           # Configuration
+│   ├── controllers/      # Controllers
+│   ├── models/           # Models
+│   ├── views/            # Views
+│   ├── middleware/       # Middleware
+│   ├── helpers/          # Helpers
+│   └── libraries/        # Libraries
+├── cli/                  # CLI scaffolding
+├── database/             # Migrations & Seeds
+├── public/               # Static files
+├── storage/              # Runtime storage
+└── tests/                # Tests
 ```
 
-## CLI 명령어
+## CLI Commands
 
 ```bash
-# 프로젝트 생성
+# Project creation
 bun run bi init my-app
 
-# 스캐폴딩
+# Scaffolding
 bun run bi make:controller posts
 bun run bi make:controller posts --resource
 bun run bi make:model user
@@ -134,25 +134,25 @@ bun run bi make:migration create_posts_table
 bun run bi make:middleware auth
 bun run bi make:scaffold post       # Controller + Model + View + Migration
 
-# 데이터베이스
+# Database
 bun run bi migrate
 bun run bi migrate:rollback
 bun run bi migrate:status
 bun run bi db:seed
 
-# 개발 도구
-bun run bi serve                    # 개발 서버
-bun run bi list:routes              # 라우트 목록
-bun run bi repl                     # 대화형 REPL
+# Development tools
+bun run bi serve                    # Development server
+bun run bi list:routes              # List routes
+bun run bi repl                     # Interactive REPL
 ```
 
-## 첫 컨트롤러 만들기
+## Your First Controller
 
 ```bash
 bun run bi make:controller hello
 ```
 
-생성된 파일: `app/controllers/hello_controller.ts`
+Generated file: `app/controllers/hello_controller.ts`
 
 ```typescript
 import { Controller } from "system/core/controller.ts";
@@ -167,7 +167,7 @@ export class HelloController extends Controller {
 export default new HelloController();
 ```
 
-라우트 추가: `app/config/routes.ts`
+Add route: `app/config/routes.ts`
 
 ```typescript
 import helloController from "app/controllers/hello_controller.ts";
@@ -175,7 +175,7 @@ import helloController from "app/controllers/hello_controller.ts";
 router.get("/hello", helloController, "index");
 ```
 
-뷰 생성: `app/views/hello/index.html`
+Create view: `app/views/hello/index.html`
 
 ```html
 <!-- layout:default -->
@@ -183,5 +183,5 @@ router.get("/hello", helloController, "index");
 <!-- slot:title -->Hello<!-- endslot -->
 
 <h1>{{ title }}</h1>
-<p>BunIgniter에 오신 것을 환영합니다!</p>
+<p>Welcome to BunIgniter!</p>
 ```

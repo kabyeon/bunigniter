@@ -1,41 +1,41 @@
-# 📊 큐 대시보드
+# 📊 Queue Dashboard
 
-큐 모니터링 대시보드 + JSON API 엔드포인트입니다.
+Queue monitoring dashboard with JSON API endpoints.
 
-## HTML 대시보드
+## HTML Dashboard
 
-브라우저에서 `/_dashboard` 접속:
+Visit `/_dashboard` in your browser:
 
-- 대기/실패 잡 수
-- 스케줄드 잡 현황
-- 등록된 핸들러 목록
-- 런타임 정보 (메모리, 업타임)
-- 워커 시작/정지 버튼
-- 10초 자동 새로고침
+- Pending/failed job counts
+- Scheduled job status
+- Registered handler list
+- Runtime info (memory, uptime)
+- Worker start/stop buttons
+- 10-second auto-refresh
 
-## 설정
+## Setup
 
 ```typescript
-// bootstrap.ts 또는 routes.ts
+// bootstrap.ts or routes.ts
 import { createDashboardRoutes } from "system/core/dashboard.ts";
 
 const routes = createDashboardRoutes(["default", "emails"]);
-// routes를 Bun.serve routes에 등록
+// Register routes with Bun.serve
 ```
 
 ## JSON API
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/_dashboard/api` | 대시보드 데이터 (JSON) |
-| POST | `/_dashboard/api/worker/start` | 워커 시작 |
-| POST | `/_dashboard/api/worker/stop` | 워커 정지 |
-| POST | `/_dashboard/api/queue/:name/flush-failed` | 실패 잡 삭제 |
-| POST | `/_dashboard/api/queue/:name/recover-timeout` | 타임아웃 잡 복구 |
-| GET | `/_dashboard/api/scheduler` | 스케줄드 잡 목록 |
-| POST | `/_dashboard/api/scheduler/:name/toggle` | 잡 활성화/비활성화 |
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/_dashboard/api` | Dashboard data (JSON) |
+| POST | `/_dashboard/api/worker/start` | Start worker |
+| POST | `/_dashboard/api/worker/stop` | Stop worker |
+| POST | `/_dashboard/api/queue/:name/flush-failed` | Clear failed jobs |
+| POST | `/_dashboard/api/queue/:name/recover-timeout` | Recover timed-out jobs |
+| GET | `/_dashboard/api/scheduler` | Scheduled jobs list |
+| POST | `/_dashboard/api/scheduler/:name/toggle` | Enable/disable a job |
 
-## 데이터 구조
+## Data Structure
 
 ```typescript
 interface DashboardData {

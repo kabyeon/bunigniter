@@ -1,27 +1,27 @@
 # ⏱ Rate Limiting
 
-슬라이딩 윈도우 방식의 요청 빈도 제한 미들웨어입니다.
+Sliding window request rate limiting middleware.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { rateLimitMiddleware } from "system/core/rate_limit.ts";
 router.use(rateLimitMiddleware);
 ```
 
-기본값: 60초당 100회 요청
+Default: 100 requests per 60 seconds.
 
-## 커스텀 설정
+## Custom Configuration
 
 ```typescript
 import { createRateLimitMiddleware } from "system/core/rate_limit.ts";
 
 const apiLimiter = createRateLimitMiddleware({
-  windowMs: 60,       // 60초 윈도우
-  maxRequests: 30,    // 최대 30회
-  message: "요청이 너무 많습니다",
+  windowMs: 60,       // 60-second window
+  maxRequests: 30,    // max 30 requests
+  message: "Too many requests",
   statusCode: 429,
-  headers: true,      // X-RateLimit-* 헤더 포함
+  headers: true,      // include X-RateLimit-* headers
 });
 
 router.group("/api", [apiLimiter], (apiRouter) => {
@@ -29,32 +29,32 @@ router.group("/api", [apiLimiter], (apiRouter) => {
 });
 ```
 
-## 응답 헤더
+## Response Headers
 
-| 헤더 | 설명 |
-|------|------|
-| `X-RateLimit-Limit` | 윈도우 내 최대 요청 수 |
-| `X-RateLimit-Remaining` | 남은 요청 수 |
-| `X-RateLimit-Reset` | 윈도우 리셋까지 남은 초 |
-| `Retry-After` | 제한 초과 시 재시도 대기 초 |
+| Header | Description |
+|--------|-------------|
+| `X-RateLimit-Limit` | Max requests per window |
+| `X-RateLimit-Remaining` | Remaining requests |
+| `X-RateLimit-Reset` | Seconds until window reset |
+| `Retry-After` | Seconds to wait when limited |
 
-## 설정 옵션
+## Configuration Options
 
-| 옵션 | 기본값 | 설명 |
-|------|--------|------|
-| `windowMs` | 60 | 시간 윈도우 (초) |
-| `maxRequests` | 100 | 윈도우 내 최대 요청 |
-| `keyGenerator` | IP 주소 | 클라이언트 식별 함수 |
-| `message` | "Too many requests..." | 제한 초과 메시지 |
-| `statusCode` | 429 | 제한 초과 HTTP 상태 |
-| `headers` | `true` | Rate Limit 헤더 포함 |
+| Option | Default | Description |
+|--------|---------|-------------|
+| `windowMs` | 60 | Time window (seconds) |
+| `maxRequests` | 100 | Max requests per window |
+| `keyGenerator` | IP address | Client identification function |
+| `message` | "Too many requests..." | Rate limit exceeded message |
+| `statusCode` | 429 | Rate limit exceeded HTTP status |
+| `headers` | `true` | Include Rate Limit headers |
 
-## 유틸리티
+## Utilities
 
 ```typescript
 import { cleanupRateLimitStore, resetRateLimitStore, resetRateLimitForKey } from "system/core/rate_limit.ts";
 
-cleanupRateLimitStore();          // 만료 항목 정리
-resetRateLimitStore();            // 전체 초기화
-resetRateLimitForKey("127.0.0.1"); // 특정 키 초기화
+cleanupRateLimitStore();          // clean expired entries
+resetRateLimitStore();            // full reset
+resetRateLimitForKey("127.0.0.1"); // reset a specific key
 ```

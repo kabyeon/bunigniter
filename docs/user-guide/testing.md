@@ -1,44 +1,44 @@
-# 🧪 테스트
+# 🧪 Testing
 
-Bun 내장 테스트 러너(`bun:test`)를 사용합니다.
+Uses Bun's built-in test runner (`bun:test`).
 
-## 실행
+## Running Tests
 
 ```bash
-bun test              # 전체
-bun test --watch      # 워치
-bun test tests/validator_test.ts  # 특정 파일
+bun test              # all tests
+bun test --watch      # watch mode
+bun test tests/validator_test.ts  # specific file
 ```
 
-## 단위 테스트 작성
+## Writing Unit Tests
 
 ```typescript
 import { describe, test, expect } from "bun:test";
 import { validate } from "../system/core/validator.ts";
 
-describe("유효성 검사", () => {
-  test("이메일 검증", () => {
+describe("Validation", () => {
+  test("email validation", () => {
     const { valid } = validate({ email: "bad" }, { email: "required|email" });
     expect(valid).toBe(false);
   });
 });
 ```
 
-## 테스트 헬퍼
+## Test Helpers
 
 ```typescript
 import { createTestDB, testRequest, parseJsonResponse } from "../system/core/test_helper.ts";
 
-// 인메모리 DB
+// In-memory DB
 const db = await createTestDB();
 await db`CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT)`;
 const result = await db`SELECT * FROM users`;
 await db.close();
 ```
 
-## E2E 테스트 (서버 미실행)
+## E2E Tests (No Server Required)
 
-Router를 직접 호출하여 HTTP 요청→응답을 테스트합니다:
+Call the Router directly to test HTTP requests and responses:
 
 ```typescript
 import { httpTest } from "../system/core/e2e_test.ts";
@@ -50,69 +50,69 @@ router.post("/users", userController, "store");
 
 const test = httpTest(router);
 
-// GET 요청
+// GET request
 const res = await test.get("/users");
 test.assertStatus(res, 200);
 
-// POST 요청
+// POST request
 const res2 = await test.post("/users", { name: "Test" });
 test.assertJson(res2, { success: true });
 
-// 리다이렉트 검증
+// Redirect assertion
 test.assertRedirect(await test.get("/old-path"), "/new-path");
 
-// 본문 포함 검증
+// Body content assertion
 test.assertBodyContains(await test.get("/users"), "Test");
 ```
 
-### httpTest 메서드
+### httpTest Methods
 
-| 메서드 | 설명 |
-|--------|------|
-| `get(path, headers?)` | GET 요청 |
-| `post(path, body?, headers?)` | POST 요청 |
-| `put(path, body?, headers?)` | PUT 요청 |
-| `patch(path, body?, headers?)` | PATCH 요청 |
-| `delete(path, headers?)` | DELETE 요청 |
-| `assertStatus(res, code)` | 상태 코드 검증 |
-| `assertJson(res, expected)` | JSON 응답 검증 |
-| `assertRedirect(res, location?)` | 리다이렉트 검증 |
-| `assertBodyContains(res, text)` | 본문 포함 검증 |
+| Method | Description |
+|--------|-------------|
+| `get(path, headers?)` | GET request |
+| `post(path, body?, headers?)` | POST request |
+| `put(path, body?, headers?)` | PUT request |
+| `patch(path, body?, headers?)` | PATCH request |
+| `delete(path, headers?)` | DELETE request |
+| `assertStatus(res, code)` | Assert status code |
+| `assertJson(res, expected)` | Assert JSON response |
+| `assertRedirect(res, location?)` | Assert redirect |
+| `assertBodyContains(res, text)` | Assert body content |
 
-## 통합 테스트 (실서버)
+## Integration Tests (Live Server)
 
 ```typescript
 import { createIntegrationTestClient } from "../system/core/integration_test.ts";
 
 const { client, close } = await createIntegrationTestClient(3999);
 
-// HTTP 요청
+// HTTP requests
 const res = await client.get("/users");
 const json = await res.json();
 
-// 폼 전송
+// Form submission
 await client.postForm("/login", { email: "test@test.com", password: "1234" });
 
-// 상태 코드 확인
+// Status code assertion
 await client.assertStatus("/users", 200);
 
-close(); // 반드시 종료
+close(); // must close
 ```
 
-## IntegrationTestClient 메서드
+## IntegrationTestClient Methods
 
-| 메서드 | 설명 |
-|--------|------|
-| `get(path, headers?)` | GET 요청 |
-| `post(path, body?, headers?)` | POST 요청 |
-| `put(path, body?, headers?)` | PUT 요청 |
-| `patch(path, body?, headers?)` | PATCH 요청 |
-| `delete(path, headers?)` | DELETE 요청 |
-| `postForm(path, fields)` | 폼 데이터 POST |
-| `getJson(path)` | GET + JSON 파싱 |
-| `assertStatus(path, status, method?)` | 상태 코드 확인 |
+| Method | Description |
+|--------|-------------|
+| `get(path, headers?)` | GET request |
+| `post(path, body?, headers?)` | POST request |
+| `put(path, body?, headers?)` | PUT request |
+| `patch(path, body?, headers?)` | PATCH request |
+| `delete(path, headers?)` | DELETE request |
+| `postForm(path, fields)` | POST form data |
+| `getJson(path)` | GET + JSON parse |
+| `assertStatus(path, status, method?)` | Assert status code |
 
-## 현재 테스트 현황
+## Current Test Status
 
 ```
 620 pass, 0 fail, 1121 expect() calls across 28 files

@@ -1,26 +1,26 @@
-# 🗄 캐시
+# 🗄 Cache
 
-인메모리 + 파일 + Redis 기반 캐시 드라이버를 제공합니다.
+Provides in-memory + file + Redis-based cache drivers.
 
-## 기본 사용법 (Cache 매니저)
+## Basic Usage (Cache Manager)
 
 ```typescript
 import { Cache } from "system/core/cache.ts";
 
-Cache.put("key", "value", 600);     // 10분 TTL
+Cache.put("key", "value", 600);     // 10-minute TTL
 await Cache.get("key");              // "value"
 await Cache.has("key");              // true
-Cache.forever("key", "value");       // 영구 저장
-await Cache.forget("key");           // 삭제
-await Cache.pull("key");             // 조회 후 삭제
-Cache.flush();                       // 전체 삭제
+Cache.forever("key", "value");       // permanent storage
+await Cache.forget("key");           // delete
+await Cache.pull("key");             // retrieve and delete
+Cache.flush();                       // delete all
 ```
 
-## Remember (콜백 캐시)
+## Remember (Callback Cache)
 
 ```typescript
 const users = await Cache.remember("users:list", 300, async () => {
-  return await userModel.findAll();  // 캐시 없으면 실행 후 저장
+  return await userModel.findAll();  // runs and stores if not cached
 });
 
 const config = await Cache.rememberForever("app:config", async () => {
@@ -28,7 +28,7 @@ const config = await Cache.rememberForever("app:config", async () => {
 });
 ```
 
-## 설정
+## Configuration
 
 ```typescript
 Cache.configure({
@@ -41,7 +41,7 @@ Cache.configure({
 });
 ```
 
-또는 `app/config/cache.ts`에서 설정합니다:
+Or configure via `app/config/cache.ts`:
 
 ```typescript
 export default {
@@ -51,7 +51,7 @@ export default {
 };
 ```
 
-## 드라이버 직접 사용
+## Using Drivers Directly
 
 ### MemoryCacheDriver
 
@@ -69,7 +69,7 @@ import { FileCacheDriver } from "system/core/cache.ts";
 const driver = new FileCacheDriver({ path: "./storage/cache" });
 driver.set("key", { data: 123 }, 300);
 driver.get("key"); // { data: 123 }
-driver.gc();       // 만료 항목 정리
+driver.gc();       // clean expired items
 ```
 
 ### RedisCacheDriver
@@ -82,13 +82,13 @@ const driver = new RedisCacheDriver({
 });
 await driver.set("key", { data: 123 }, 300);
 const val = await driver.get("key"); // { data: 123 }
-await driver.flush();  // 전체 삭제
+await driver.flush();  // delete all
 ```
 
-- 분산 환경에서 캐시 공유 가능
-- Bun 내장 `RedisClient` 사용
-- Redis `SET ... EX`로 TTL 자동 관리
-- `RedisCacheDriver.closeAll()` — 연결 종료
+- Share cache across distributed environments
+- Uses Bun's built-in `RedisClient`
+- Auto-manages TTL with Redis `SET ... EX`
+- `RedisCacheDriver.closeAll()` — close connections
 
 ```env
 # .env
@@ -98,6 +98,6 @@ REDIS_URL=redis://localhost:6379
 
 ## TTL
 
-- `Cache.put(key, value, seconds)` — 초 단위 TTL
-- `Cache.forever(key, value)` — TTL 없음 (영구)
-- TTL 만료 후 `get()` 은 `null` 반환
+- `Cache.put(key, value, seconds)` — TTL in seconds
+- `Cache.forever(key, value)` — no TTL (permanent)
+- After TTL expiry, `get()` returns `null`

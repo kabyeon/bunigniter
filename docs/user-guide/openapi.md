@@ -1,8 +1,8 @@
 # 📖 OpenAPI / Swagger
 
-Router에서 OpenAPI 3.0 스펙을 자동 생성합니다.
+Auto-generates OpenAPI 3.0 specifications from your Router.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { OpenApiGenerator } from "system/core/openapi.ts";
@@ -13,23 +13,23 @@ const generator = new OpenApiGenerator({
   servers: [{ url: "http://localhost:3000" }],
 });
 
-// OpenAPI 스펙 생성
+// Generate OpenAPI spec
 const spec = generator.generate(router);
 ```
 
-## 라우트 문서 커스터마이징
+## Customizing Route Documentation
 
 ```typescript
 generator.describe("GET", "/users", {
-  summary: "사용자 목록 조회",
+  summary: "List users",
   tags: ["Users"],
   responses: {
-    "200": { description: "사용자 목록" },
+    "200": { description: "User list" },
   },
 });
 
 generator.describe("POST", "/users", {
-  summary: "사용자 생성",
+  summary: "Create a user",
   tags: ["Users"],
   requestBody: {
     content: {
@@ -51,14 +51,14 @@ generator.describe("POST", "/users", {
 ## Swagger UI
 
 ```typescript
-// JSON 엔드포인트
+// JSON endpoint
 const specJson = generator.toJson(router);
 
 // Swagger UI HTML
 const html = generator.swaggerUiHtml("/api/docs/json");
 ```
 
-컨트롤러에서 제공:
+Serve from a controller:
 
 ```typescript
 import { OpenApiGenerator } from "system/core/openapi.ts";
@@ -76,10 +76,10 @@ async docsJson({ request, response }: Context) {
 }
 ```
 
-## 자동 생성 내용
+## Auto-generated Content
 
-- 라우트 → paths 자동 변환 (`:id` → `{id}`)
-- 경로 첫 세그먼트 → tags 자동 추출
-- POST/PUT → requestBody 자동 추가
-- GET → page 쿼리 파라미터 자동 추가
-- 기본 응답 (200, 201, 404, 500 등) 자동 생성
+- Routes → paths auto-converted (`:id` → `{id}`)
+- First path segment → tags auto-extracted
+- POST/PUT → requestBody auto-added
+- GET → `page` query parameter auto-added
+- Default responses (200, 201, 404, 500, etc.) auto-generated

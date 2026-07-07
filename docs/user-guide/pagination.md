@@ -1,6 +1,6 @@
-# 📄 페이지네이션
+# 📄 Pagination
 
-## 컨트롤러
+## Controller
 
 ```typescript
 async index({ request, response }: Context) {
@@ -10,7 +10,7 @@ async index({ request, response }: Context) {
 }
 ```
 
-## 뷰 (HTML)
+## View (HTML)
 
 ```html
 <?= paginationHtml(pagination) ?>
@@ -27,10 +27,10 @@ return this.json({
 });
 ```
 
-## 유틸리티
+## Utilities
 
-| 함수 | 설명 |
-|------|------|
-| `paginationHtml(pagination)` | HTML 네비게이션 (`<nav class="pagination">...`) |
-| `paginationInfo(pagination)` | 정보 텍스트 ("총 150건 중 1-15건") |
-| `paginationMeta(pagination)` | API 메타데이터 (`{ current_page, total, ... }`) |
+| Function | Description |
+|----------|-------------|
+| `paginationHtml(pagination)` | HTML navigation (`<nav class="pagination">...`) |
+| `paginationInfo(pagination)` | Info text ("Showing 1-15 of 150 items") |
+| `paginationMeta(pagination)` | API metadata (`{ current_page, total, ... }`) |

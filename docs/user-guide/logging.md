@@ -1,35 +1,35 @@
-# 📝 로깅
+# 📝 Logging
 
-파일 + 콘솔 출력 로깅 시스템입니다.
+File + console output logging system.
 
-## 기본 사용법
+## Basic Usage
 
 ```typescript
 import { logger, logMessage } from "system/core/logger.ts";
 
-logger.debug("디버그 정보", { key: "value" });
-logger.info("서버 시작", { port: 3000 });
-logger.warn("메모리 부족", { used: "90%" });
-logger.error("DB 연결 실패", { error: err.message });
-logger.fatal("치명적 오류", { stack: err.stack });
+logger.debug("Debug info", { key: "value" });
+logger.info("Server started", { port: 3000 });
+logger.warn("Low memory", { used: "90%" });
+logger.error("DB connection failed", { error: err.message });
+logger.fatal("Fatal error", { stack: err.stack });
 
-// CI3 호환
-logMessage("info", "서버 시작");
+// CI3 compatible
+logMessage("info", "Server started");
 ```
 
-## 로그 레벨
+## Log Levels
 
-| 레벨 | 콘솔 색상 | 용도 |
-|------|----------|------|
-| `debug` | cyan | 개발 디버깅 |
-| `info` | green | 일반 정보 |
-| `warn` | yellow | 경고 |
-| `error` | red | 오류 |
-| `fatal` | magenta | 치명적 오류 |
+| Level | Console Color | Purpose |
+|-------|---------------|---------|
+| `debug` | cyan | Development debugging |
+| `info` | green | General information |
+| `warn` | yellow | Warnings |
+| `error` | red | Errors |
+| `fatal` | magenta | Fatal errors |
 
-## 출력 대상
+## Output Targets
 
-- **콘솔**: 색상 포함
-- **파일**: `storage/logs/app-YYYY-MM-DD.log`
-- **레벨 필터링**: 개발=debug 이상, 프로덕션=info 이상
-- **로그 회전**: 10MB 초과 시 자동 회전, 최대 30개 파일
+- **Console**: colorized output
+- **File**: `storage/logs/app-YYYY-MM-DD.log`
+- **Level filtering**: development=debug+, production=info+
+- **Log rotation**: auto-rotate at 10MB, max 30 files
